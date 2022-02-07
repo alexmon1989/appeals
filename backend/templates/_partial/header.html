@@ -1,0 +1,313 @@
+{% load static %}
+
+<header id="header" class="d-flex align-items-center shadow-xs">
+
+    <!-- Navbar -->
+    <div class="container-fluid position-relative">
+
+        <nav class="navbar navbar-expand-lg navbar-light justify-content-between">
+
+            <!-- logo, navigation toggler -->
+            <div class="align-items-start">
+                <!-- sidebar toggler -->
+                <a href="#aside-main"
+                   class="btn-sidebar-toggle h-100 d-inline-block d-lg-none justify-content-center align-items-center p-2">
+                <span>
+                  <svg width="25" height="25" viewBox="0 0 20 20">
+                    <path d="M 19.9876 1.998 L -0.0108 1.998 L -0.0108 -0.0019 L 19.9876 -0.0019 L 19.9876 1.998 Z"></path>
+                    <path d="M 19.9876 7.9979 L -0.0108 7.9979 L -0.0108 5.9979 L 19.9876 5.9979 L 19.9876 7.9979 Z"></path>
+                    <path d="M 19.9876 13.9977 L -0.0108 13.9977 L -0.0108 11.9978 L 19.9876 11.9978 L 19.9876 13.9977 Z"></path>
+                    <path d="M 19.9876 19.9976 L -0.0108 19.9976 L -0.0108 17.9976 L 19.9876 17.9976 L 19.9876 19.9976 Z"></path>
+                  </svg>
+                </span>
+                </a>
+
+                <!-- logo : mobile only -->
+                <a class="navbar-brand d-inline-block d-lg-none mx-2" href="{% url 'cases-list' %}">
+                    <img src="{% static 'images/logo/logo_sm.png' %}" height="38" alt="Апеляційні справи">
+                </a>
+            </div>
+
+            <!-- options -->
+            <ul class="list-inline list-unstyled mb-0 d-flex align-items-end">
+
+                <!-- notifications -->
+                <li class="list-inline-item mx-1 dropdown">
+
+                    <a href="#" id="dropdownNotificationOptions"
+                       class="btn btn-sm btn-light rounded-circle text-primary-hover dropdown-toggle"
+                       data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-haspopup="true"
+                       aria-label="Notifications">
+
+                        <!-- svg icon -->
+                        <span style="margin-top: -3px;">
+                    <svg width="24px" height="24px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                        <path fill="currentColor"
+                              d="M17,12 L18.5,12 C19.3284271,12 20,12.6715729 20,13.5 C20,14.3284271 19.3284271,15 18.5,15 L5.5,15 C4.67157288,15 4,14.3284271 4,13.5 C4,12.6715729 4.67157288,12 5.5,12 L7,12 L7.5582739,6.97553494 C7.80974924,4.71225688 9.72279394,3 12,3 C14.2772061,3 16.1902508,4.71225688 16.4417261,6.97553494 L17,12 Z"></path>
+
+                          <!-- animate-blink -->
+                          <!-- <rect class="animate-blink" fill="#6dbb30" opacity="0.8" x="10" y="16" width="4" height="4" rx="2"></rect> -->
+
+                          <!-- no animate -->
+                        <rect fill="#000000" opacity="0.3" x="10" y="16" width="4" height="4" rx="2"></rect>
+                      </g>
+                    </svg>
+                  </span>
+
+                    </a>
+
+                    <div aria-labelledby="dropdownNotificationOptions"
+                         class="dropdown-menu dropdown-menu-clean dropdown-menu-navbar-autopos dropdown-fadeindown end-0 p-0 mt-2 w-300">
+                        <div class="dropdown-header p-4">1 new notification</div>
+                        <div class="dropdown-divider"></div>
+                        <div class="max-vh-50 scrollable-vertical">
+
+                            <!-- <div class="py-5 text-gray-400 text-center">NO ITEMS!</div> -->
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- badge -->
+                                <span class="badge bg-success float-end fw-normal mt-1">new</span>
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-cart-1"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">2 new orders</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-shield-ok"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">AI self repair success!</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-check"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">2 people joined the team</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-close"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">Missed a chat</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-check"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">3 new orders today</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-close"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">System chrashed</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-close"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">John sent you an attachment</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-close"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">Melissa removed from Ikarus project</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-star"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">2 new notifications</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-star-full"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">System fully recovered</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                            <!-- item -->
+                            <a href="#"
+                               class="clearfix dropdown-item fw-medium p-3 border-bottom border-light overflow-hidden">
+
+                                <!-- icon -->
+                                <div class="float-start avatar avatar-sm rounded-circle bg-gray-200 fs-5">
+                                    <i class="fi fi-round-info-full"></i>
+                                </div>
+
+                                <p class="small fw-bold m-0 text-truncate">System health status</p>
+                                <small class="d-block smaller fw-normal text-muted">Oct 22, 2019 / 02:21:46pm</small>
+
+                            </a>
+                            <!-- /item -->
+
+
+                        </div>
+                        <div class="dropdown-divider mb-0"></div>
+                        <a href="#" class="prefix-icon-ignore dropdown-footer dropdown-custom-ignore fw-medium py-3">
+                            View all
+                        </a>
+                    </div>
+
+                </li>
+
+                <!-- account -->
+                <li class="list-inline-item mx-1 dropdown">
+
+
+                    <a href="#" id="dropdownAccountOptions"
+                       class="btn btn-sm btn-icon btn-light dropdown-toggle rounded-circle" data-bs-toggle="dropdown"
+                       aria-expanded="false" aria-haspopup="true">
+                        <span class="small fw-bold">ОМ</span>
+                    </a>
+
+                    <div aria-labelledby="dropdownAccountOptions"
+                         class="dropdown-menu dropdown-menu-clean dropdown-menu-navbar-autopos dropdown-menu-invert dropdown-fadeindown p-0 mt-2 w-300">
+
+                        <!-- user detail -->
+                        <div class="dropdown-header bg-primary bg-gradient rounded rounded-bottom-0 text-white small p-4">
+                            <span class="d-block fw-medium text-truncate">Монастирецький Олександр Миколайович</span>
+                            <span class="d-block smaller fw-medium text-truncate">a.monastyretsky@ukrpatent.org</span>
+                            <span class="d-block smaller"><b>Last Login:</b> 2019-09-03 01:48</span>
+                        </div>
+
+                        <div class="dropdown-divider mb-3"></div>
+
+                        <a href="#" class="dropdown-item text-truncate">
+                            <span class="fw-medium">My profile</span>
+                            <small class="d-block text-muted smaller">account settings and more</small>
+                        </a>
+
+                        <a href="#" class="dropdown-item text-truncate">
+                            <small class="badge bg-success-soft float-end">1 new</small>
+                            <span class="fw-medium">My Messages</span>
+                            <small class="d-block text-muted smaller">inbox, projects, tasts</small>
+                        </a>
+
+                        <a href="#" class="dropdown-item text-truncate">
+                            <span class="fw-medium">Account Settings</span>
+                            <small class="d-block text-muted smaller">profile, password and more...</small>
+                        </a>
+
+                        <div class="dropdown-divider mb-0 mt-3"></div>
+
+                        <a href="#"
+                           class="prefix-icon-ignore dropdown-footer dropdown-custom-ignore fw-medium py-3 px-4">
+                            <i class="fi fi-power float-start"></i>
+                            Log Out
+                        </a>
+                    </div>
+
+                </li>
+
+            </ul>
+            <!-- /options -->
+
+        </nav>
+
+    </div>
+    <!-- /Navbar -->
+
+</header>
