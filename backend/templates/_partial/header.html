@@ -41,20 +41,19 @@
 
                         <!-- svg icon -->
                         <span style="margin-top: -3px;">
-                    <svg width="24px" height="24px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                      <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                        <path fill="currentColor"
-                              d="M17,12 L18.5,12 C19.3284271,12 20,12.6715729 20,13.5 C20,14.3284271 19.3284271,15 18.5,15 L5.5,15 C4.67157288,15 4,14.3284271 4,13.5 C4,12.6715729 4.67157288,12 5.5,12 L7,12 L7.5582739,6.97553494 C7.80974924,4.71225688 9.72279394,3 12,3 C14.2772061,3 16.1902508,4.71225688 16.4417261,6.97553494 L17,12 Z"></path>
+                            <svg width="24px" height="24px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                              <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                <path fill="currentColor"
+                                      d="M17,12 L18.5,12 C19.3284271,12 20,12.6715729 20,13.5 C20,14.3284271 19.3284271,15 18.5,15 L5.5,15 C4.67157288,15 4,14.3284271 4,13.5 C4,12.6715729 4.67157288,12 5.5,12 L7,12 L7.5582739,6.97553494 C7.80974924,4.71225688 9.72279394,3 12,3 C14.2772061,3 16.1902508,4.71225688 16.4417261,6.97553494 L17,12 Z"></path>
 
-                          <!-- animate-blink -->
-                          <!-- <rect class="animate-blink" fill="#6dbb30" opacity="0.8" x="10" y="16" width="4" height="4" rx="2"></rect> -->
+                                  <!-- animate-blink -->
+                                  <rect class="animate-blink" fill="#f64e60" opacity="0.8" x="9.5" y="16" width="5" height="5" rx="2"></rect>
 
-                          <!-- no animate -->
-                        <rect fill="#000000" opacity="0.3" x="10" y="16" width="4" height="4" rx="2"></rect>
-                      </g>
-                    </svg>
-                  </span>
-
+                                  <!-- no animate -->
+                                <!-- <rect fill="#000000" opacity="0.3" x="10" y="16" width="4" height="4" rx="2"></rect> -->
+                              </g>
+                            </svg>
+                        </span>
                     </a>
 
                     <div aria-labelledby="dropdownNotificationOptions"
@@ -256,7 +255,6 @@
                 <!-- account -->
                 <li class="list-inline-item mx-1 dropdown">
 
-
                     <a href="#" id="dropdownAccountOptions"
                        class="btn btn-sm btn-icon btn-light dropdown-toggle rounded-circle" data-bs-toggle="dropdown"
                        aria-expanded="false" aria-haspopup="true">
@@ -269,34 +267,23 @@
                         <!-- user detail -->
                         <div class="dropdown-header bg-primary bg-gradient rounded rounded-bottom-0 text-white small p-4">
                             <span class="d-block fw-medium text-truncate">Монастирецький Олександр Миколайович</span>
-                            <span class="d-block smaller fw-medium text-truncate">a.monastyretsky@ukrpatent.org</span>
-                            <span class="d-block smaller"><b>Last Login:</b> 2019-09-03 01:48</span>
+                            <span class="d-block smaller fw-medium text-truncate">{{ request.user.email }}</span>
+                            <span class="d-block smaller"><b>Останній вхід:</b> {{ request.user.last_login }}</span>
                         </div>
 
                         <div class="dropdown-divider mb-3"></div>
 
                         <a href="#" class="dropdown-item text-truncate">
-                            <span class="fw-medium">My profile</span>
-                            <small class="d-block text-muted smaller">account settings and more</small>
-                        </a>
-
-                        <a href="#" class="dropdown-item text-truncate">
-                            <small class="badge bg-success-soft float-end">1 new</small>
-                            <span class="fw-medium">My Messages</span>
-                            <small class="d-block text-muted smaller">inbox, projects, tasts</small>
-                        </a>
-
-                        <a href="#" class="dropdown-item text-truncate">
-                            <span class="fw-medium">Account Settings</span>
-                            <small class="d-block text-muted smaller">profile, password and more...</small>
+                            <span class="fw-medium">Налаштування профілю</span>
+                            <small class="d-block text-muted smaller">профіль, пароль та інше...</small>
                         </a>
 
                         <div class="dropdown-divider mb-0 mt-3"></div>
 
-                        <a href="#"
+                        <a href="{% url 'logout' %}?next={{ request.path }}"
                            class="prefix-icon-ignore dropdown-footer dropdown-custom-ignore fw-medium py-3 px-4">
                             <i class="fi fi-power float-start"></i>
-                            Log Out
+                            Вихід
                         </a>
                     </div>
 

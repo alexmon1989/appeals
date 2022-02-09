@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div id="wrapper" class="d-flex align-items-stretch flex-column">
+
+        <!--  header -->
+        {% include '_partial/header.html' %}
+        <!-- /Header -->
+
+
+        <!-- content -->
+        <div id="wrapper_content" class="d-flex flex-fill">
+
+            <!-- sidebar -->
+            {% include '_partial/sidebar.html' %}
+            <!-- /sidebar -->
+
+
+            <!-- main -->
+            <main id="middle" class="flex-fill mx-auto">
+                {% block main %}{% endblock %}
+            </main>
+            <!-- /main -->
+        </div>
+        <!-- /content -->
+
+        <!-- footer -->
+        <footer id="footer" class="bg-white shadow">
+            <div class="p-3 text-end">
+                <span class="small fw-medium">&copy; Державне підприємство «Український інститут інтелектуальної власності», 2022</span>
+            </div>
+        </footer>
+        <!-- /footer -->
+
+    </div><!-- /#wrapper -->
+{% endblock %}

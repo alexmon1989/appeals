@@ -7,6 +7,7 @@ authors = ["Alexandr Monastyrtesky <alex.mon1989@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 Django = "3.2.12"
+crispy-bootstrap5 = "^0.6"
 
 [tool.poetry.dev-dependencies]
 
