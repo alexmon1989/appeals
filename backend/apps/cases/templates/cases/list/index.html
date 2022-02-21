@@ -3,22 +3,12 @@
 {% block title %}Список справ{% endblock %}
 
 {% block main %}
-    <!-- PAGE TITLE -->
-    <header>
-        <h1 class="h4">Список апеляційних справ</h1>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb small">
-                <li class="breadcrumb-item"><a href="#">Апеляційні справи</a></li>
-                <li class="breadcrumb-item text-muted active" aria-current="page">Список справ</li>
-            </ol>
-        </nav>
-    </header>
-
+    {% include 'cases/list/_partials/header.html' %}
 
     <!-- Primary -->
     <div class="section rounded mb-3">
-        Тут буде таблиця зі списком справ.
+        {% include 'cases/list/_partials/table.html' %}
     </div>
     <!-- /Primary -->
+
 {% endblock %}

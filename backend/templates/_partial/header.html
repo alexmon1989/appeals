@@ -266,8 +266,9 @@
 
                         <!-- user detail -->
                         <div class="dropdown-header bg-primary bg-gradient rounded rounded-bottom-0 text-white small p-4">
-                            <span class="d-block fw-medium text-truncate">Монастирецький Олександр Миколайович</span>
+                            <span class="d-block fw-medium text-truncate">{{ request.user.get_full_name }}</span>
                             <span class="d-block smaller fw-medium text-truncate">{{ request.user.email }}</span>
+                            <span class="d-block smaller fw-medium text-wrap my-2"><b>Групи:</b> {{ request.user.get_groups }}</span>
                             <span class="d-block smaller"><b>Останній вхід:</b> {{ request.user.last_login }}</span>
                         </div>
 
