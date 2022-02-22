@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from ...models import Case
+from ...models import Case, CollegiumMembership
 from ....classifiers.models import ClaimKind, ObjKind
 
 from random import randint, sample
@@ -71,6 +71,7 @@ class Command(BaseCommand):
         group = Group.objects.get(name='Голова апеляційної палати')
         user.groups.add(group)
         users['head'] = user
+        users['members'].append(users['head'])
 
         # Создание пользователей с группой "Члени апеляційної палати"
         for i in range(10):
@@ -124,13 +125,16 @@ class Command(BaseCommand):
             )
             case.save()
 
-            # Члены коллегии - глава + 3 обычных члена комиссии
-            case.collegium.add(self.users['head'])
-            member_ids = sample(range(1, len(self.users['members'])-1), 3)
-            for j in member_ids:
-                case.collegium.add(self.users['members'][j])
-            case.secretary = self.users['members'][member_ids[1]]
-            case.papers_owner = self.users['members'][member_ids[1]]
+            # Члены коллегии - 3 обычных члена комиссии
+            # case.collegium.add(self.users['head'])
+            member_keys = sample(range(1, len(self.users['members'])-1), 3)
+            for j, key in enumerate(member_keys):
+                if j == 0:
+                    CollegiumMembership.objects.create(person=self.users['members'][key], case=case, is_head=True)
+                else:
+                    CollegiumMembership.objects.create(person=self.users['members'][key], case=case, is_head=False)
+            case.secretary = self.users['members'][member_keys[1]]
+            case.papers_owner = self.users['members'][member_keys[1]]
             case.expert = self.users['experts'][randint(0, len(self.users['experts'])-1)]
             case.save()
 

@@ -1,0 +1,13 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Справа № {{ case.case_number }}{% endblock %}
+
+{% block main %}
+    {% include 'cases/detail/_partials/header.html' %}
+
+    {% include 'cases/detail/_partials/details.html' %}
+
+    {% include 'cases/detail/_partials/documents.html' %}
+
+    {% include 'cases/detail/_partials/payments.html' %}
+{% endblock %}

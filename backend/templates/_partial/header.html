@@ -274,6 +274,13 @@
 
                         <div class="dropdown-divider mb-3"></div>
 
+                        {% if request.user.is_superuser %}
+                            <a href="{% url 'admin:index' %}" target="_blank" class="dropdown-item text-truncate">
+                                <span class="fw-medium">Адміністративна панель</span>
+                                <small class="d-block text-muted smaller">Редагування усіх даних АС</small>
+                            </a>
+                        {% endif %}
+
                         <a href="#" class="dropdown-item text-truncate">
                             <span class="fw-medium">Налаштування профілю</span>
                             <small class="d-block text-muted smaller">профіль, пароль та інше...</small>

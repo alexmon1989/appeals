@@ -32,6 +32,7 @@ class Case(TimeStampModel):
         UserModel,
         verbose_name='Члени колегії',
         related_name='collegium',
+        through='CollegiumMembership'
     )
     secretary = models.ForeignKey(
         UserModel,
@@ -90,3 +91,10 @@ class Document(TimeStampModel):
         verbose_name = 'Документ'
         verbose_name_plural = 'Документи'
         db_table = 'cases_documents_list'
+
+
+class CollegiumMembership(models.Model):
+    """Связующая таблица апелляционного дела и членов коллегии"""
+    person = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE)
+    is_head = models.BooleanField(default=False)

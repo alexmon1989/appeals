@@ -26,3 +26,6 @@ class User(AbstractUser):
     def get_groups(self):
         groups = self.groups.values_list('name', flat=True)
         return ', '.join(groups)
+
+    def belongs_to_group(self, group_name: str) -> bool:
+        return self.groups.filter(name=group_name).exists()

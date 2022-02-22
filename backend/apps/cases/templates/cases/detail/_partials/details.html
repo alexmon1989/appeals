@@ -1,0 +1,91 @@
+<div class="section rounded mb-3">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>Основна інформація</h4>
+        <a href="#!" role="button" class="btn btn-sm btn-primary d-inline-flex align-items-center">
+            <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"></path>
+                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"></path>
+            </svg>
+            <span class="d-none d-sm-inline-block ps-2">Редагувати</span>
+        </a>
+    </div>
+
+
+    <div class="row">
+        <div class="col">
+            <div class="text-muted text-uppercase">Номер справи</div>
+            <div class="fw-medium mb-3">{{ case.case_number }}</div>
+
+            <div class="text-muted text-uppercase">Номер заявки</div>
+            <div class="fw-medium mb-3">{{ case.app_number }}</div>
+
+            <div class="text-muted text-uppercase">Вид об'єкта</div>
+            <div class="fw-medium mb-3">{{ case.obj_kind.title }}</div>
+
+            <div class="text-muted text-uppercase">Вид заяви/заперечення</div>
+            <div class="fw-medium mb-3">{{ case.claim_kind.title }}</div>
+
+            <div class="text-muted text-uppercase">Назва об'єкта</div>
+            <div class="fw-medium mb-3">{{ case.obj_title }}</div>
+
+            <div class="text-muted text-uppercase">Найменування апелянта</div>
+            <div class="fw-medium mb-3">{{ case.applicant_name }}</div>
+
+            <div class="text-muted text-uppercase">Найменування представника апелянта</div>
+            <div class="fw-medium mb-3">{{ case.applicant_represent }}</div>
+
+            <div class="text-muted text-uppercase">Адреса для листування</div>
+            <div class="fw-medium">{{ case.mailing_address }}</div>
+        </div>
+
+        <div class="col">
+            <div class="text-muted text-uppercase">Члени колегії</div>
+            <div class="fw-medium mb-3">
+                <ul class="list-unstyled">
+                {% for person in case.collegiummembership_set.all %}
+                    <li>
+                        {{ person.person.get_full_name }}{% if person.is_head %} <span class="text-indigo-600">(голова колегії)</span>{% endif %}
+                        {% if person.person.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ person.person.phone_number }}</span>{% endif %}
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+
+            <div class="text-muted text-uppercase">Секретар</div>
+            <div class="fw-medium mb-3">
+                {{ case.secretary.get_full_name }}
+                {% if case.secretary.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ case.secretary.phone_number }}</span>{% endif %}
+            </div>
+
+            <div class="text-muted text-uppercase">Третя особа</div>
+            <div class="fw-medium mb-3">
+                {{ case.expert.get_full_name|default:"Не призначено" }}
+                {% if case.expert.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ case.expert.phone_number }}</span>{% endif %}
+            </div>
+
+            <div class="text-muted text-uppercase">Особа, у якої знаходиться паперова справа</div>
+            <div class="fw-medium mb-3">
+                {{ case.papers_owner.get_full_name }}
+                {% if case.papers_owner.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ case.papers_owner.phone_number }}</span>{% endif %}
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="text-muted text-uppercase">Дата подання заперечення</div>
+            <div class="fw-medium mb-3">
+                {{ case.claim_date|default_if_none:"Не призначено" }}
+            </div>
+
+            <div class="text-muted text-uppercase">Дата, до якої необхідно розглянути заперечення</div>
+            <div class="fw-medium mb-3">
+                {{ case.deadline|default_if_none:"Не призначено" }}
+            </div>
+
+            <div class="text-muted text-uppercase">Дата призначеного засідання</div>
+            <div class="fw-medium mb-3">
+                {{ case.hearing|default_if_none:"Не призначено" }}
+            </div>
+        </div>
+    </div>
+</div>
