@@ -1,0 +1,19 @@
+{% extends 'cases/digital_sign/base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="row mt-3">
+        <div class="col">
+            Підпис файлу за допомогою токена
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <!-- Підключення скрипта з обгорткою для бібліотеки "ІІТ Користувач ЦСК Підпис (web)" -->
+    <script src="{% static 'digital_sign/eusw.js' %}"></script>
+    <!-- Підключення скрипта для завантаження бібліотеки "ІІТ Користувач ЦСК Підпис (web)" -->
+    <script src="{% static 'digital_sign/euswll.js' %}"></script>
+{% endblock %}
+

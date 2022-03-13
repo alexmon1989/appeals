@@ -4,14 +4,14 @@
             <h1 class="h4">Список апеляційних справ</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small">
-                    <li class="breadcrumb-item"><a href="#">Апеляційні справи</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'cases-list' %}">Апеляційні справи</a></li>
                     <li class="breadcrumb-item text-muted active" aria-current="page">Список справ</li>
                 </ol>
             </nav>
         </div>
 
         <div class="col-auto">
-            <a href="#!" role="button" class="btn btn-sm btn-primary d-inline-flex align-items-center">
+            <a href="{% url 'cases-create' %}" role="button" class="btn btn-sm btn-primary d-inline-flex align-items-center">
                 <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>

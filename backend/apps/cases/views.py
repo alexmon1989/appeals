@@ -1,6 +1,17 @@
+import json
+
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.views.generic.detail import DetailView
+from django.views.generic.edit import CreateView
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.http import require_POST
+from django.conf import settings
+
+from urllib.parse import unquote
+from pathlib import Path
+
 from .services import services
 from .models import Case
 
@@ -19,3 +30,53 @@ class CaseDetailView(DetailView):
 
     def get_queryset(self):
         return services.case_get_list(user=self.request.user)
+
+
+class CaseCreateView(CreateView):
+    """Отображает страницу создания апелляционного дела."""
+    model = Case
+    template_name = 'cases/create/index.html'
+    fields = ['case_number']
+
+
+@require_POST
+@login_required
+def upload_sign(request, document_id: int):
+    """Загружает на сервер информацию о цифровой подписи документа."""
+    # Получение документа
+    document = services.document_get_by_id(document_id, request.user)
+    if document:
+        # Загрузка файла
+        relative_path = Path(unquote(f"{document.file}_{request.user.pk}.p7s"))
+        sign_destination = Path(settings.MEDIA_ROOT) / relative_path
+        if services.sign_upload(request.FILES['blob'], sign_destination):
+            # Создание объекта цифровой подписи в БД
+            sign_info = json.loads(request.POST['sign_info'])
+            sign_data = {
+                'document': document,
+                'file': str(relative_path),
+                'user': request.user,
+                'subject': sign_info['subject'],
+                'serial_number': sign_info['serial'],
+                'issuer': sign_info['issuer'],
+                'timestamp': sign_info['timestamp'],
+            }
+            services.sign_create(sign_data)
+
+        return JsonResponse({'success': 1})
+
+    return JsonResponse({'success': 0})
+
+
+@xframe_options_exempt
+def ds_file(request):
+    return render(request, template_name='cases/digital_sign/file.html')
+
+
+@xframe_options_exempt
+def ds_token(request):
+    return render(request, template_name='cases/digital_sign/token.html')
+
+
+def ds_iframe(request):
+    return render(request, template_name='cases/digital_sign/iframe.html')

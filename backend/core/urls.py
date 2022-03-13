@@ -15,13 +15,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('apps.cases.urls')),
+    path('', RedirectView.as_view(url='cases/', permanent=True)),
+    path('cases/', include('apps.cases.urls')),
 
     path('users/', include('apps.users.urls')),
     path('users/', include('django.contrib.auth.urls')),
 
     path('__debug__/', include('debug_toolbar.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

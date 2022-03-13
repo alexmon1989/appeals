@@ -24026,8 +24026,9 @@ return /******/ (function(modules) { // webpackBootstrap
      **/
     process: function(_this) {
 
-      if(_this.hasClass('js-datatableified'))
+      if(_this.hasClass('js-datatableified')) {
         return;
+      }
 
 
       var ID                              = _this.attr('id')                                  || '',
@@ -24257,7 +24258,6 @@ return /******/ (function(modules) { // webpackBootstrap
                   +">",
 
               buttons: []
-
       };
 
 
@@ -24356,7 +24356,11 @@ return /******/ (function(modules) { // webpackBootstrap
       if( typeof dataTableExtend === 'object' )
         __dtOptions =  $.extend({}, __dtOptions, dataTableExtend);
 
-
+      if (typeof dataTableInitComplete === "function") {
+        __dtOptions = $.extend({}, __dtOptions, {
+          "initComplete": dataTableInitComplete,
+        });
+      }
 
       // PDFMAKE : 2Mb
       var paths = $.SOW.helper.vendorLogicPaths('datatables');
@@ -24364,15 +24368,7 @@ return /******/ (function(modules) { // webpackBootstrap
         paths['path_js'] = paths['path_js'].replace('datatables.min', 'pdfmake.min');
         $.SOW.helper.loadScript([paths['path_js']], false, true).done(function() {
 
-          __dtOptions = $.extend({}, __dtOptions, {
-              "stateSave": true
-            });
 
-          if (typeof dataTableInitComplete === "function") {
-            __dtOptions = $.extend({}, __dtOptions, {
-              "initComplete": dataTableInitComplete,
-            });
-          }
 
           DTable[ID] = _this.DataTable(__dtOptions);
 

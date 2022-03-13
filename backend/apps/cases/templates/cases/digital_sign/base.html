@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Підписати файл{% endblock %}
+
+{% block body %}
+    <div id="wrapper" class="d-flex align-items-stretch flex-column">
+        <!-- content -->
+        <div class="d-flex flex-fill">
+            <!-- main -->
+            <main id="middle" class="flex-fill mx-auto">
+                <!-- Primary -->
+                <div class="section rounded mb-3">
+                    <h5 class="mb-3">Встановлення особистого ключа</h5>
+
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'cases_ds_file' %}active{% endif %}"
+                               aria-current="page"
+                               href="{% url 'cases_ds_file' %}">Файловий</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'cases_ds_token' %}active{% endif %}"
+                               aria-current="page"
+                               href="{% url 'cases_ds_token' %}">Токен</a>
+                        </li>
+                    </ul>
+
+                    {% block content %}{% endblock %}
+                </div>
+                <!-- /Primary -->
+            </main>
+            <!-- /main -->
+        </div>
+        <!-- /content -->
+    </div><!-- /#wrapper -->
+{% endblock %}

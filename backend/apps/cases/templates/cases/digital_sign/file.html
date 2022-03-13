@@ -1,0 +1,82 @@
+{% extends 'cases/digital_sign/base.html' %}
+
+{% load static %}
+
+{% block content %}
+    {% csrf_token %}
+
+    <div class="row mt-3">
+        <div class="col">
+            <div class="mb-3">
+                <label class="form-label">Оберіть ЦСК</label>
+                <select class="form-select form-select-sm" aria-label="Default select example" id="CAsServersSelect">
+                </select>
+            </div>
+
+            <form autocomplete="off">
+            <div class="mb-3">
+                <label for="PKeyFileName" class="form-label">Особистий ключ</label>
+                <input class="form-control form-control-sm"
+                       type="search"
+                       id="PKeyFileName"
+                       onclick="document.getElementById('PKeyFileInput').click();">
+                <input class="form-control form-control-sm" type="file" id="PKeyFileInput" style="display: none">
+            </div>
+
+            <div class="mb-3">
+                <label for="PKeyPassword" class="form-label">Пароль захисту ключа</label>
+                <input class="form-control form-control-sm"
+                       type="password"
+                       id="PKeyPassword">
+                <div class="form-text">Особистий ключ та його пароль захисту не передаються на сервер. Уся робота програми відбувається у браузері.</div>
+            </div>
+            </form>
+
+            <div class="mb-3" id="SelectedCertsList"></div>
+
+            <button id="PKeyReadButton" class="btn btn-sm btn-primary" title="Зчитати" onclick="euSignTest.readPrivateKeyButtonClick()">Зчитати</button>
+
+            <hr class="my-4">
+
+            <h5>Дані підписанта</h5>
+
+            <div id="key-owner">
+                <div id="key-no-info" class="text-muted">Інформація відсутня. Необхідно зчитати ключ.</div>
+                <div id="key-info"></div>
+            </div>
+
+            <hr class="my-4">
+
+            <h5>Файл(и) для підпису</h5>
+
+            <div class="my-3">
+                <a href="#" target="_blank" class="fs-5">
+                    <svg width="22px" height="22px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-link me-1" viewBox="0 0 16 16">
+                      <path d="M6.354 5.5H4a3 3 0 0 0 0 6h3a3 3 0 0 0 2.83-4H9c-.086 0-.17.01-.25.031A2 2 0 0 1 7 10.5H4a2 2 0 1 1 0-4h1.535c.218-.376.495-.714.82-1z"></path>
+                      <path d="M9 5.5a3 3 0 0 0-2.83 4h1.098A2 2 0 0 1 9 6.5h3a2 2 0 1 1 0 4h-1.535a4.02 4.02 0 0 1-.82 1H12a3 3 0 1 0 0-6H9z"></path>
+                    </svg>Скарга щодо заявки №12345678</a>
+            </div>
+
+            <div class="mb-3 d-flex align-items-center">
+                <button class="btn btn-sm btn-primary"
+                        disabled="disabled"
+                        id="sign-file-btn"
+                        onclick="euSignTest.signFile('/media/documents/1/test.pdf');">Підписати</button>
+                <p class="text-muted ms-2 mb-0 text-red-700"
+                   id="sign-impossible-msg">Підписання неможливе. Необхідно зчитати ключ.</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="text/JavaScript" src="{% static 'digital_sign/euutils.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/euscpt.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/euscpm.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/euscp.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/ds_file.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/qr/qrcodedecode.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/qr/reedsolomon.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/fs/Blob.min.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/fs/FileSaver.js' %}"></script>
+{% endblock %}

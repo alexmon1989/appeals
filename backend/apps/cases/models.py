@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-
 from backend.core.models import TimeStampModel
 from ..classifiers.models import ObjKind, ClaimKind, DocumentName, DocumentType
+from .utils import sign_get_file_path, document_get_original_file_path
 
 
 UserModel = get_user_model()
@@ -81,11 +81,26 @@ class Document(TimeStampModel):
     registration_date = models.DateField('Дата реєстрації', null=True, blank=True)
     output_date = models.DateField('Дата відправлення', null=True, blank=True)
     input_date = models.DateField('Дата отримання', null=True, blank=True)
+    file = models.FileField(
+        verbose_name='Оригінальний файл документа',
+        upload_to=document_get_original_file_path
+    )
 
     def __str__(self):
         if self.case.case_number:
             return f"{self.document_name} (номер справи: {self.case.case_number})"
         return self.document_name
+
+    def save(self, *args, **kwargs):
+        """Переопределение метода сохранения для обеспечения структуры каталогов."""
+        if self.id is None:
+            saved_file = self.file
+            self.file = None
+            super().save(*args, **kwargs)
+            self.file = saved_file
+            if 'force_insert' in kwargs:
+                kwargs.pop('force_insert')
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Документ'
@@ -95,6 +110,49 @@ class Document(TimeStampModel):
 
 class CollegiumMembership(models.Model):
     """Связующая таблица апелляционного дела и членов коллегии"""
-    person = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    person = models.ForeignKey(UserModel, on_delete=models.CASCADE, verbose_name='Особа')
     case = models.ForeignKey(Case, on_delete=models.CASCADE)
-    is_head = models.BooleanField(default=False)
+    is_head = models.BooleanField(default=False, verbose_name='Голова колегії')
+
+    class Meta:
+        verbose_name = 'Колегія'
+        verbose_name_plural = 'Колегія'
+        db_table = 'cases_collegium_membership'
+
+
+class Sign(TimeStampModel):
+    """Цифровая подпись документа."""
+    document = models.ForeignKey(Document, verbose_name='Документ', on_delete=models.CASCADE)
+    file = models.FileField(
+        upload_to=sign_get_file_path,
+        verbose_name='Файл з цифровим підписом (.p7s)'
+    )
+    user = models.ForeignKey(
+        UserModel,
+        on_delete=models.SET_NULL,
+        verbose_name="Користувач",
+        null=True,
+    )
+    subject = models.CharField('Підписант', max_length=255)
+    serial_number = models.CharField('Серійний номер', max_length=255)
+    issuer = models.CharField('Надавач послуг (АЦСК)', max_length=255)
+    timestamp = models.CharField('Мітка часу', max_length=255)
+
+    def __str__(self):
+        return f"{self.document.case.case_number} - {self.document.document_name} - {self.subject}"
+
+    def save(self, *args, **kwargs):
+        """Переопределение метода сохранения для обеспечения структуры каталогов."""
+        if self.id is None:
+            saved_file = self.file
+            self.file = None
+            super().save(*args, **kwargs)
+            self.file = saved_file
+            if 'force_insert' in kwargs:
+                kwargs.pop('force_insert')
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = 'Цифровий підпис'
+        verbose_name_plural = 'Цифрові підписи'
+        db_table = 'cases_documents_signs'
