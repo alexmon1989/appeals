@@ -24369,7 +24369,6 @@ return /******/ (function(modules) { // webpackBootstrap
         $.SOW.helper.loadScript([paths['path_js']], false, true).done(function() {
 
 
-
           DTable[ID] = _this.DataTable(__dtOptions);
 
           /**

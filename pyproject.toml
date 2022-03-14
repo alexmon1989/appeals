@@ -10,6 +10,7 @@ Django = "3.2.12"
 crispy-bootstrap5 = "^0.6"
 django-debug-toolbar = "^3.2.4"
 python-docx = "^0.8.11"
+djangorestframework-datatables = "^0.7.0"
 
 [tool.poetry.dev-dependencies]
 
