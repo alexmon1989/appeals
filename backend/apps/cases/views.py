@@ -63,6 +63,8 @@ def upload_sign(request, document_id: int):
             }
             services.sign_create(sign_data)
 
+            services.document_add_sign_info_to_file(document_id)
+
         return JsonResponse({'success': 1})
 
     return JsonResponse({'success': 0})

@@ -1218,6 +1218,7 @@ function() {
 
 	processFile: async function(documentId, url) {
 		const signBtn = document.querySelector('#sign-file-btn')
+		const originalButtonText = signBtn.textContent
 		signBtn.textContent = 'Зачекайте...'
 		signBtn.disabled = true
 
@@ -1247,15 +1248,29 @@ function() {
 					true
 				);
 			} else {
-				alert('Документ не було підписано.')
+				$.SOW.core.toast.show(
+					'danger',
+					'',
+					'Документ не було підписано.',
+					'top-right',
+					0,
+					true
+				);
 			}
 		} catch (e) {
-			alert('Виникла помилка при підписанні документа')
+			$.SOW.core.toast.show(
+				'danger',
+				'',
+				'Виникла помилка при підписанні документа.',
+				'top-right',
+				0,
+				true
+			);
 			console.log(e)
 		} finally {
+			signBtn.textContent = originalButtonText
 			signBtn.disabled = false
 		}
-
 	},
 
 	verifyFile: function() {

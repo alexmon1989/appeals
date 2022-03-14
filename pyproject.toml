@@ -9,6 +9,7 @@ python = "^3.7"
 Django = "3.2.12"
 crispy-bootstrap5 = "^0.6"
 django-debug-toolbar = "^3.2.4"
+python-docx = "^0.8.11"
 
 [tool.poetry.dev-dependencies]
 
