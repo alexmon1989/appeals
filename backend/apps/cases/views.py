@@ -8,14 +8,13 @@ from django.views.generic.edit import CreateView
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
 from django.conf import settings
-from django.db.models import Count
 
 from urllib.parse import unquote
 from pathlib import Path
 from rest_framework import viewsets
 
 from .services import services
-from .models import Case, Document
+from .models import Case
 from .serializers import DocumentSerializer
 
 
@@ -73,16 +72,12 @@ def upload_sign(request, document_id: int):
     return JsonResponse({'success': 0})
 
 
-class DocumentsViewSet(viewsets.ModelViewSet):
-    queryset = Document.objects.select_related(
-        'document_name',
-        'document_type'
-    ).prefetch_related(
-        'sign_set'
-    ).annotate(
-        signs_count=Count('sign')
-    ).order_by('-created_at')
+class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Возвращает JSON с документами дела."""
     serializer_class = DocumentSerializer
+
+    def get_queryset(self):
+        return services.case_get_documents_list(self.kwargs['id'], self.request.user)
 
 
 @xframe_options_exempt

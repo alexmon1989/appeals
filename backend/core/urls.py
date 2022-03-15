@@ -18,10 +18,20 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic import RedirectView
+from django.conf.urls import url
+
+from rest_framework import routers
+
+from apps.cases import views as cases_views
+
+
+router = routers.DefaultRouter()
+router.register(r'cases/(?P<id>\d+)/documents', cases_views.DocumentsViewSet, basename='Document')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(url='cases/', permanent=True)),
+    url('^api/', include(router.urls)),
     path('cases/', include('apps.cases.urls')),
 
     path('users/', include('apps.users.urls')),

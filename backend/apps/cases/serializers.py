@@ -1,8 +1,8 @@
 from django.template.loader import render_to_string
 
 from rest_framework import serializers
-from .models import Document, Sign
-from ..classifiers.models import DocumentName, DocumentType
+from .models import Document, Sign, Case
+from ..classifiers.models import DocumentName, DocumentType, ClaimKind, ObjKind
 
 
 class DocumentNameSerializer(serializers.ModelSerializer):
@@ -54,7 +54,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     signs_info = serializers.SerializerMethodField()
     actions = serializers.SerializerMethodField()
 
-    def get_signs_info(self, document):
+    def get_signs_info(self, document: Document):
         return render_to_string(
             'cases/_partials/document_signs_info.html',
             {
@@ -62,7 +62,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             }
         )
 
-    def get_actions(self, document):
+    def get_actions(self, document: Document):
         return render_to_string(
             'cases/_partials/actions.html',
             {
@@ -86,4 +86,14 @@ class DocumentSerializer(serializers.ModelSerializer):
 
             'document_type',
             'document_name',
+        )
+
+
+class CaseSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Case
+        fields = (
+            'id',
         )

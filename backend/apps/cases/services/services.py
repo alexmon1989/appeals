@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.db.models import Count
 
 from ..models import Case, Document, Sign
 from ..utils import set_cell_border
@@ -28,6 +29,21 @@ def case_get_list(user: UserModel = None) -> Iterable[Case]:
         'document_set__sign_set',
     )
     return cases
+
+
+def case_get_documents_list(case_id: int, user: UserModel = None) -> Iterable[Document]:
+    """Возвращает документы дела."""
+    queryset = Document.objects.filter(
+        case_id=case_id
+    ).select_related(
+        'document_name',
+        'document_type'
+    ).prefetch_related(
+        'sign_set'
+    ).annotate(
+        signs_count=Count('sign')
+    ).order_by('-created_at')
+    return queryset
 
 
 def document_get_by_id(doc_id: int, user: UserModel = None) -> Document:
