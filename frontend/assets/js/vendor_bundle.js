@@ -23914,7 +23914,7 @@ return /******/ (function(modules) { // webpackBootstrap
    *
    **/
   var scriptInfo                  = 'Vendor Datatables';
-  var DTable                      = [];
+  window.DTable                      = {};
 
   $.SOW.vendor.datatables = {
 

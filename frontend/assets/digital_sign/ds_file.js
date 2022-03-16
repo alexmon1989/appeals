@@ -1236,7 +1236,8 @@ function() {
 			const uploadedRes = await euSignTest.uploadSign(documentId, signData, signInfo)
 
 			if (uploadedRes.success === 1) {
-				// Отобразить на экране что файл успешно подписан, закрыть модальное окно
+				// Обновить список документов, отобразить на экране что файл успешно подписан, закрыть модальное окно
+				window.DTable["table-documents"].ajax.reload()
 				const closeBtn = dsModal.querySelector('.modal-footer button')
 				closeBtn.click()
 				$.SOW.core.toast.show(
