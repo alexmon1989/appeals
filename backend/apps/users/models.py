@@ -29,3 +29,8 @@ class User(AbstractUser):
 
     def belongs_to_group(self, group_name: str) -> bool:
         return self.groups.filter(name=group_name).exists()
+
+    @property
+    def is_privileged(self) -> bool:
+        """Привилегированный пользователь."""
+        return self.is_superuser and self.belongs_to_group('Голова апеляційної палати')

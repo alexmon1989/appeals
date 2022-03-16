@@ -15,7 +15,9 @@ from rest_framework import viewsets
 
 from .services import services
 from .models import Case
+from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer
+from ..common.mixins import LoginRequiredMixin
 
 
 @login_required
@@ -25,7 +27,7 @@ def cases_list(request):
     return render(request, 'cases/list/index.html', {'cases': cases})
 
 
-class CaseDetailView(DetailView):
+class CaseDetailView(LoginRequiredMixin, DetailView):
     """Отображает страницу апелляционного дела."""
     model = Case
     template_name = 'cases/detail/index.html'
@@ -34,7 +36,7 @@ class CaseDetailView(DetailView):
         return services.case_get_list(user=self.request.user)
 
 
-class CaseCreateView(CreateView):
+class CaseCreateView(LoginRequiredMixin, CreateView):
     """Отображает страницу создания апелляционного дела."""
     model = Case
     template_name = 'cases/create/index.html'
@@ -46,8 +48,8 @@ class CaseCreateView(CreateView):
 def upload_sign(request, document_id: int):
     """Загружает на сервер информацию о цифровой подписи документа."""
     # Получение документа
-    document = services.document_get_by_id(document_id, request.user)
-    if document:
+    document = services.document_get_by_id(document_id)
+    if document and services.case_user_has_access(document.case_id, request.user):
         # Загрузка файла
         relative_path = Path(unquote(f"{document.file}_{request.user.pk}.p7s"))
         sign_destination = Path(settings.MEDIA_ROOT) / relative_path
@@ -75,9 +77,10 @@ def upload_sign(request, document_id: int):
 class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
     """Возвращает JSON с документами дела."""
     serializer_class = DocumentSerializer
+    permission_classes = (HasAccessToCase,)
 
     def get_queryset(self):
-        return services.case_get_documents_list(self.kwargs['id'], self.request.user)
+        return services.case_get_documents_list(self.kwargs['id'])
 
 
 @xframe_options_exempt

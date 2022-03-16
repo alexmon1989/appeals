@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Q
 
 from ..models import Case, Document, Sign
 from ..utils import set_cell_border
@@ -28,10 +28,38 @@ def case_get_list(user: UserModel = None) -> Iterable[Case]:
         'document_set__document_name',
         'document_set__sign_set',
     )
+
+    # Оставляет только ап. дела, к которым у пользователя есть доступ
+    if user and user.is_authenticated \
+            and not user.is_privileged \
+            and not user.belongs_to_group('Голова апеляційної палати'):
+        cases = cases.filter(case_get_user_has_access_filter(user))
+
     return cases
 
 
-def case_get_documents_list(case_id: int, user: UserModel = None) -> Iterable[Document]:
+def case_user_has_access(case_id: int, user: UserModel = None) -> bool:
+    """Проверяет, имеет ли доступ к апелляционному делу пользователь."""
+    return user.is_privileged \
+           or Case.objects.filter(
+                Q(
+                    pk=case_id
+                )
+                & case_get_user_has_access_filter(user)
+            ).exists()
+
+
+def case_get_user_has_access_filter(user: UserModel = None) -> Q:
+    """Возвращает запрос для фильтра, определяющего имеет ли пользователь доступ к ап. делу(ам)."""
+    return (
+                Q(collegiummembership__person=user)
+                | Q(expert=user)
+                | Q(secretary=user)
+                | Q(papers_owner=user)
+        )
+
+
+def case_get_documents_list(case_id: int) -> Iterable[Document]:
     """Возвращает документы дела."""
     queryset = Document.objects.filter(
         case_id=case_id
@@ -43,10 +71,11 @@ def case_get_documents_list(case_id: int, user: UserModel = None) -> Iterable[Do
     ).annotate(
         signs_count=Count('sign')
     ).order_by('-created_at')
+
     return queryset
 
 
-def document_get_by_id(doc_id: int, user: UserModel = None) -> Document:
+def document_get_by_id(doc_id: int) -> Document:
     """Возвращает документ по его идентификатору."""
     doc = Document.objects.filter(pk=doc_id)
     return doc.first()
