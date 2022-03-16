@@ -666,29 +666,33 @@ function() {
 				passwordTextField.value, null, false);
 		}
 
+		const readButton = document.getElementById('PKeyReadButton')
+		readButton.disabled = true;
+		readButton.textContent = 'Зачекайте...';
+
 		try {
-			if (document.getElementById('PKeyReadButton').title == 'Зчитати') {
+			if (readButton.title == 'Зчитати') {
 				setStatus('зчитування ключа');
 
 				var files = document.getElementById('PKeyFileInput').files;
 
 				if (files.length != 1) {
-					_onError("Виникла помилка при зчитуванні особистого ключа. " + 
+					_onError("Виникла помилка при зчитуванні особистого ключа. " +
 						"Опис помилки: файл з особистим ключем не обрано");
 					return;
 				}
 
 				if (passwordTextField.value == "") {
 					passwordTextField.focus();
-					_onError("Виникла помилка при зчитуванні особистого ключа. " + 
+					_onError("Виникла помилка при зчитуванні особистого ключа. " +
 						"Опис помилки: не вказано пароль доступу до особистого ключа");
 					return;
 				}
-				
-				if (euSignTest.loadPKCertsFromFile && 
+
+				if (euSignTest.loadPKCertsFromFile &&
 					(certificatesFiles == null ||
 					certificatesFiles.length <= 0)) {
-					_onError("Виникла помилка при зчитуванні особистого ключа. " + 
+					_onError("Виникла помилка при зчитуванні особистого ключа. " +
 						"Опис помилки: не обрано жодного сертифіката відкритого ключа");
 					return;
 				}
@@ -697,7 +701,6 @@ function() {
 					euSignTest.readPrivateKeyAsImage(files[0], _onSuccess, _onError);
 				}
 				else {
-                    console.log(files)
 					var _onFileRead = function(readedFile) {
 						_onSuccess(readedFile.file.name, readedFile.data);
 					};
@@ -714,6 +717,8 @@ function() {
 			}
 		} catch (e) {
 			_onError(e);
+		} finally {
+			readButton.disabled = false;
 		}
 	},
 	showOwnerInfo: function () {
