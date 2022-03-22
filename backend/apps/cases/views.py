@@ -16,15 +16,22 @@ from rest_framework import viewsets
 from .services import services
 from .models import Case
 from .permissions import HasAccessToCase
-from .serializers import DocumentSerializer
+from .serializers import DocumentSerializer, CaseSerializer
 from ..common.mixins import LoginRequiredMixin
 
 
 @login_required
 def cases_list(request):
     """Отображает страницу со списком апелляционных дел."""
-    cases = services.case_get_list(user=request.user)
-    return render(request, 'cases/list/index.html', {'cases': cases})
+    return render(request, 'cases/list/index.html')
+
+
+class CasesViewSet(viewsets.ReadOnlyModelViewSet):
+    """Возвращает JSON с документами дела."""
+    serializer_class = CaseSerializer
+
+    def get_queryset(self):
+        return services.case_get_list(user=self.request.user)
 
 
 class CaseDetailView(LoginRequiredMixin, DetailView):

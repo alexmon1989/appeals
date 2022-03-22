@@ -6,7 +6,7 @@
 
 -->
 <table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
-       id="table-appeals"
+       id="table-documents"
        data-lng-empty="No data available in table"
        data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
        data-lng-filtered="(filtered from _MAX_ total entries)"
@@ -34,36 +34,28 @@
        data-lng-column-visibility="Видимість стовбчиків"
 
        data-enable-export="false"
-       data-custom-config='{"stateSave": true, "stateDuration": -1}'>
+
+       data-custom-config='{
+        "stateSave": true,
+        "server-side": true,
+        "processing": true,
+        "serverSide": true,
+        "ajax": "/api/cases/?format=datatables",
+        "order": []
+       }'>
     <thead>
     <tr>
-        <th>№</th>
-        <th>№ заявки</th>
-        <th>Вид об'єкта</th>
-        <th>Вид заяви</th>
-        <th>Назва об'єкта</th>
-        <th>Апелянт</th>
-        <th>Дата подання</th>
-        <th>Дата, до якої необхідно розглянути</th>
-        <th>Дата засідання</th>
+        <th data-data="case_number_link" data-name="case_number">№</th>
+        <th data-data="app_number">№ заявки</th>
+        <th data-data="obj_kind_title" data-name="obj_kind.title">Вид об'єкта</th>
+        <th data-data="claim_kind_title" data-name="claim_kind.title">Вид заяви</th>
+        <th data-data="obj_title" >Назва об'єкта</th>
+        <th data-data="applicant_name">Апелянт</th>
+        <th data-data="claim_date">Дата подання</th>
+        <th data-data="deadline">Дата, до якої необхідно розглянути</th>
+        <th data-data="hearing">Дата засідання</th>
     </tr>
     </thead>
-    <tbody>
-
-    {% for case in cases %}
-        <tr>
-            <td><a href="{% url 'cases-detail' pk=case.pk %}">{{ case.case_number }}</a></td>
-            <td>{{ case.app_number }}</td>
-            <td>{{ case.obj_kind.title }}</td>
-            <td>{{ case.claim_kind.title }}</td>
-            <td>{{ case.obj_title|default_if_none:"" }}</td>
-            <td>{{ case.applicant_name|default_if_none:"" }}</td>
-            <td data-order="{{ case.claim_date|date:"U" }}">{{ case.claim_date|date:"SHORT_DATE_FORMAT" }}</td>
-            <td data-order="{{ case.deadline|date:"U" }}">{{ case.deadline|date:"SHORT_DATE_FORMAT" }}</td>
-            <td data-order="{{ case.hearing|date:"U" }}">{{ case.hearing|date:"SHORT_DATE_FORMAT" }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
 
     <tfoot>
     <tr>
