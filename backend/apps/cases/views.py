@@ -49,7 +49,7 @@ def upload_sign(request, document_id: int):
     """Загружает на сервер информацию о цифровой подписи документа."""
     # Получение документа
     document = services.document_get_by_id(document_id)
-    if document and services.document_can_be_signed_by_user(document_id, request.user):
+    if document and services.document_can_be_signed_by_user(document, request.user):
         # Загрузка файла
         relative_path = Path(unquote(f"{document.file}_{request.user.pk}.p7s"))
         sign_destination = Path(settings.MEDIA_ROOT) / relative_path

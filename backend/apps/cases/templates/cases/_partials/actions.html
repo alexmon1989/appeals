@@ -1,3 +1,5 @@
+{% load cases_extras %}
+
 <div class="d-flex align-items-center">
     <div class="px-1">
         <a href="{% if document.signs_count %}{{ document.signed_file }}{% else %}{{ document.file.url }}{% endif %}"
@@ -20,7 +22,8 @@
             </svg>
         </a>
     </div>
-    {% if document.document_type.title == 'Вихідний' %}
+    {% user_can_sign_document document=document user=request.user as user_can_sign_document_result %}
+    {% if user_can_sign_document_result %}
         <div class="px-1">
             <a href="#"
                data-bs-toggle="modal"

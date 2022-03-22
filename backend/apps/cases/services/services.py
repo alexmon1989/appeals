@@ -134,12 +134,11 @@ def document_get_signs_info(doc_id: int) -> List[dict]:
     return res
 
 
-def document_can_be_signed_by_user(doc_id: int, user: UserModel) -> bool:
+def document_can_be_signed_by_user(document: Document, user: UserModel) -> bool:
     """Проверяет, может ли пользователь подписывать документ."""
-    document = document_get_by_id(doc_id)
-    if document and document.document_type.title == 'Вихідний':
-        return case_user_has_access(document.case_id, user)
-    return False
+    if Sign.objects.filter(document=document, user=user).exists():
+        return False
+    return document.document_type.title == 'Вихідний' and case_user_has_access(document.case_id, user)
 
 
 def sign_upload(file, dest: Path) -> bool:
