@@ -24368,7 +24368,6 @@ return /******/ (function(modules) { // webpackBootstrap
         paths['path_js'] = paths['path_js'].replace('datatables.min', 'pdfmake.min');
         $.SOW.helper.loadScript([paths['path_js']], false, true).done(function() {
 
-
           DTable[ID] = _this.DataTable(__dtOptions);
 
           /**

@@ -542,10 +542,10 @@ function SetClassID(className, classVersion, classPtr) {
 	classPtr['ClassVersion'] = classVersion;
 	classPtr['ClassName'] = className;
 }
-
-String.prototype.capitalize = function() {
-	return this.charAt(0).toUpperCase() + this.slice(1);
-};
+//
+// String.prototype.capitalize = function() {
+// 	return this.charAt(0).toUpperCase() + this.slice(1);
+// };
 
 function intArrayFromStrings(strArr) {
 	if (strArr.length == 0)
@@ -605,7 +605,8 @@ function IsStructureFilled(classPtr, structPtr, variables) {
 
 function ClassInitializeMethods(classConstructor, variables, hasSetters) {
 	for (var key in variables) {
-		var funcName = key.capitalize();
+		// var funcName = key.capitalize();
+		var funcName = key.charAt(0).toUpperCase() + key.slice(1);
 
 		var getName = (variables[key] != 'boolean') ? 
 			('Get' + funcName) : funcName; 

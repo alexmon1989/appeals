@@ -16953,7 +16953,6 @@ if ( window.NodeList && !NodeList.prototype.forEach ) {
           },
 
           error:  function(XMLHttpRequest, textStatus, errorThrown) {
-
             if(typeof $.SOW.core.toast === 'object') {
                 $.SOW.core.toast.show('danger', '404 Error', 'Unexpected Internal error!', 'bottom-center', 0, true);
             } else {
@@ -17492,7 +17491,7 @@ if ( window.NodeList && !NodeList.prototype.forEach ) {
                 ajxModal.querySelector('.modal-content').innerHTML = _loader; // reset & show loading spinner
 
             var myModal = new bootstrap.Modal(ajxModal, {
-              backdrop: _backdrop, 
+              backdrop: _backdrop,
               keyboard:_keyboard
             }); myModal.show();
             // -- -- --
@@ -17501,7 +17500,6 @@ if ( window.NodeList && !NodeList.prototype.forEach ) {
           },
 
           error:  function(XMLHttpRequest, textStatus, errorThrown) {
-
             if(typeof $.SOW.core.toast === 'object') {
               $.SOW.core.toast.show('danger', '404 Error', 'Unexpected Internal error!', 'bottom-center', 0, true);
             } else {

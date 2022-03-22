@@ -982,6 +982,7 @@ function() {
 				onError(pThis.MakeError(EU_ERROR_JS_READ_FILE));
 			};
 
+
 			var fileReader = new FileReader();
 			fileReader.onloadend = _onSuccess;
 			fileReader.onerror = _onError;

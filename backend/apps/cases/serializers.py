@@ -58,7 +58,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         return render_to_string(
             'cases/_partials/document_signs_info.html',
             {
-                'signs_count': document.sign_set.count()
+                'document': document
             }
         )
 

@@ -49,7 +49,7 @@ def upload_sign(request, document_id: int):
     """Загружает на сервер информацию о цифровой подписи документа."""
     # Получение документа
     document = services.document_get_by_id(document_id)
-    if document and services.case_user_has_access(document.case_id, request.user):
+    if document and services.document_can_be_signed_by_user(document_id, request.user):
         # Загрузка файла
         relative_path = Path(unquote(f"{document.file}_{request.user.pk}.p7s"))
         sign_destination = Path(settings.MEDIA_ROOT) / relative_path
@@ -81,6 +81,12 @@ class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return services.case_get_documents_list(self.kwargs['id'])
+
+
+def document_signs_info(request, document_id: int):
+    """Отображает информацию о цифровых подписях документа."""
+    document = services.document_get_by_id(document_id)
+    return render(request, 'cases/detail/document_signs_info.html', {'document': document})
 
 
 @xframe_options_exempt

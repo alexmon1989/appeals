@@ -1,8 +1,11 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+
 from backend.core.models import TimeStampModel
 from ..classifiers.models import ObjKind, ClaimKind, DocumentName, DocumentType
 from .utils import sign_get_file_path, document_get_original_file_path
+
+from pathlib import Path
 
 
 UserModel = get_user_model()
@@ -85,6 +88,12 @@ class Document(TimeStampModel):
         verbose_name='Оригінальний файл документа',
         upload_to=document_get_original_file_path
     )
+
+    @property
+    def signed_file(self):
+        """Возвращает путь к файлу с информацией о цифровых подписях."""
+        path = Path(self.file.url)
+        return str(path).replace(path.stem, f"{path.stem}_signs")
 
     def __str__(self):
         if self.case.case_number:

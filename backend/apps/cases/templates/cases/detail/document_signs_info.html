@@ -1,0 +1,21 @@
+<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+        <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title m-0">Список підписантів</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-0 m-3 m-2-xs">
+            <ol>
+                {% for sign in document.sign_set.all %}
+                    <li>
+                        <strong>{{ sign.subject }}</strong><br>
+                        {{ sign.serial_number }}<br>
+                        {{ sign.issuer }}<br>
+                        {{ sign.timestamp }}<br>
+                    </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+</div>
