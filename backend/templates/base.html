@@ -1,8 +1,10 @@
 {% load static %}
+{% load django_vite %}
 
 <!doctype html>
 <html lang="uk" xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    {% vite_hmr_client %}
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %} | Апеляційні справи</title>
     <meta name="description" content="">
@@ -48,22 +50,25 @@
     ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++ ++
 
   -->
-  <body class="layout-admin aside-sticky bg-lime header-sticky"
+  <body
+        class="layout-admin aside-sticky bg-lime header-sticky"
         data-s2t-class="btn-primary btn-sm bg-gradient-default rounded-circle border-0">
 
-    {% block body %}{% endblock %}
+    <div id="app">
+        {% block body %}{% endblock %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="hide toast-on-load"
-                 data-toast-type="{{ message.tags }}-soft"
-                 data-toast-title=""
-                 data-toast-body="{{ message }}"
-                 data-toast-pos="top-end"
-                 data-toast-delay="0"
-                 data-toast-fill="true"></div>
-        {% endfor %}
-    {% endif %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="hide toast-on-load"
+                     data-toast-type="{{ message.tags }}-soft"
+                     data-toast-title=""
+                     data-toast-body="{{ message }}"
+                     data-toast-pos="top-end"
+                     data-toast-delay="0"
+                     data-toast-fill="true"></div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
     <!-- Core javascripts -->
     <script src="{% static 'js/core.js' %}"></script>
@@ -74,6 +79,8 @@
 
     <!-- Your custom javascripts -->
     <script src="{% static 'js/custom.js' %}"></script>
+
+    {% vite_asset 'app/main.js' %}
 
   </body>
 </html>
