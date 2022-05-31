@@ -1,9 +1,9 @@
 import { createApp } from 'vue'
-import Hello from './components/Hello.vue'
+import ApplicantFillingForm from './components/ApplicantFillingForm/ApplicantFillingForm.vue'
 
 const app = createApp({
     components: {
-        Hello,
+        ApplicantFillingForm,
     }
 })
 

@@ -34,6 +34,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url='cases/', permanent=True)),
     url('^api/', include(router.urls)),
     path('cases/', include('apps.cases.urls')),
+    path('filling/', include('apps.filling.urls')),
 
     path('users/', include('apps.users.urls')),
     path('users/', include('django.contrib.auth.urls')),

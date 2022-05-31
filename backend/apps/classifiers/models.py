@@ -5,6 +5,7 @@ from backend.core.models import TimeStampModel
 class ObjKind(TimeStampModel):
     """Модель вида объекта ИС."""
     title = models.CharField("Назва", max_length=255)
+    sis_id = models.PositiveSmallIntegerField("Id типу об'єкта у СІС", null=True, blank=False)
 
     def __str__(self):
         return self.title
@@ -18,6 +19,13 @@ class ObjKind(TimeStampModel):
 class ClaimKind(TimeStampModel):
     """Модель вида заявления/возражения."""
     title = models.CharField("Назва", max_length=255)
+    obj_kind = models.ForeignKey(
+        ObjKind,
+        on_delete=models.SET_NULL,
+        verbose_name="Вид об'єкта промислової власності",
+        null=True,
+    )
+    third_person = models.BooleanField("3-тя особа", default=False)
 
     def __str__(self):
         return self.title

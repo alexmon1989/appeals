@@ -1,0 +1,17 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Створення заявки{% endblock %}
+
+{% block main %}
+    {% include 'filling/create_application/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+        <applicant-filling-form :obj-kinds="{{ obj_kinds }}"
+                                :claim-kinds="{{ claim_kinds }}"
+                                :claim-fields="{{ claim_fields }}"
+        ></applicant-filling-form>
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

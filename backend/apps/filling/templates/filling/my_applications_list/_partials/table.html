@@ -1,0 +1,73 @@
+<!--
+
+	data-autofill="false|hover|click"
+	data-enable-paging="true"			 false = show all, no pagination
+	data-items-per-page="10|15|30|50|100"
+
+-->
+<table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
+       id="table-documents"
+       data-lng-empty="No data available in table"
+       data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
+       data-lng-filtered="(filtered from _MAX_ total entries)"
+       data-lng-loading="Loading..."
+       data-lng-processing="Processing..."
+       data-lng-search="Пошук..."
+       data-lng-norecords="Результати відсутні"
+       data-lng-sort-ascending=": activate to sort column ascending"
+       data-lng-sort-descending=": activate to sort column descending"
+
+       data-main-search="true"
+       data-column-search="false"
+       data-row-reorder="false"
+       data-col-reorder="true"
+       data-responsive="true"
+       data-header-fixed="true"
+       data-select-onclick="false"
+       data-enable-paging="true"
+       data-enable-col-sorting="true"
+       data-autofill="false"
+       data-group="false"
+       data-items-per-page="15"
+
+       data-enable-column-visibility="true"
+       data-lng-column-visibility="Видимість стовбчиків"
+
+       data-enable-export="false"
+
+       data-custom-config='{
+        "stateSave": true,
+        "server-side": true,
+        "processing": true,
+        "serverSide": true,
+        "ajax": "/api/cases/?format=datatables",
+        "order": []
+       }'>
+    <thead>
+    <tr>
+        <th data-data="case_number_link" data-name="case_number">№</th>
+        <th data-data="app_number">№ заявки</th>
+        <th data-data="obj_kind_title" data-name="obj_kind.title">Вид об'єкта</th>
+        <th data-data="claim_kind_title" data-name="claim_kind.title">Вид заяви</th>
+        <th data-data="obj_title" >Назва об'єкта</th>
+        <th data-data="applicant_name">Апелянт</th>
+        <th data-data="claim_date">Дата подання</th>
+        <th data-data="deadline">Дата, до якої необхідно розглянути</th>
+        <th data-data="hearing">Дата засідання</th>
+    </tr>
+    </thead>
+
+    <tfoot>
+    <tr>
+        <th>№ справи</th>
+        <th>№ заявки</th>
+        <th>Вид об'єкта</th>
+        <th>Вид заяви</th>
+        <th>Назва об'єкта</th>
+        <th>Апелянт</th>
+        <th>Дата подання</th>
+        <th>Дата, до якої необхідно розглянути</th>
+        <th>Дата засідання</th>
+    </tr>
+    </tfoot>
+</table>
