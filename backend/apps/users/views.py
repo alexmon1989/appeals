@@ -1,10 +1,15 @@
 from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, PasswordResetConfirmView
 from django.contrib import messages
+from django.contrib.auth import login, authenticate
 from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import resolve_url
+from django.shortcuts import resolve_url, render
 from django.conf import settings
+from django.http import JsonResponse
+import random
+import string
 
-from .forms import CustomAuthenticationForm, CustomPasswordResetForm, CustomSetPasswordForm
+from .forms import CustomAuthenticationForm, CustomPasswordResetForm, CustomSetPasswordForm, AuthFormDSFile
+from .services import get_certificate
 
 
 class CustomLoginView(SuccessMessageMixin, LoginView):
@@ -21,6 +26,40 @@ class CustomLoginView(SuccessMessageMixin, LoginView):
             return resolve_url('my-applications-list')
 
         return resolve_url(settings.LOGIN_REDIRECT_URL)
+
+
+def login_view_ds_file(request):
+    """Страница логина пользователей с помощью файловой ЭЦП."""
+    if request.method == 'POST':
+        # Проверка валидности ЭЦП
+        cert = get_certificate(request.POST, request.session['secret'])
+
+        if cert:
+            user = authenticate(certificate=cert)
+            if user is not None:
+                login(request, user)
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    'Авторизація успішна.'
+                )
+                return JsonResponse({
+                    'is_logged': 1
+                })
+        return JsonResponse({
+            'is_logged': 0
+        })
+
+    request.session['secret'] = ''.join(
+        random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(32)
+    )
+    return render(
+        request,
+        'users/login_ds_file/index.html',
+        {
+            'form': AuthFormDSFile(),
+        }
+    )
 
 
 class CustomLogoutView(LogoutView):

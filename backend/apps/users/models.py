@@ -1,7 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.utils.translation import ugettext_lazy as _
 from .managers import UserManager
+from backend.core.models import TimeStampModel
+import random
+import string
 
 
 class User(AbstractUser):
@@ -34,3 +37,49 @@ class User(AbstractUser):
     def is_privileged(self) -> bool:
         """Привилегированный пользователь."""
         return self.is_superuser and self.belongs_to_group('Голова апеляційної палати')
+
+
+class CertificateOwner(TimeStampModel):
+    """Модель данных владельца сертификата ЭЦП."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Користувач')
+    pszIssuer = models.CharField('Ім’я ЦСК, що видав сертифікат', max_length=255, blank=True, null=True)
+    pszIssuerCN = models.CharField('Реквізити ЦСК, що видав сертифікат', max_length=255, blank=True, null=True)
+    pszSerial = models.CharField('Реєстраційний номер сертифіката', max_length=255, blank=True, null=True)
+    pszSubject = models.CharField('Ім’я власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjCN = models.CharField('Реквізити власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjOrg = models.CharField('Організація до якої належить власник сертифіката', max_length=255, blank=True,
+                                  null=True)
+    pszSubjOrgUnit = models.CharField('Підрозділ організації до якої належить власник сертифіката', max_length=255,
+                                      blank=True, null=True)
+    pszSubjTitle = models.CharField('Посада власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjState = models.CharField('Назва області до якої належить власник сертифіката', max_length=255, blank=True,
+                                    null=True)
+    pszSubjFullName = models.CharField('Повне ім’я власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjAddress = models.CharField('Адреса власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjPhone = models.CharField('Номер телефону власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjEMail = models.CharField('Адреса електронної пошти власника сертифіката', max_length=255, blank=True,
+                                    null=True)
+    pszSubjDNS = models.CharField('DNS-ім`я чи інше технічного засобу', max_length=255, blank=True, null=True)
+    pszSubjEDRPOUCode = models.CharField('Код ЄДРПОУ власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjDRFOCode = models.CharField('Код ДРФО власника сертифіката', max_length=255, blank=True, null=True)
+    pszSubjLocality = models.CharField('Locality власника сертифіката', max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.pszSerial
+
+    def save(self, *args, **kwargs):
+        """Переопределение метода сохранения модели."""
+        super().save(*args, **kwargs)
+        # Создание нового пользователя
+        if not self.user:
+            user, created = User.objects.get_or_create(email=self.pszSubjEMail)
+            self.user = user
+            self.save()
+
+            # Добавление его в группу заявителей
+            group = Group.objects.get(name='Заявник')
+            user.groups.add(group)
+
+    class Meta:
+        verbose_name = 'Сертифікат'
+        verbose_name_plural = 'Сертифікати'

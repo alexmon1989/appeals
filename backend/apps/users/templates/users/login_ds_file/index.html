@@ -1,0 +1,113 @@
+{% extends 'registration/base.html' %}
+
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Авторизація{% endblock %}
+
+{% block content %}
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">АС "Апеляційні справи"</h1>
+
+        <p class="lead m-0">
+            Для початку роботи авторизуйтесь за допомогою КЕП
+        </p>
+    </div>
+
+    <div class="col-md-9 col-lg-6 mx-auto mb-5">
+        {% csrf_token %}
+
+        <div class="alert alert-danger"
+             role="alert"
+             id="DSLoginErrors"
+             style="display: none">
+            <p class="m-0" id="DSLoginErrorsText"></p>
+        </div>
+
+        <div id="status" style="display: none"></div>
+
+        <form class="p-4 p-md-5 card rounded-xl" onSubmit="return false">
+
+            <div class="overlay" id="overlay" style="display: none">
+                <div class="overlay-content"><img src="{% static 'images/preloaders/loading.svg' %}" alt="Loading..."/>
+                </div>
+            </div>
+
+            <input type="hidden" id="secret" value="{{ request.session.secret }}">
+
+            <div class="mb-3">
+                <label for="CAsServersSelect"
+                       class="form-label">Оберіть ЦСК</label>
+                <select class="form-select" id="CAsServersSelect"></select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Особистий ключ</label>
+
+                <div class="input-group">
+                    <input type="text"
+                           class="form-control"
+                           id="PKeyFileName"
+                           onclick="document.getElementById('PKeyFileInput').click();"
+                           placeholder="Особистий ключ">
+                    <button class="btn btn-secondary"
+                            type="button"
+                            onclick="document.getElementById('PKeyFileInput').click();"
+                            id="PKeySelectFileButton">Огляд
+                    </button>
+                    <input id="PKeyFileInput" type="file" style="display: none">
+                </div>
+                <small id="ChoosePKFileText" class="form-text text-muted"></small>
+            </div>
+
+            <div class="mb-3" id="PKCertsSelectZone" style="display: none">
+                <label class="form-label">Сертифікат(и)</label>
+
+                <div class="input-group">
+                    <input type="text"
+                           id="SelectedPKCertsList"
+                           onclick="document.getElementById('ChoosePKCertsInput').click();"
+                           class="form-control"
+                           placeholder="Сертифікат(и)">
+                    <div class="input-group-append">
+                        <a class="btn btn-secondary"
+                           id="ChoosePKCertsButton"
+                           onclick="document.getElementById('ChoosePKCertsInput').click();">Огляд</a>
+                        <input id="ChoosePKCertsInput" type="file" style="display: none" multiple>
+                    </div>
+                </div>
+                <small class="form-text text-muted">Оберіть файл(и) з сертифікатом(ами) (зазвичай, з розширенням cer, crt)</small>
+            </div>
+
+            <div class="mb-4">
+                <label for="PKeyPassword"
+                       class="form-label">Пароль захисту ключа</label>
+                <input type="password"
+                       class="form-control"
+                       id="PKeyPassword"
+                       disabled="disabled"
+                       placeholder="Пароль захисту ключа">
+            </div>
+
+            <button class="btn btn-primary"
+                    type="submit"
+                    onclick="euSignTest.readPrivateKeyButtonClick()"
+                    title="Вхід"
+                    id="PKeyReadButton">Вхід
+            </button>
+        </form>
+    </div>
+{% endblock %}
+
+
+{% block extra_scripts %}
+    <script type="text/JavaScript" src="{% static 'digital_sign/euutils.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/euscpt.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/euscpm.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/euscp.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/ds_file_login.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/qr/qrcodedecode.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/qr/reedsolomon.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/fs/Blob.min.js' %}"></script>
+    <script type="text/JavaScript" src="{% static 'digital_sign/fs/FileSaver.js' %}"></script>
+{% endblock %}

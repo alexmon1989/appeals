@@ -1,7 +1,7 @@
 //=============================================================================
 
 var URL_EMAIL_PARAM = "@EMAIL_PARAM";
-var URL_GET_KEP_CERTIFICATE_BY_EMAIL = "http://ca.iit.com.ua/services-cmp-getcert?eUserEMail=" +
+var URL_GET_KEP_CERTIFICATE_BY_EMAIL = "http://ca.iit.com.ua/services-cmp-getcert?eUserEMail=" + 
 		URL_EMAIL_PARAM + "&certType=2&respType=2";
 
 var URL_GET_CERTIFICATES = "/static/digital_sign/CACertificates.p7b?version=1.0.19";
@@ -24,8 +24,7 @@ var SubjectCertTypes = [
 var CertKeyTypes = [
 	EU_CERT_KEY_TYPE_UNKNOWN,
 	EU_CERT_KEY_TYPE_DSTU4145,
-	EU_CERT_KEY_TYPE_RSA,
-	EU_CERT_KEY_TYPE_ECDSA
+	EU_CERT_KEY_TYPE_RSA
 ];
 
 var KeyUsages = [
@@ -38,8 +37,7 @@ var CAdESTypes = [
 	EU_SIGN_TYPE_CADES_BES,
 	EU_SIGN_TYPE_CADES_T,
 	EU_SIGN_TYPE_CADES_C,
-	EU_SIGN_TYPE_CADES_X_LONG,
-	EU_SIGN_TYPE_CADES_X_LONG | EU_SIGN_TYPE_CADES_X_LONG_TRUSTED
+	EU_SIGN_TYPE_CADES_X_LONG
 ];
 
 //=============================================================================
@@ -57,7 +55,7 @@ var EUSignCPTest = NewClass({
 	"PrivateKeyPasswordSessionStorageName": "PrivateKeyPassword",
 	"PrivateKeyCertificatesSessionStorageName": "PrivateKeyCertificates",
 	"PrivateKeyCertificatesChainSessionStorageName": "PrivateKeyCertificatesChain",
-	"CACertificatesSessionStorageName" : "CACertificates",
+	"CACertificatesSessionStorageName" : null,
 	"CAServerIndexSessionStorageName": "CAServerIndex",
 	"CAsServers": null,
 	"CAServer": null,
@@ -78,28 +76,30 @@ function() {
 				euSign.SetJavaStringCompliant(true);
 				euSign.SetCharset("UTF-16LE");
 
-				euSign.SetRuntimeParameter(
-					EU_MAKE_PKEY_PFX_CONTAINER_PARAMETER, true);
-
 				if (euSign.DoesNeedSetSettings()) {
 					euSignTest.setDefaultSettings();
-
-					if (utils.IsStorageSupported()) {
-						euSignTest.loadCertsAndCRLsFromLocalStorage();
-					}
 				}
 
 				euSignTest.loadCertsFromServer();
 				euSignTest.setCASettings(0);
 
-				if (utils.IsSessionStorageSupported()) {
-					var _readPrivateKeyAsStoredFile = function() {
-						euSignTest.readPrivateKeyAsStoredFile();
-					}
-					setTimeout(_readPrivateKeyAsStoredFile, 10);
-				}
+				// setPointerEvents(
+				// 	document.getElementById('PGenKeyButton'), true);
+				// setPointerEvents(
+				// 	document.getElementById('VerifyDataButton'), true);
 
-				setStatus('ініціалізовано');
+				euSignTest.setSelectPKCertificatesEvents();
+
+				// if (utils.IsSessionStorageSupported()) {
+				// 	var _readPrivateKeyAsStoredFile = function() {
+				// 		euSignTest.readPrivateKeyAsStoredFile();
+				// 	}
+				// 	setTimeout(_readPrivateKeyAsStoredFile, 10);
+				// }
+
+				//euSignTest.updateCertList();
+				
+				setStatus('');
 			} catch (e) {
 				setStatus('не ініціалізовано');
 				alert(e);
@@ -108,8 +108,9 @@ function() {
 
 		var _onError = function() {
 			setStatus('Не ініціалізовано');
-			alert('Виникла помилка ' +
+			alert('Виникла помилка ' + 
 				'при завантаженні криптографічної бібліотеки');
+
 		};
 
 		euSignTest.loadCAsSettings(_onSuccess, _onError);
@@ -149,27 +150,62 @@ function() {
 	loadCertsAndCRLsFromLocalStorage: function() {
 		try {
 			var files = euSignTest.loadFilesFromLocalStorage(
-				euSignTest.CertsLocalStorageName,
+				euSignTest.CertsLocalStorageName, 
 				function(fileName, fileData) {
 						if (fileName.indexOf(".cer") >= 0)
 							euSign.SaveCertificate(fileData);
 						else if (fileName.indexOf(".p7b") >= 0)
 							euSign.SaveCertificates(fileData);
 					});
+			if (files != null && files.length > 0)
+				euSignTest.setItemsToList('SelectedCertsList', files);
+			else {
+				document.getElementById('SelectedCertsList').innerHTML = 
+					"Сертифікати відсутні в локальному сховищі";
+			}
 		} catch (e) {
-            console.log("Виникла помилка при завантаженні сертифікатів з локального сховища");
+			document.getElementById('SelectedCertsList').innerHTML = 
+				"Виникла помилка при завантаженні сертифікатів " + 
+				"з локального сховища";
+		}
+		
+		try {
+			var files = euSignTest.loadFilesFromLocalStorage(
+				euSignTest.CRLsLocalStorageName, 
+				function(fileName, fileData) {
+						if (fileName.indexOf(".crl") >= 0) {
+							try {
+								euSign.SaveCRL(true, fileData);
+							} catch (e) {
+								euSign.SaveCRL(false, fileData);
+							}
+						}
+					});
+			if (files != null && files.length > 0)
+				euSignTest.setItemsToList('SelectedCRLsList', files);
+			else {
+				document.getElementById('SelectedCRLsList').innerHTML = 
+					"СВС відсутні в локальному сховищі";
+			}
+		} catch (e) {
+			document.getElementById('SelectedCRLsList').innerHTML = 
+				"Виникла помилка при завантаженні СВС з локального сховища";
 		}
 	},
 	loadCertsFromServer: function() {
-		var certificates = utils.GetSessionStorageItem(
-			euSignTest.CACertificatesSessionStorageName, true, false);
+        var certificates = null;
+        if (euSignTest.CACertificatesSessionStorageName != null) {
+            var certificates = utils.GetSessionStorageItem(
+                euSignTest.CACertificatesSessionStorageName, true, false);
+        }
 		if (certificates != null) {
 			try {
 				euSign.SaveCertificates(certificates);
+				//euSignTest.updateCertList();
 				return;
 			} catch (e) {
-				alert("Виникла помилка при імпорті " +
-					"завантажених з сервера сертифікатів " +
+				alert("Виникла помилка при імпорті " + 
+					"завантажених з сервера сертифікатів " + 
 					"до файлового сховища");
 			}
 		}
@@ -180,16 +216,20 @@ function() {
 				utils.SetSessionStorageItem(
 					euSignTest.CACertificatesSessionStorageName,
 					certificates, false);
+				//euSignTest.updateCertList();
 			} catch (e) {
-				alert("Виникла помилка при імпорті " +
-					"завантажених з сервера сертифікатів " +
+				alert("Виникла помилка при імпорті " + 
+					"завантажених з сервера сертифікатів " + 
 					"до файлового сховища");
 			}
 		};
 
 		var _onFail = function(errorCode) {
-			console.log("Виникла помилка при завантаженні сертифікатів з сервера. " +
-				"(HTTP статус " + errorCode + ")");
+			var e = "Виникла помилка при завантаженні сертифікатів з сервера. " +
+				"(HTTP статус " + errorCode + ")";
+			console.log(e);
+			document.getElementById('DSLoginErrorsText').innerHTML = e;
+			document.getElementById('DSLoginErrors').style.display = '';
 		};
 
 		utils.GetDataFromServerAsync(URL_GET_CERTIFICATES, _onSuccess, _onFail, true);
@@ -205,7 +245,7 @@ function() {
 
 			settings = euSign.CreateProxySettings();
 			euSign.SetProxySettings(settings);
-
+			
 			settings = euSign.CreateTSPSettings();
 			euSign.SetTSPSettings(settings);
 
@@ -217,7 +257,7 @@ function() {
 
 			settings = euSign.CreateLDAPSettings();
 			euSign.SetLDAPSettings(settings);
-
+			
 			settings = euSign.CreateOCSPAccessInfoModeSettings();
 			settings.SetEnabled(true);
 			euSign.SetOCSPAccessInfoModeSettings(settings);
@@ -239,13 +279,13 @@ function() {
 	},
 	setCASettings: function(caIndex) {
 		try {
-			var caServer = (caIndex < this.CAsServers.length) ?
+			var caServer = (caIndex < this.CAsServers.length) ? 
 				this.CAsServers[caIndex] : null;
-			var offline = ((caServer == null) ||
+			var offline = ((caServer == null) || 
 				(caServer.address == "")) ?
 				true : false;
 			var useCMP = (!offline && (caServer.cmpAddress != ""));
-			var loadPKCertsFromFile = (caServer == null) ||
+			var loadPKCertsFromFile = (caServer == null) || 
 				(!useCMP && !caServer.certsInKey);
 
 			euSignTest.CAServer = caServer;
@@ -253,8 +293,19 @@ function() {
 			euSignTest.useCMP = useCMP;
 			euSignTest.loadPKCertsFromFile = loadPKCertsFromFile;
 
+			document.getElementById('ChoosePKFileText').innerHTML = 
+				"Оберіть файл з особистим ключем та вкажіть пароль захисту";
+			if (loadPKCertsFromFile) {
+				document.getElementById('ChoosePKFileText').innerHTML +=
+					", а також оберіть сертифікат(и)";
+			}
+
 			var settings;
 
+			document.getElementById('PKCertsSelectZone').hidden =
+				loadPKCertsFromFile ? '' : 'hidden';
+			euSignTest.clearPrivateKeyCertificatesList();
+			
 			settings = euSign.CreateTSPSettings();
 			if (!offline) {
 				settings.SetGetStamps(true);
@@ -267,15 +318,16 @@ function() {
 				}
 			}
 			euSign.SetTSPSettings(settings);
-
+			
 			settings = euSign.CreateOCSPSettings();
 			if (!offline) {
 				settings.SetUseOCSP(true);
 				settings.SetBeforeStore(true);
 				settings.SetAddress(caServer.ocspAccessPointAddress);
-				settings.SetPort("80");
+				settings.SetPort(caServer.ocspAccessPointPort);
 			}
 			euSign.SetOCSPSettings(settings);
+
 
 			settings = euSign.CreateCMPSettings();
 			settings.SetUseCMP(useCMP);
@@ -287,6 +339,8 @@ function() {
 
 			settings = euSign.CreateLDAPSettings();
 			euSign.SetLDAPSettings(settings);
+			
+			console.log(settings);
 		} catch (e) {
 			alert("Виникла помилка при встановленні налашувань: " + e);
 		}
@@ -314,7 +368,7 @@ function() {
 			fileReader.onloadend  = (function(fileName) {
 				return function(evt) {
 					if (evt.target.readyState == FileReader.DONE) {
-						euSignTest.saveFileToModuleFileStorage(fileName,
+						euSignTest.saveFileToModuleFileStorage(fileName, 
 							evt.target.result);
 					}
 				};
@@ -322,18 +376,18 @@ function() {
 
 			fileReader.readAsArrayBuffer(file);
 		}
-
+		
 		if (certsFiles.length > 0) {
 			euSignTest.setFileItemsToList('SelectedCertsList', certsFiles);
 		} else {
-			document.getElementById('SelectedCertsList').innerHTML =
+			document.getElementById('SelectedCertsList').innerHTML = 
 				"Не обрано жодного сертифіката";
 		}
 
 		if (crlsFiles.length > 0) {
 			euSignTest.setFileItemsToList('SelectedCRLsList', crlsFiles);
 		} else {
-			document.getElementById('SelectedCRLsList').innerHTML =
+			document.getElementById('SelectedCRLsList').innerHTML = 
 				"Не обрано жодного СВС";
 		}
 	},
@@ -356,23 +410,23 @@ function() {
 					certKeyType, keyUsage, index);
 				if (cert == null)
 					break;
-
+				
 				certs.push(cert);
 				index++;
 			};
-
+			
 			if (certs.length == 0) {
-				document.getElementById('StorageCertList').innerHTML =
+				document.getElementById('StorageCertList').innerHTML = 
 					"Сертифікати відсутні";
 				return;
 			}
-
+			
 			var _makeCertField = function(name, value, addNewLine) {
-				return name + ': ' +
-					value  +
+				return name + ': ' + 
+					value  + 
 					(addNewLine ? '<br>' : '');
 			}
-
+			
 			var certInfos = [];
 
 			for (var i = 0; i < certs.length; i++) {
@@ -386,27 +440,24 @@ function() {
 					case EU_CERT_KEY_TYPE_RSA:
 						publicKeyType += 'RSA';
 						break;
-					case EU_CERT_KEY_TYPE_ECDSA:
-						publicKeyType += 'ECDSA';
-						break;
 					default:
 						publicKeyType = 'Невизначено';
 						break;
 				}
-
+				
 				certInfoStr += _makeCertField('Власник', certInfo.GetSubjCN(), true);
 				certInfoStr += _makeCertField('ЦСК', certInfo.GetIssuerCN(), true);
 				certInfoStr += _makeCertField('Серійний номер', certInfo.GetSerial(), true);
 				certInfoStr += _makeCertField('Тип', publicKeyType, true);
 				certInfoStr += _makeCertField('Призначення', certInfo.GetKeyUsage(), false);
-
+				
 				certInfos.push(certInfoStr);
 			}
-
+			
 			euSignTest.setItemsToList(
 				'StorageCertList', certInfos);
 		} catch (e) {
-			alert("Виникла помилка при " +
+			alert("Виникла помилка при " + 
 				"отриманні сертифікатів з файлового сховища: " + e);
 		}
 	},
@@ -423,7 +474,7 @@ function() {
 		var index = utils.GetSessionStorageItem(
 			euSignTest.CAServerIndexSessionStorageName, false, false);
 		if (index != null) {
-			document.getElementById("CAsServersSelect").selectedIndex =
+			document.getElementById("CAsServersSelect").selectedIndex = 
 				parseInt(index);
 			euSignTest.setCASettings(parseInt(index));
 		}
@@ -482,13 +533,18 @@ function() {
 //-----------------------------------------------------------------------------
 	selectPrivateKeyFile: function(event) {
 		var enable = (event.target.files.length == 1);
-
 		setPointerEvents(document.getElementById('PKeyReadButton'), enable);
-		document.getElementById('PKeyPassword').disabled =
+		document.getElementById('PKeyPassword').disabled = 
 			enable ? '' : 'disabled';
-		document.getElementById('PKeyFileName').value =
+		document.getElementById('PKeyFileName').value = 
 			enable ? event.target.files[0].name : '';
 		document.getElementById('PKeyPassword').value = '';
+		
+		// if (enable) {
+		// 	var file = event.target.files[0];
+		// 	setPointerEvents(document.getElementById('PKeySaveInfo'),
+		// 		file.name.endsWith(".jks"));
+		// }
 	},
 //-----------------------------------------------------------------------------
 	getPrivateKeyCertificatesByCMP: function(key, password, onSuccess, onError) {
@@ -503,12 +559,12 @@ function() {
 	getPrivateKeyCertificates: function(key, password, fromCache, onSuccess, onError) {
 		var certificates;
 
-		if (euSignTest.CAServer != null &&
+		if (euSignTest.CAServer != null && 
 			euSignTest.CAServer.certsInKey) {
 			onSuccess([]);
 			return;
 		}
-
+		
 		if (fromCache) {
 			if (euSignTest.useCMP) {
 				certificates = utils.GetSessionStorageItem(
@@ -538,9 +594,6 @@ function() {
 		}
 	},
 	readPrivateKey: function(keyName, key, password, certificates, fromCache) {
-		const readButton = document.getElementById('PKeyReadButton')
-		readButton.disabled = true
-
 		var _onError = function(e) {
 			setStatus('');
 
@@ -548,18 +601,24 @@ function() {
 				euSignTest.removeStoredPrivateKey();
 				euSignTest.privateKeyReaded(false);
 			} else {
-				alert(e);
+				document.getElementById('DSLoginErrorsText').innerHTML = e;
+				document.getElementById('DSLoginErrors').style.display = '';
+				//alert(e);
 			}
 
-			if (e.GetErrorCode != null &&
+			if (e.GetErrorCode != null && 
 				e.GetErrorCode() == EU_ERROR_CERT_NOT_FOUND) {
 
 				euSignTest.mainMenuItemClicked(
 					document.getElementById('MainPageMenuCertsAndCRLs'),
 					'MainPageMenuCertsAndCRLsPage');
 			}
-			readButton.textContent = login ? 'Вхід' : 'Зчитати'
-			readButton.disabled = false
+
+			var PKeyReadButton = document.getElementById('PKeyReadButton');
+			var overLay = document.getElementById('overlay');
+			overLay.style.display = 'none';
+			PKeyReadButton.disabled = false;
+			PKeyReadButton.innerHTML = 'Вхід';
 		};
 
 		if (certificates == null) {
@@ -576,7 +635,7 @@ function() {
 				key, password, fromCache, _onGetCertificates, _onError);
 			return;
 		}
-
+	
 		try {
 			if (Array.isArray(certificates)) {
 				for (var i = 0; i < certificates.length; i++) {
@@ -595,13 +654,13 @@ function() {
 				}
 			}
 
-			euSignTest.privateKeyReaded(true);
+			//euSignTest.privateKeyReaded(true);
 
-			// euSignTest.updateCertList();
+			//euSignTest.updateCertList();
 
-			// if (!fromCache)
-			// 	euSignTest.showOwnerInfo();
-			if (login) {
+			if (!fromCache) {
+                // euSignTest.showOwnerInfo();
+
 				// Запрос на авторизацию
 				var data = euSign.GetPrivateKeyOwnerInfo();
 				data['signed_data'] = euSign.SignData(document.getElementById('secret').value, true);
@@ -609,7 +668,7 @@ function() {
 				data['csrfmiddlewaretoken'] = document.getElementsByName('csrfmiddlewaretoken')[0].value;
 				$.post( "/users/login/", data, function (data) {
 					if (data.is_logged === 1) {
-						location.href = '/filling/create-application/';
+						location.href = '/filling/create-application';
 					} else {
 						document.getElementById('DSLoginErrorsText').innerHTML = 'Авторизація неможлива!';
 						document.getElementById('DSLoginErrors').style.display = '';
@@ -620,10 +679,7 @@ function() {
 						PKeyReadButton.innerHTML = 'Вхід';
 					}
                 }, "json" );
-			} else {
-				euSignTest.showOwnerInfo();
-				euSignTest.letSignFiles();
-			}
+            }
 		} catch (e) {
 			_onError(e);
 		}
@@ -633,7 +689,7 @@ function() {
 		image.onload=function(){
 			try {
 				var qr = new QRCodeDecode();
-
+				
 				var canvas = document.createElement('canvas');
 				var context = canvas.getContext('2d');
 
@@ -651,7 +707,7 @@ function() {
 				onError();
 			}
 		}
-
+		
 		image.src = utils.CreateObjectURL(file);
 	},
 	readPrivateKeyAsStoredFile: function() {
@@ -661,7 +717,7 @@ function() {
 			euSignTest.PrivateKeySessionStorageName, true, false);
 		var password = utils.GetSessionStorageItem(
 			euSignTest.PrivateKeyPasswordSessionStorageName, false, true);
-		if (keyName == null || key == null || password == null)
+		if (keyName == null || key == null || password == null) 
 			return;
 
 		euSignTest.loadCAServer();
@@ -678,44 +734,54 @@ function() {
 		return;
 	},
 	readPrivateKeyButtonClick: function() {
+		var overLay = document.getElementById('overlay');
+		var PKeyReadButton = document.getElementById('PKeyReadButton');
+		overLay.style.display = '';
+		PKeyReadButton.disabled = true;
+		PKeyReadButton.innerHTML = 'Зачекайте...';
+
 		var passwordTextField = document.getElementById('PKeyPassword');
 		var certificatesFiles = euSignTest.privateKeyCerts;
-		const readButton = document.getElementById('PKeyReadButton')
-		readButton.disabled = true
-		readButton.textContent = 'Зачекайте...'
 
 		var _onError = function(e) {
 			setStatus('');
-			alert(e);
+			// alert(e);
+			document.getElementById('DSLoginErrorsText').innerHTML = e;
+			document.getElementById('DSLoginErrors').style.display = '';
+			overLay.style.display = 'none';
+			PKeyReadButton.disabled = false;
+			PKeyReadButton.innerHTML = 'Вхід';
 		};
-
+		
 		var _onSuccess = function(keyName, key) {
-			euSignTest.readPrivateKey(keyName, new Uint8Array(key), passwordTextField.value, null, false);
+			euSignTest.readPrivateKey(keyName, new Uint8Array(key),
+				passwordTextField.value, null, false);
 		}
 
 		try {
-			if (readButton.title == 'Зчитати' || readButton.title == 'Вхід') {
+		    var PKeyReadButtonTitle = document.getElementById('PKeyReadButton').title;
+			if (PKeyReadButtonTitle === 'Вхід' || PKeyReadButtonTitle === 'Enter') {
 				setStatus('зчитування ключа');
 
 				var files = document.getElementById('PKeyFileInput').files;
 
 				if (files.length != 1) {
-					_onError("Виникла помилка при зчитуванні особистого ключа. " +
-						"Опис помилки: файл з особистим ключем не обрано");
+					_onError("Виникла помилка при зчитуванні особистого ключа. <br>" +
+						"<strong>Опис помилки:</strong> файл з особистим ключем не обрано");
 					return;
 				}
 
 				if (passwordTextField.value == "") {
 					passwordTextField.focus();
-					_onError("Виникла помилка при зчитуванні особистого ключа. " +
+					_onError("Виникла помилка при зчитуванні особистого ключа. " + 
 						"Опис помилки: не вказано пароль доступу до особистого ключа");
 					return;
 				}
-
-				if (euSignTest.loadPKCertsFromFile &&
+				
+				if (euSignTest.loadPKCertsFromFile && 
 					(certificatesFiles == null ||
 					certificatesFiles.length <= 0)) {
-					_onError("Виникла помилка при зчитуванні особистого ключа. " +
+					_onError("Виникла помилка при зчитуванні особистого ключа. " + 
 						"Опис помилки: не обрано жодного сертифіката відкритого ключа");
 					return;
 				}
@@ -735,110 +801,22 @@ function() {
 				euSign.ResetPrivateKey();
 				euSignTest.privateKeyReaded(false);
 				passwordTextField.value = "";
-				euSignTest.hideKeyInfo();
-				euSignTest.forbidSignFiles();
+				euSignTest.clearPrivateKeyCertificatesList();
 			}
 		} catch (e) {
 			_onError(e);
-		} finally {
-			readButton.disabled = false;
-		}
-	},
-	LoginButtonClick: function(login = false) {
-		var passwordTextField = document.getElementById('PKeyPassword');
-		var certificatesFiles = euSignTest.privateKeyCerts;
-		const readButton = document.getElementById('PKeyReadButton')
-		readButton.disabled = true
-		readButton.textContent = 'Зачекайте...'
-
-		var _onError = function(e) {
-			setStatus('');
-			alert(e);
-		};
-
-		var _onSuccess = function(keyName, key) {
-			euSignTest.readPrivateKey(keyName, new Uint8Array(key), passwordTextField.value, null, false, login);
-		}
-
-		try {
-			if (readButton.title == 'Зчитати' || readButton.title == 'Вхід') {
-				setStatus('зчитування ключа');
-
-				var files = document.getElementById('PKeyFileInput').files;
-
-				if (files.length != 1) {
-					_onError("Виникла помилка при зчитуванні особистого ключа. " +
-						"Опис помилки: файл з особистим ключем не обрано");
-					return;
-				}
-
-				if (passwordTextField.value == "") {
-					passwordTextField.focus();
-					_onError("Виникла помилка при зчитуванні особистого ключа. " +
-						"Опис помилки: не вказано пароль доступу до особистого ключа");
-					return;
-				}
-
-				if (euSignTest.loadPKCertsFromFile &&
-					(certificatesFiles == null ||
-					certificatesFiles.length <= 0)) {
-					_onError("Виникла помилка при зчитуванні особистого ключа. " +
-						"Опис помилки: не обрано жодного сертифіката відкритого ключа");
-					return;
-				}
-
-				if (utils.IsFileImage(files[0])) {
-					euSignTest.readPrivateKeyAsImage(files[0], _onSuccess, _onError);
-				}
-				else {
-					var _onFileRead = function(readedFile) {
-						_onSuccess(readedFile.file.name, readedFile.data);
-					};
-
-					euSign.ReadFile(files[0], _onFileRead, _onError);
-				}
-			} else {
-				euSignTest.removeStoredPrivateKey();
-				euSign.ResetPrivateKey();
-				euSignTest.privateKeyReaded(false);
-				passwordTextField.value = "";
-				euSignTest.hideKeyInfo();
-				euSignTest.forbidSignFiles();
-			}
-		} catch (e) {
-			_onError(e);
-		} finally {
-			readButton.disabled = false;
 		}
 	},
 	showOwnerInfo: function () {
 		try {
 			var ownerInfo = euSign.GetPrivateKeyOwnerInfo();
 
-			document.getElementById('key-no-info').style.display = "none";;
-			const keyOwnerDiv = document.getElementById('key-info');
-			keyOwnerDiv.innerHTML = "Власник: " + ownerInfo.GetSubjCN() + "<br>" +
-				"ЦСК: " + ownerInfo.GetIssuerCN() + "<br>" +
-				"Серійний номер: " + ownerInfo.GetSerial();
+			alert("Власник: " + ownerInfo.GetSubjCN() + "\n" + 
+					"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" + 
+					"Серійний номер: " + ownerInfo.GetSerial());
 		} catch (e) {
 			alert(e);
 		}
-	},
-	letSignFiles: function () {
-		const signFileBtn = document.getElementById('sign-file-btn');
-		const signImpossibleMsg = document.getElementById('sign-impossible-msg');
-		signFileBtn.disabled = false;
-		signImpossibleMsg.style.display = "none";
-	},
-	forbidSignFiles: function () {
-		const signFileBtn = document.getElementById('sign-file-btn');
-		const signImpossibleMsg = document.getElementById('sign-impossible-msg');
-		signFileBtn.disabled = true;
-		signImpossibleMsg.style.display = "block";
-	},
-	hideKeyInfo: function () {
-		document.getElementById('key-info').innerHTML = '';
-		document.getElementById('key-no-info').style.display = 'block';
 	},
 	showOwnCertificates: function () {
 		try {
@@ -849,35 +827,35 @@ function() {
 				var info = euSign.EnumOwnCertificates(i);
 				if (info == null)
 					break;
-
-				var isNationalAlgs =
+				
+				var isNationalAlgs = 
 					(info.GetPublicKeyType() == EU_CERT_KEY_TYPE_DSTU4145);
-
+				
 				message += splitLine + "\n";
-				message += "Сертифікат № " + (i + 1) + "\n" +
-					"Власник: " + info.GetSubjCN() + "\n" +
-					"ЦСК: " + info.GetIssuerCN() + "\n" +
-					"Серійний номер: " + info.GetSerial() + "\n" +
-					"Призначення: " + info.GetKeyUsage() +
-						(isNationalAlgs ? " в державних " : " в міжнародних ")  +
+				message += "Сертифікат № " + (i + 1) + "\n" + 
+					"Власник: " + info.GetSubjCN() + "\n" + 
+					"ЦСК: " + info.GetIssuerCN() + "\n" + 
+					"Серійний номер: " + info.GetSerial() + "\n" + 
+					"Призначення: " + info.GetKeyUsage() + 
+						(isNationalAlgs ? " в державних " : " в міжнародних ")  + 
 						"алгоритмах та протоколах" + "\n";
 				message += splitLine + "\n";
 
 				i++;
 			}
-
+			
 			if (i == 0)
 				message += "Відсутня";
-
+			
 			alert(message);
-
+			
 		} catch (e) {
 			alert(e);
 		}
 	},
 	getJKSContainerInfo: function(jksContainer, password) {
 		var info = '\tІнформація про JKS контейнер:\n';
-
+		
 		try {
 			var keyIndex = 0;
 			while (true) {
@@ -901,7 +879,7 @@ function() {
 					info += "Розширенне призначення: " + certInfo.GetExtKeyUsages() + '\n';
 					info += "Бінарне подання: " + euSign.Base64Encode(cert) + '\n';
 				}
-
+				
 				info += 'Інформація про відкриті ключі:\n';
 				try {
 					var keyInfo = euSign.GetKeyInfoBinary(
@@ -910,13 +888,13 @@ function() {
 				} catch (e) {
 					info += e + '\n';
 				}
-
+				
 				keyIndex++;
 			}
 		} catch (e) {
 			info += e + '\n';
 		}
-
+		
 		return info;
 	},
 	savePKeyInfo: function() {
@@ -929,10 +907,10 @@ function() {
 		}
 
 		var _onError = function(msg) {
-			alert("Виникла помилка при " +
+			alert("Виникла помилка при " + 
 				"збереженні інформації про ос. ключ. " + msg);
 		};
-
+		
 		var pkFile = pkFileInput.files[0];
 		var password = document.getElementById('PKeyPassword').value;
 		var info = 'Інформація про ос. ключ:\n';
@@ -942,8 +920,8 @@ function() {
 
 		eu_wait(function(runNext) {
 			euSign.ReadFile(
-				pkFile,
-				runNext,
+				pkFile, 
+				runNext, 
 				function(e) {
 					_onError(e);
 				}
@@ -961,7 +939,7 @@ function() {
 					info += e + '\n';
 				}
 			}
-
+			
 			info += 'Інформація про зчитаний ключ:\n';
 			try {
 				if (euSign.IsPrivateKeyReaded()) {
@@ -990,14 +968,14 @@ function() {
 				info += e + '\n';
 			}
 
-			saveFile(pkFile.name + '.txt',
+			saveFile(pkFile.name + '.txt', 
 				new Uint8Array(encoder.encode(info)));
 		});
 	},
 	blockOwnCertificates: function() {
-		if (!confirm('Після блокування сертифікатів ос. ключа ' +
-				'їх розблокування можливе лише при особистому ' +
-				'зверненні до ЦСК. Продовжити?')) {
+		if (!confirm('Після блокування сертифікатів ос. ключа ' + 
+				'їх розблокування можливе лише при особистому ' + 
+				'зверненні до АЦСК. Продовжити?')) {
 			return;
 		}
 
@@ -1010,7 +988,7 @@ function() {
 		}
 	},
 	revokeOwnCertificates: function() {
-		if (!confirm('Після скасування сертифікатів ос. ключа ' +
+		if (!confirm('Після скасування сертифікатів ос. ключа ' + 
 				'використання ос. ключа буде не можливе. Продовжити?')) {
 			return;
 		}
@@ -1029,19 +1007,19 @@ function() {
 //-----------------------------------------------------------------------------
 	changePrivKeyType: function() {
 		var useUA = document.getElementById('ChooseKeysUARadioBtn').checked;
-		var useInt = document.getElementById('ChooseKeysIntRadioBtn').checked;
+		var useRSA = document.getElementById('ChooseKeysRSARadioBtn').checked;
+		
+		if (document.getElementById('ChooseKeysUARSARadioBtn').checked)
+			useUA = useRSA = true;
 
-		if (document.getElementById('ChooseKeysUAIntRadioBtn').checked)
-			useUA = useInt = true;
-
-		document.getElementById('UAPrivKeyParams').style.display =
+		document.getElementById('UAPrivKeyParams').style.display = 
 			useUA ? 'block' : 'none';
-		document.getElementById('InternationalPrivKeyParams').style.display =
-			useInt ? 'block': 'none';
+		document.getElementById('InternationalPrivKeyParams').style.display = 
+			useRSA ? 'block': 'none';
 	},
 	generatePK: function() {
 		var pkPassword = document.getElementById('PGenKeyPassword').value;
-
+		
 		if (pkPassword == "") {
 			alert("Пароль особистого ключа не вказано");
 			document.getElementById('PGenKeyPassword').focus();
@@ -1049,58 +1027,55 @@ function() {
 		}
 
 		var useUA = document.getElementById('ChooseKeysUARadioBtn').checked;
-		var useInt = document.getElementById('ChooseKeysIntRadioBtn').checked;
+		var useRSA = document.getElementById('ChooseKeysRSARadioBtn').checked;
 
-		if (document.getElementById('ChooseKeysUAIntRadioBtn').checked)
-			useUA = useInt = true;
+		if (document.getElementById('ChooseKeysUARSARadioBtn').checked)
+			useUA = useRSA = true;
 
-		var uaKeysType = useUA ?
-			EU_KEYS_TYPE_DSTU_AND_ECDH_WITH_GOST : EU_KEYS_TYPE_NONE;
-		var uaDSKeysSpec = useUA ?
+		var uaKeysType = useUA ? 
+			EU_KEYS_TYPE_DSTU_AND_ECDH_WITH_GOST : EU_KEYS_TYPE_NONE; 
+		var uaDSKeysSpec = useUA ? 
 			parseInt(document.getElementById("UAKeySpecSelect").value) : 0;
 		var uaKEPSpec = useUA ?
 			parseInt(document.getElementById("UAKEPKeySpecSelect").value) : 0;
 
-		var intKeysType = EU_KEYS_TYPE_NONE;
+		var intKeysType = useRSA ? 
+			EU_KEYS_TYPE_RSA_WITH_SHA : EU_KEYS_TYPE_NONE; 
 
-		var rsaKeysSpec = useInt ?
-			parseInt(document.getElementById("RSAKeySpecSelect").value) : 0;
-		var ecdsaKeysSpec = useInt ?
-			parseInt(document.getElementById("ECDSAKeySpecSelect").value) : 0;
+		var intKeysSpec = useRSA ? 
+			parseInt(document.getElementById("InternationalKeySpecSelect").value) : 0;
 
-		if (rsaKeysSpec != 0)
-			intKeysType |= EU_KEYS_TYPE_RSA_WITH_SHA;
-		if (ecdsaKeysSpec != 0)
-			intKeysType |= EU_KEYS_TYPE_ECDSA_WITH_SHA;
+		var userInfo = EndUserInfo();
+		userInfo.commonName = "User 1";
+		userInfo.locality = "Kharkov";
+		userInfo.state = "Kharkovska";
 
 		var _generatePKFunction = function() {
 			try {
-				var privKey = euSign.GeneratePrivateKey2(
-					pkPassword, uaKeysType, uaDSKeysSpec, false, uaKEPSpec,
-					intKeysType, rsaKeysSpec, ecdsaKeysSpec, null, null);
+				euSign.SetRuntimeParameter(
+					EU_MAKE_PKEY_PFX_CONTAINER_PARAMETER,
+					document.getElementById('PKPFXContainerCheckbox').checked);
+			
+				var privKey = euSign.GeneratePrivateKey(
+					pkPassword, uaKeysType, uaDSKeysSpec, false, uaKEPSpec, 
+					intKeysType, intKeysSpec, null, null);
 
-				saveFile(privKey.GetPrivateKeyName(), privKey.GetPrivateKey());
-
+				saveFile(privKey.privateKeyName, privKey.privateKey);
+				/*saveFile(privKey.privateKeyInfoName, privKey.privateKeyInfo);*/
+			
 				if (useUA) {
-					saveFile(privKey.GetUARequestName(),
-						privKey.GetUARequest());
-					saveFile(privKey.GetUAKEPRequestName(),
-						privKey.GetUAKEPRequest());
+					saveFile(privKey.uaRequestName, privKey.uaRequest);
+					saveFile(privKey.uaKEPRequestName, privKey.uaKEPRequest);
 				}
-
-				if (intKeysType & EU_KEYS_TYPE_RSA_WITH_SHA) {
-					saveFile(privKey.GetRSARequestName(),
-						privKey.GetRSARequest());
-				}
-
-				if (intKeysType & EU_KEYS_TYPE_ECDSA_WITH_SHA) {
-					saveFile(privKey.GetECDSARequestName(),
-						privKey.GetECDSARequest());
+			
+				if (useRSA) {
+					saveFile(privKey.internationalRequestName, 
+						privKey.internationalRequest);
 				}
 				setStatus('');
 			} catch (e) {
 				setStatus('');
-				alert("Виникла помилка при генерації особистого ключа. " +
+				alert("Виникла помилка при генерації особистого ключа. " + 
 					"Опис помилки: " + e);
 			}
 		};
@@ -1109,74 +1084,57 @@ function() {
 		setTimeout(_generatePKFunction, 10);
 },
 //-----------------------------------------------------------------------------
-// 	signData: function () {
-// 		var data = document.getElementById('DataToSignTextEdit').value + "";
-// 		var isInternalSign =
-// 			document.getElementById("InternalSignCheckbox").checked;
-// 		var isAddCert =
-// 			document.getElementById("AddCertToInternalSignCheckbox").checked;
-// 		var isSignHash =
-// 			document.getElementById("SignHashCheckbox").checked;
-// 		var signedDataText = document.getElementById("SignedDataText");
-// 		var dsAlgType = parseInt(document.getElementById("DSAlgTypeSelect").value)
-//
-// 		signedDataText.value = "";
-//
-// 		var _signDataFunction = function() {
-// 			try {
-// 				var sign = "";
-// 				if (dsAlgType == 1) {
-// 					if (isInternalSign) {
-// 						sign = euSign.SignDataInternal(isAddCert, data, true);
-// 					} else {
-// 						if (isSignHash) {
-// 							var hash = euSign.HashData(data);
-// 							sign = euSign.SignHash(hash, true);
-// 						} else {
-// 							sign = euSign.SignData(data, true);
-// 						}
-// 					}
-// 				} else {
-// 					sign = euSign.SignDataRSA(data, isAddCert,
-// 						!isInternalSign, true);
-// 				}
-//
-// 				signedDataText.value = sign;
-// 				setStatus('');
-// 			} catch (e) {
-// 				setStatus('');
-// 				alert(e);
-// 			}
-// 		};
-//
-// 		setStatus('підпис данних');
-// 		setTimeout(_signDataFunction, 10);
-// 	},
-	getSignTypeString: function(signType) {
-		switch (signType) {
-			case EU_SIGN_TYPE_CADES_BES:
-				return 'базовий';
-			case EU_SIGN_TYPE_CADES_T:
-				return 'з позначкою часу від ЕЦП';
-			case EU_SIGN_TYPE_CADES_C:
-				return 'з посиланням на повні дані для перевірки';
-			case EU_SIGN_TYPE_CADES_X_LONG:
-				return 'з повними даними для перевірки';
-			case EU_SIGN_TYPE_CADES_X_LONG | EU_SIGN_TYPE_CADES_X_LONG_TRUSTED:
-				return 'з повними даними ЦСК для перевірки';
-			default:
-				return 'невизначено';
-		}
+	signData: function () {
+		var data = document.getElementById('DataToSignTextEdit').value + "";
+		var isInternalSign = 
+			document.getElementById("InternalSignCheckbox").checked;
+		var isAddCert = 
+			document.getElementById("AddCertToInternalSignCheckbox").checked;
+		var isSignHash = 
+			document.getElementById("SignHashCheckbox").checked;
+		var signedDataText = document.getElementById("SignedDataText"); 
+		var dsAlgType = parseInt(document.getElementById("DSAlgTypeSelect").value)
+		
+		signedDataText.value = "";
+
+		var _signDataFunction = function() {
+			try {
+				var sign = "";
+				if (dsAlgType == 1) {
+					if (isInternalSign) {
+						sign = euSign.SignDataInternal(isAddCert, data, true);
+					} else {
+						if (isSignHash) {
+							var hash = euSign.HashData(data);
+							sign = euSign.SignHash(hash, true);
+						} else {
+							sign = euSign.SignData(data, true);
+						}
+					}
+				} else {
+					sign = euSign.SignDataRSA(data, isAddCert, 
+						!isInternalSign, true);
+				}
+
+				signedDataText.value = sign;
+				setStatus('');
+			} catch (e) {
+				setStatus('');
+				alert(e);
+			}
+		};
+
+		setStatus('підпис данних');
+		setTimeout(_signDataFunction, 10);
 	},
 	verifyData: function () {
-		var pThis = this;
 		var data = document.getElementById('DataToSignTextEdit').value + "";
 		var signedData = document.getElementById('SignedDataText').value;
-		var isInternalSign =
+		var isInternalSign = 
 			document.getElementById("InternalSignCheckbox").checked;
-		var isSignHash =
+		var isSignHash = 
 			document.getElementById("SignHashCheckbox").checked;
-		var isGetSignerInfo =
+		var isGetSignerInfo = 
 			document.getElementById("GetSignInfoCheckbox").checked;
 		var verifiedDataText = document.getElementById("VerifiedDataText");
 		var dsAlgType = parseInt(document.getElementById("DSAlgTypeSelect").value)
@@ -1195,21 +1153,19 @@ function() {
 						info = euSign.VerifyData(data, signedData);
 					}
 				}
-				var signType = pThis.getSignTypeString(
-					euSign.GetSignType(0, signedData));
-
+			
 				var message = "Підпис успішно перевірено";
-
+			
 				if (isGetSignerInfo) {
 					var ownerInfo = info.GetOwnerInfo();
 					var timeInfo = info.GetTimeInfo();
 
 					message += "\n";
-					message += "Підписувач: " + ownerInfo.GetSubjCN() + "\n" +
-								"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" +
+					message += "Підписувач: " + ownerInfo.GetSubjCN() + "\n" + 
+								"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" + 
 								"Серійний номер: " + ownerInfo.GetSerial() + "\n";
 					if (timeInfo.IsTimeAvail()) {
-						message += (timeInfo.IsTimeStamp() ?
+						message += (timeInfo.IsTimeStamp() ? 
 							"Мітка часу (від даних):" : "Час підпису: ") + timeInfo.GetTime();
 					} else {
 						message += "Час підпису відсутній";
@@ -1218,16 +1174,14 @@ function() {
 					if (timeInfo.IsSignTimeStampAvail()) {
 						message += "\nМітка часу (від підпису):" + timeInfo.GetSignTimeStamp();
 					}
-
-					message += '\nТип підпису: ' + signType;
 				}
-
+			
 				if (isInternalSign) {
 					message += "\n";
 					verifiedDataText.value = euSign.ArrayToString(info.GetData());
 					message += "Підписані дані: " + verifiedDataText.value + "\n";
 				}
-
+			
 				setStatus('');
 				alert(message);
 			} catch (e) {
@@ -1246,150 +1200,80 @@ function() {
 		setPointerEvents(document.getElementById('SignFileButton'), enable);
 	},
 	chooseFileToVerify: function (event) {
-		var enable = (document.getElementById('FileToVerify').files.length == 1) &&
-		(document.getElementById("InternalSignCheckbox").checked ||
+		var enable = (document.getElementById('FileToVerify').files.length == 1) && 
+		(document.getElementById("InternalSignCheckbox").checked || 
 			document.getElementById('FileWithSign').files.length == 1)
 
 		setPointerEvents(document.getElementById('VerifyFileButton'), enable);
 	},
-
-	uploadSign: async function (documentId, signData, signInfo) {
-		const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-		let blob = new Blob([signData], {type:"application/octet-stream"});
-
-		const data = new FormData();
-		data.append('blob', blob);
-		data.append('sign_info', JSON.stringify(signInfo));
-
-		const request = new Request(
-			'/cases/upload-sign/' + documentId + '/',
-			{
-				method: 'POST',
-				headers: {'X-CSRFToken': csrftoken},
-				mode: 'same-origin',
-				body: data
-			}
-		);
-
-		const response = await fetch(request)
-		return await response.json()
-	},
-
-	signData: function (data) {
-		// Підписує дані.
-		return euSign.SignData(data, false);
-	},
-
-	getSignInfo: function (fileData, signData) {
-		// Повертає дані про підпис
-		let info = euSign.VerifyData(fileData, signData);
-
-		let ownerInfo = info.GetOwnerInfo()
-		let timeInfo = info.GetTimeInfo()
-
-		let res = {}
-		res['subject'] = ownerInfo.GetSubjCN()
-		res['issuer'] = ownerInfo.GetIssuerCN()
-		res['serial'] = ownerInfo.GetSerial()
-		res['timestamp'] =  "Мітка часу (від даних): " + timeInfo.GetTime()
-
-		return res
-	},
-
-	getFileArrayBuffer: async function(url) {
-		// Возвращает ArrayBuffer файла
-		let response = await fetch(url)
-		let CONTENT = await response.blob()
-
-		return new Promise((resolve, reject) => {
-			let fr = new FileReader();
-			fr.onloadend = () => {
-				resolve(fr.result);
-			};
-			fr.onerror = reject;
-			fr.readAsArrayBuffer(CONTENT);
-		});
-	},
-
-	processFile: async function(documentId, url) {
-		const signBtn = document.querySelector('#sign-file-btn')
-		const originalButtonText = signBtn.textContent
-		signBtn.textContent = 'Зачекайте...'
-		signBtn.disabled = true
-
-		try {
-			// Скачать файл и преобразовать его в ArrayBuffer
-			const fileArrayBuffer = await euSignTest.getFileArrayBuffer(url)
-
-			// Получить подписанные данные
-			const signData = euSignTest.signData(fileArrayBuffer)
-
-			// Получить данные о подписи
-			const signInfo = euSignTest.getSignInfo(fileArrayBuffer, signData)
-
-			// Отправить на сервер подписанный файл и данные о подписи
-			const uploadedRes = await euSignTest.uploadSign(documentId, signData, signInfo)
-
-			if (uploadedRes.success === 1) {
-				// Обновить список документов, отобразить на экране что файл успешно подписан, закрыть модальное окно
-				const dTable = window.DTable["table-documents"]
-				dTable.ajax.reload(function () {
-					$.SOW.core.ajax_modal.ajax_modal($('.js-ajax-modal'));
-				})
-				const closeBtn = dsModal.querySelector('.modal-footer button')
-				closeBtn.click()
-				$.SOW.core.toast.show(
-					'success-soft',
-					'',
-					'Файл підписано!',
-					'top-right',
-					0,
-					true
-				);
-			} else {
-				$.SOW.core.toast.show(
-					'danger',
-					'',
-					'Документ не було підписано.',
-					'top-right',
-					0,
-					true
-				);
-			}
-		} catch (e) {
-			$.SOW.core.toast.show(
-				'danger',
-				'',
-				'Виникла помилка при підписанні документа.',
-				'top-right',
-				0,
-				true
-			);
-			console.log(e)
-		} finally {
-			signBtn.textContent = originalButtonText
-			signBtn.disabled = false
+	signFile: function() {
+		var file = document.getElementById('FileToSign').files[0];
+		
+		if (file.size > Module.MAX_DATA_SIZE) {
+			alert("Розмір файлу для піпису занадто великий. Оберіть файл меншого розміру");
+			return;
 		}
-	},
+		
+		var fileReader = new FileReader();
 
+		fileReader.onloadend  = (function(fileName) {
+			return function(evt) {
+				if (evt.target.readyState != FileReader.DONE)
+					return;
+
+				var isInternalSign = 
+					document.getElementById("InternalSignCheckbox").checked;
+				var isAddCert = document.getElementById(
+					"AddCertToInternalSignCheckbox").checked;
+				var dsAlgType = parseInt(
+					document.getElementById("DSAlgTypeSelect").value);
+
+				var data = new Uint8Array(evt.target.result);
+
+				try {
+					var sign;
+
+					if (dsAlgType == 1) {
+						if (isInternalSign)
+							sign = euSign.SignDataInternal(isAddCert, data, false);
+						else
+							sign = euSign.SignData(data, false);
+					} else {
+						sign = euSign.SignDataRSA(data, isAddCert, 
+							!isInternalSign, false);
+					}
+
+					saveFile(fileName + ".p7s", sign);
+
+					setStatus('');
+					alert("Файл успішно підписано");
+				} catch (e) {
+					setStatus('');
+					alert(e);
+				}
+			};
+		})(file.name);
+
+		setStatus('підпис файлу');
+		fileReader.readAsArrayBuffer(file);
+	},
 	verifyFile: function() {
-		var pThis = this;
-		var isInternalSign =
+		var isInternalSign = 
 			document.getElementById("InternalSignCheckbox").checked;
-		var isGetSignerInfo =
+		var isGetSignerInfo = 
 			document.getElementById("GetSignInfoCheckbox").checked;
 		var files = [];
 
 		files.push(document.getElementById('FileToVerify').files[0]);
 		if (!isInternalSign)
 			files.push(document.getElementById('FileWithSign').files[0]);
-
+			
 		if ((files[0].size > (Module.MAX_DATA_SIZE + EU_MAX_P7S_CONTAINER_SIZE)) ||
 			(!isInternalSign && (files[1].size > Module.MAX_DATA_SIZE))) {
 			alert("Розмір файлу для перевірки підпису занадто великий. Оберіть файл меншого розміру");
 			return;
 		}
-
+		
 		var _onSuccess = function(files) {
 			try {
 				var info = "";
@@ -1398,21 +1282,19 @@ function() {
 				} else {
 					info = euSign.VerifyData(files[0].data, files[1].data);
 				}
-				var signType = pThis.getSignTypeString(
-					euSign.GetSignType(0, files[isInternalSign ? 0 : 1].data));
 
 				var message = "Підпис успішно перевірено";
-
+				
 				if (isGetSignerInfo) {
 					var ownerInfo = info.GetOwnerInfo();
 					var timeInfo = info.GetTimeInfo();
 
 					message += "\n";
-					message += "Підписувач: " + ownerInfo.GetSubjCN() + "\n" +
-								"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" +
+					message += "Підписувач: " + ownerInfo.GetSubjCN() + "\n" + 
+								"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" + 
 								"Серійний номер: " + ownerInfo.GetSerial() + "\n";
 					if (timeInfo.IsTimeAvail()) {
-						message += (timeInfo.IsTimeStamp() ?
+						message += (timeInfo.IsTimeStamp() ? 
 							"Мітка часу (від даних):" : "Час підпису: ") + timeInfo.GetTime();
 					} else {
 						message += "Час підпису відсутній";
@@ -1421,12 +1303,10 @@ function() {
 					if (timeInfo.IsSignTimeStampAvail()) {
 						message += "\nМітка часу (від підпису):" + timeInfo.GetSignTimeStamp();
 					}
-
-					message += '\nТип підпису: ' + signType;
 				}
 
 				if (isInternalSign) {
-					saveFile(files[0].name.substring(0,
+					saveFile(files[0].name.substring(0, 
 						files[0].name.length - 4), info.GetData());
 				}
 
@@ -1437,7 +1317,7 @@ function() {
 				setStatus('');
 			}
 		}
-
+		
 		var _onFail = function(files) {
 			setStatus('');
 			alert("Виникла помилка при зчитуванні файлів для перевірки підпису");
@@ -1451,7 +1331,7 @@ function() {
 		var issuers = euSignTest.recepientsCertsIssuers;
 		var serials = euSignTest.recepientsCertsSerials;
 
-		if (issuers == null || serials == null ||
+		if (issuers == null || serials == null || 
 			issuers.length <= 0 || serials.length <= 0) {
 			alert("Не обрано жодного сертифіката отримувача");
 			return;
@@ -1462,7 +1342,7 @@ function() {
 		var envelopedText = document.getElementById("EnvelopedDataText");
 		var developedText = document.getElementById("DevelopedDataText");
 		var kepAlgType = parseInt(document.getElementById("KEPAlgTypeSelect").value);
-
+					
 		envelopedText.value = "";
 		developedText.value = "";
 
@@ -1479,7 +1359,7 @@ function() {
 			} catch (e) {
 				setStatus('');
 				alert(e);
-			}
+			} 
 		};
 
 		setStatus('зашифрування даних');
@@ -1496,19 +1376,19 @@ function() {
 				var info = euSign.DevelopData(envelopedText.value);
 				var ownerInfo = info.GetOwnerInfo();
 				var timeInfo = info.GetTimeInfo();
-
+				
 				var message = "Дані успішно розшифровано";
 				message += "\n";
-				message += "Відправник: " + ownerInfo.GetSubjCN() + "\n" +
-							"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" +
+				message += "Відправник: " + ownerInfo.GetSubjCN() + "\n" + 
+							"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" + 
 							"Серійний номер: " + ownerInfo.GetSerial() + "\n";
 				if (timeInfo.IsTimeAvail()) {
-					message += (timeInfo.IsTimeStamp() ?
+					message += (timeInfo.IsTimeStamp() ? 
 						"Мітка часу:" : "Час підпису: ") + timeInfo.GetTime();
 				} else {
 					message += "Підпис відсутній";
 				}
-
+			
 				developedText.value = euSign.ArrayToString(info.GetData());
 
 				setStatus('');
@@ -1533,15 +1413,15 @@ function() {
 		var issuers = euSignTest.recepientsCertsIssuers;
 		var serials = euSignTest.recepientsCertsSerials;
 
-		if (issuers == null || serials == null ||
+		if (issuers == null || serials == null || 
 			issuers.length <= 0 || serials.length <= 0) {
 			alert("Не обрано жодного сертифіката отримувача");
 			return;
-		}
-
+		}	
+	
 		var file = document.getElementById('EnvelopFiles').files[0];
 		var fileReader = new FileReader();
-
+		
 		fileReader.onloadend  = (function(fileName) {
 			return function(evt) {
 				if (evt.target.readyState != FileReader.DONE)
@@ -1580,7 +1460,7 @@ function() {
 			alert("Розмір файлу для розшифрування занадто великий. Оберіть файл меншого розміру");
 			return;
 		}
-
+		
 		fileReader.onloadend  = (function(fileName) {
 			return function(evt) {
 				if (evt.target.readyState != FileReader.DONE)
@@ -1592,14 +1472,14 @@ function() {
 					var info = euSign.DevelopData(fileData);
 					var ownerInfo = info.GetOwnerInfo();
 					var timeInfo = info.GetTimeInfo();
-
+						
 					var message = "Файл успішно розшифровано";
 					message += "\n";
-					message += "Відправник: " + ownerInfo.GetSubjCN() + "\n" +
-								"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" +
+					message += "Відправник: " + ownerInfo.GetSubjCN() + "\n" + 
+								"ЦСК: " + ownerInfo.GetIssuerCN() + "\n" + 
 								"Серійний номер: " + ownerInfo.GetSerial() + "\n";
 					if (timeInfo.IsTimeAvail()) {
-						message += (timeInfo.IsTimeStamp() ?
+						message += (timeInfo.IsTimeStamp() ? 
 							"Мітка часу:" : "Час підпису: ") + timeInfo.GetTime();
 					} else {
 						message += "Підпис відсутній";
@@ -1627,8 +1507,8 @@ function() {
 				var info = euSign.EnumOwnCertificates(index);
 				if (info == null)
 					return null;
-
-				if ((info.GetPublicKeyType() == keyType) &&
+					
+				if ((info.GetPublicKeyType() == keyType) && 
 					((info.GetKeyUsageType() & keyUsage) == keyUsage))
 				{
 					return info;
@@ -1648,13 +1528,13 @@ function() {
 				keyType, keyUsage);
 			if (info == null)
 				return null;
-
+			
 			return euSign.GetCertificate(
 				info.GetIssuer(), info.GetSerial());
 		} catch(e) {
 			alert(e);
 		}
-
+		
 		return null;
 	},
 	recepientCertLoaded: function (files, curIndex, processedFiles) {
@@ -1664,7 +1544,7 @@ function() {
 
 			var file = new Object();
 			file.name = files[curIndex].name;
-			file.isCertificate =
+			file.isCertificate = 
 				euSignTest.isCertificateExtension(file.name);
 			if (file.isCertificate) {
 				file.data = new Uint8Array(evt.target.result);
@@ -1680,7 +1560,7 @@ function() {
 				fileReader.readAsArrayBuffer(files[curIndex]);
 				return;
 			}
-
+			
 			euSignTest.recepientCertsLoaded(processedFiles);
 		};
 	},
@@ -1688,17 +1568,17 @@ function() {
 		var loadedFiles = [];
 		var issuers = [];
 		var serials = [];
-
+		
 		for (var i = 0; i < processedFiles.length; i++) {
 			var file = processedFiles[i];
 			var fileInfo = file.name;
 			if (!file.isCertificate) {
-				fileInfo += "<br>(Не завантажено: " +
+				fileInfo += "<br>(Не завантажено: " + 
 					"не вірне розширення файлу '.cer')";
 			} else {
 				try {
 					var certInfo = euSign.ParseCertificate(file.data);
-					fileInfo += "<br>Власник: " + certInfo.subjCN + "<br>" +
+					fileInfo += "<br>Власник: " + certInfo.subjCN + "<br>" + 
 							"ЦСК: " + certInfo.issuerCN + "<br>" +
 							"Серійний номер: " +  certInfo.serial;
 					issuers.push(certInfo.issuer);
@@ -1708,7 +1588,7 @@ function() {
 					fileInfo += "<br>(Не завантажено: " + e.toString() + ")";
 				}
 			}
-
+			
 			loadedFiles.push(fileInfo);
 		}
 
@@ -1724,7 +1604,7 @@ function() {
 
 		var files = event.target.files;
 		if (files.length <= 0) {
-			document.getElementById('SelectedRecipientsCertsList').innerHTML =
+			document.getElementById('SelectedRecipientsCertsList').innerHTML = 
 				"Не обрано жодного сертифіката";
 			return;
 		}
@@ -1757,7 +1637,7 @@ function() {
 
 		var _appendResult = function(algoName, keyBits, useTsp, firstTime, avgTime) {
 			var resultText = document.getElementById('TestSignText');
-			resultText.value += "Тестування швидкодії підпису " + algoName +
+			resultText.value += "Тестування швидкодії підпису " + algoName + 
 				"(" + (useTsp ? "з TSP" : "без TSP") + ", " + keyBits + " бітів)\r\n";
 			resultText.value += "Перший:" + firstTime + "(мс)\r\n";
 			resultText.value += "Середнє:" + avgTime + "(мс)\r\n";
@@ -1772,24 +1652,24 @@ function() {
 			var mode = euSign.CreateModeSettings();
 			mode.SetOfflineMode(!useTsp);
 			euSign.SetModeSettings(mode);
-
+			
 			var firstTime = _signFunction(data, isRSA);
 			var times = 0;
 			for (var i = 0; i < count; i++)
 				times += _signFunction(data, isRSA);
-
-			_appendResult(isRSA ? "RSA" : "ДСТУ-4145",
-				ownCertInfo.GetPublicKeyBits(),
+			
+			_appendResult(isRSA ? "RSA" : "ДСТУ-4145", 
+				ownCertInfo.GetPublicKeyBits(), 
 				useTsp, firstTime, times / count);
-
+			
 			mode.SetOfflineMode(false);
 			euSign.SetModeSettings(mode);
 		}
-
+		
 		var resultText = document.getElementById('TestSignText');
-		resultText.value += "Тестування швидкодії функцій підпису (" +
+		resultText.value += "Тестування швидкодії функцій підпису (" + 
 			count + " тестів)...\r\n";
-
+			
 		var ownCertInfo = euSignTest.getOwnCertificateInfo(
 			EU_CERT_KEY_TYPE_DSTU4145, EU_KEY_USAGE_DIGITAL_SIGNATURE);
 		if (ownCertInfo) {
@@ -1807,48 +1687,48 @@ function() {
 	testSignature: function() {
 		var string = "Data to sign, 1234567890";
 		var array = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8]);
-
+		
 		var sign, hash, info;
-
+		
 		var resultText = document.getElementById('TestSignText');
 		resultText.value = "Тестування функцій підпису...\r\n";
-
+		
 		try {
 			this.signDataPerformance(array, 100);
-
-			resultText.value +=
+		
+			resultText.value += 
 				"Тестування функцій зовнішнього підпису даних...\r\n";
 			sign = euSign.SignData(string, true);
 			info = euSign.VerifyData(string, sign);
-			info = euSign.VerifyDataOnTimeEx(string, 0, sign,
+			info = euSign.VerifyDataOnTimeEx(string, 0, sign, 
 				new Date(), true, true);
 
 			sign = euSign.SignData(array, false);
 			info = euSign.VerifyData(array, sign);
-			info = euSign.VerifyDataOnTimeEx(array, 0, sign,
+			info = euSign.VerifyDataOnTimeEx(array, 0, sign, 
 				null, true, true);
 
 			sign = euSign.SignData(array, true);
 			info = euSign.VerifyData(array, sign);
 
-			resultText.value +=
+			resultText.value += 
 				"Тестування функцій внутрішнього підпису даних...\r\n";
 			sign = euSign.SignDataInternal(true, string, true);
 			info = euSign.VerifyDataInternal(sign);
 			if (euSign.ArrayToString(info.GetData()) != string) {
-				resultText.value += "Тестування функцій внутрішнього підпису " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій внутрішнього підпису " + 
+					"завершилося з помилкою: " + 
 					"Перевірені дані не співпадають з даними, що підписувалися";
 				return false;
 			}
-			info = euSign.VerifyDataInternalOnTimeEx(0, sign,
+			info = euSign.VerifyDataInternalOnTimeEx(0, sign, 
 				new Date(), false, true);
 
 			sign = euSign.SignDataInternal(false, string, false);
 			info = euSign.VerifyDataInternal(sign);
 			if (euSign.ArrayToString(info.GetData()) != string) {
-				resultText.value += "Тестування функцій внутрішнього підпису " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій внутрішнього підпису " + 
+					"завершилося з помилкою: " + 
 					"Перевірені дані не співпадають з даними, що підписувалися";
 				return false;
 			}
@@ -1856,30 +1736,30 @@ function() {
 			sign = euSign.SignDataInternal(false, array, false);
 			info = euSign.VerifyDataInternal(sign);
 			if (!utils.CompareArrays(info.GetData(), array)) {
-				resultText.value += "Тестування функцій внутрішнього підпису " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій внутрішнього підпису " + 
+					"завершилося з помилкою: " + 
 					"Перевірені дані не співпадають з даними, що підписувалися";
 				return false;
 			}
-
+			
 			resultText.value += "Тестування функцій підпису геш...\r\n";
 			hash = euSign.HashData(string, true);
 			sign = euSign.SignHash(hash, true);
 			info = euSign.VerifyHash(hash, sign);
 			info = euSign.VerifyHashOnTimeEx(hash, 0, sign,
 				new Date(), true, true);
-
+			
 			hash = euSign.HashData(string, false);
 			sign = euSign.SignHash(hash, true);
 			info = euSign.VerifyHash(hash, sign);
 			info = euSign.VerifyHashOnTimeEx(hash, 0, sign,
 				null, true, true);
-
+			
 			hash = euSign.HashData(array, false);
 			sign = euSign.SignHash(hash, true);
 			info = euSign.VerifyHash(hash, sign);
 		} catch (e) {
-			resultText.value += "Тестування функцій підпису " +
+			resultText.value += "Тестування функцій підпису " + 
 				"завершилося з помилкою: " + e.toString();
 			return false;
 		}
@@ -1901,21 +1781,21 @@ function() {
 		var ownCert, hash;
 		var emptySign, signer, sign;
 		var info;
-
+		
 		var resultText = document.getElementById('TestSignText');
-
+		
 		resultText.value += "Тестування функцій додавання підпису...\r\n";
 		try {
 			ownCert = euSignTest.getOwnCertificate(
 				EU_CERT_KEY_TYPE_DSTU4145, EU_KEY_USAGE_DIGITAL_SIGNATURE);
 			if (ownCert == null) {
-				resultText.value += "Тестування функцій додавання підпису " +
-					"завершилося з помилкою: " +
-					"Сертифікат користувача для підпису за " +
+				resultText.value += "Тестування функцій додавання підпису " + 
+					"завершилося з помилкою: " + 
+					"Сертифікат користувача для підпису за " + 
 					"алгоритмом ДСТУ-4145 не знайдено";
 				return false;
 			}
-
+			
 			hash = euSign.HashData(string);
 			emptySign = euSign.CreateEmptySign(null, true);
 			signer = euSign.CreateSigner(hash, true);
@@ -1928,7 +1808,7 @@ function() {
 			sign = euSign.AppendSigner(signer, ownCert, emptySign);
 			info = euSign.VerifyDataInternal(sign);
 			if (euSign.ArrayToString(info.GetData()) != string) {
-				resultText.value += "Тестування функцій додавання підпису " +
+				resultText.value += "Тестування функцій додавання підпису " + 
 					"завершилося з помилкою: " +
 					"Перевірені дані не співпадають з даними, " +
 					"що підписувалися";
@@ -1941,7 +1821,7 @@ function() {
 			sign = euSign.AppendSigner(signer, ownCert, emptySign);
 			info = euSign.VerifyDataInternal(sign);
 			if (!utils.CompareArrays(info.GetData(), array)) {
-				resultText.value += "Тестування функцій додавання підпису " +
+				resultText.value += "Тестування функцій додавання підпису " + 
 					"завершилося з помилкою: " +
 					"Перевірені дані не співпадають з даними, " +
 					"що підписувалися";
@@ -1949,12 +1829,12 @@ function() {
 			}
 
 		} catch(e) {
-			resultText.value += "Тестування функцій додавання підпису " +
+			resultText.value += "Тестування функцій додавання підпису " + 
 				"завершилося з помилкою: " + e.toString();
-
+			
 			return false;
 		}
-
+		
 		return true;
 	},
 	testRawSign: function() {
@@ -1964,21 +1844,21 @@ function() {
 		var ownCert, hash;
 		var sign;
 		var info;
-
+		
 		var resultText = document.getElementById('TestSignText');
-
+		
 		resultText.value += "Тестування функцій спрощеного підпису...\r\n";
 		try {
 			ownCert = euSignTest.getOwnCertificate(
 				EU_CERT_KEY_TYPE_DSTU4145, EU_KEY_USAGE_DIGITAL_SIGNATURE);
 			if (ownCert == null) {
-				resultText.value += "Тестування функцій спрощеного підпису " +
-					"завершилося з помилкою: " +
-					"Сертифікат користувача для підпису за " +
+				resultText.value += "Тестування функцій спрощеного підпису " + 
+					"завершилося з помилкою: " + 
+					"Сертифікат користувача для підпису за " + 
 					"алгоритмом ДСТУ-4145 не знайдено";
 				return false;
 			}
-
+			
 			hash = euSign.HashData(array);
 			sign = euSign.RawSignHash(hash);
 			info = euSign.RawVerifyHash(hash, sign);
@@ -1989,35 +1869,35 @@ function() {
 
 			sign = euSign.RawSignData(array);
 			info = euSign.RawVerifyDataEx(null, array, sign);
-
+			
 			sign = euSign.RawSignData(string);
 			info = euSign.RawVerifyDataEx(ownCert, string, sign);
 		} catch(e) {
-			resultText.value += "Тестування функцій спрощеного підпису " +
+			resultText.value += "Тестування функцій спрощеного підпису " + 
 				"завершилося з помилкою: " + e.toString();
-
+			
 			return false;
 		}
-
+		
 		return true;
 	},
 	testEnvelop: function() {
 		var string = "Data to envelop, 1234567890";
 		var array = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8]);
-
+		
 		var ownCertInfo;
 		var envelopedData, developedData;
 		var info;
-
+		
 		var resultText = document.getElementById('TestEnvelopText');
 		resultText.value = "Тестування функцій шифрування даних...\r\n";
-
+		
 		try {
 			ownCertInfo = euSignTest.getOwnCertificateInfo(
 				EU_CERT_KEY_TYPE_DSTU4145, EU_KEY_USAGE_KEY_AGREEMENT);
 			if (ownCertInfo == null) {
-				resultText.value += "Тестування функцій шифрування даних " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій шифрування даних " + 
+					"завершилося з помилкою: " + 
 					"Сертифікат користувача для направленого шифрування не знайдено";
 				return false;
 			}
@@ -2027,35 +1907,35 @@ function() {
 				false, string, true);
 			info = euSign.DevelopData(envelopedData);
 			if (euSign.ArrayToString(info.GetData()) != string) {
-				resultText.value += "Тестування функцій шифрування даних " +
+				resultText.value += "Тестування функцій шифрування даних " + 
 					"завершилося з помилкою: " +
 					"Розшифровані дані не співпадають з даними, що зашифровувалися";
 				return false;
 			}
-
+			
 			envelopedData = euSign.EnvelopDataEx(
 				[ownCertInfo.issuer], [ownCertInfo.serial],
 				true, array, false);
 			info = euSign.DevelopData(envelopedData);
 			if (!utils.CompareArrays(info.GetData(), array)) {
-				resultText.value += "Тестування функцій шифрування даних " +
+				resultText.value += "Тестування функцій шифрування даних " + 
 					"завершилося з помилкою: " +
 					"Розшифровані дані не співпадають з даними, що зашифровувалися";
 				return false;
 			}
-
-			resultText.value += "Тестування функцій щифрування " +
+			
+			resultText.value += "Тестування функцій щифрування " + 
 				"завершилося успішно\r\n";
 		} catch (e) {
-			resultText.value += "Тестування функцій щифрування " +
+			resultText.value += "Тестування функцій щифрування " + 
 				"завершилося з помилкою: " + e.toString();
-
+			
 			return false;
 		}
-
+		
 		if (!this.testSession())
 			return false;
-
+		
 		return true;
 	},
 	testSession: function() {
@@ -2077,12 +1957,12 @@ function() {
 			ownCertInfo = euSignTest.getOwnCertificateInfo(
 				EU_CERT_KEY_TYPE_DSTU4145, EU_KEY_USAGE_KEY_AGREEMENT);
 			if (ownCert == null || ownCertInfo == null) {
-				resultText.value += "Тестування функцій захищеної сесії " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій захищеної сесії " + 
+					"завершилося з помилкою: " + 
 					"Сертифікат користувача для направленого шифрування не знайдено";
 				return false;
 			}
-
+			
 			userSession = euSign.ClientSessionCreateStep1(3600);
 			serverSession = euSign.ServerSessionCreateStep1(
 				3600, userSession.GetData());
@@ -2094,8 +1974,8 @@ function() {
 			if (!euSign.SessionIsInitialized(userSession) ||
 				!euSign.SessionIsInitialized(serverSession) ||
 				!euSign.SessionCheckCertificates(userSession)) {
-				resultText.value += "Тестування функцій захищеної сесії " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій захищеної сесії " + 
+					"завершилося з помилкою: " + 
 					"Сесію не ініціалізовано";
 				return false;
 			}
@@ -2107,8 +1987,8 @@ function() {
 			if (serverCert.GetIssuer() != userCert.GetIssuer() ||
 				serverCert.GetIssuer() != ownCertInfo.GetIssuer() ||
 				serverCert.GetSerial() != ownCertInfo.GetSerial()) {
-				resultText.value += "Тестування функцій захищеної сесії " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій захищеної сесії " + 
+					"завершилося з помилкою: " + 
 					"Сертифікати сервера та клієнта не співпадає";
 				return false;
 			}
@@ -2116,7 +1996,7 @@ function() {
 			var _testEncryption = function(_ses1, _ses2, _testData) {
 				var _isStr = ((typeof _testData) == 'string');
 				var _envData, _devData;
-
+				
 				_envData = euSign.SessionEncrypt(
 					_ses1, _testData, _isStr);
 				_devData = euSign.SessionDecrypt(
@@ -2146,8 +2026,8 @@ function() {
 
 			if (!_testEncryption(userSession, serverSession, string) ||
 				!_testEncryption(userSession, serverSession, array)) {
-				resultText.value += "Тестування функцій захищеної сесії " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій захищеної сесії " + 
+					"завершилося з помилкою: " + 
 					"Розшифровані дані не співпадають";
 				return false;
 			}
@@ -2165,8 +2045,8 @@ function() {
 
 			if (!_testEncryption(userSession, serverSession, string) ||
 				!_testEncryption(userSession, serverSession, array)) {
-				resultText.value += "Тестування функцій захищеної сесії " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій захищеної сесії " + 
+					"завершилося з помилкою: " + 
 					"Розшифровані дані не співпадають";
 				return false;
 			}
@@ -2176,19 +2056,19 @@ function() {
 			euSign.SessionClose(serverSession);
 			serverSession = null;
 
-			userSession = euSign.ClientDynamicKeySessionCreate(3600,
+			userSession = euSign.ClientDynamicKeySessionCreate(3600, 
 				ownCertInfo.GetIssuer(), ownCertInfo.GetSerial());
 			serverSession = euSign.ServerDynamicKeySessionCreate(
 				3600, userSession.GetData());
-
+				
 			if (!_testEncryption(userSession, serverSession, string) ||
 				!_testEncryption(userSession, serverSession, array)) {
-				resultText.value += "Тестування функцій захищеної сесії " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій захищеної сесії " + 
+					"завершилося з помилкою: " + 
 					"Розшифровані дані не співпадають";
 				return false;
 			}
-
+			
 			euSign.SessionClose(userSession);
 			userSession = null;
 			euSign.SessionClose(serverSession);
@@ -2197,19 +2077,19 @@ function() {
 			userSession = euSign.ClientDynamicKeySessionCreate(3600, ownCert);
 			serverSession = euSign.ServerDynamicKeySessionCreate(
 				3600, userSession.GetData());
-
+				
 			if (!_testEncryption(userSession, serverSession, string) ||
 				!_testEncryption(userSession, serverSession, array)) {
-				resultText.value += "Тестування функцій захищеної сесії " +
-					"завершилося з помилкою: " +
+				resultText.value += "Тестування функцій захищеної сесії " + 
+					"завершилося з помилкою: " + 
 					"Розшифровані дані не співпадають";
 				return false;
 			}
-
-			resultText.value += "Тестування функцій захищеної сесії " +
+			
+			resultText.value += "Тестування функцій захищеної сесії " + 
 				"завершилося успішно\r\n";
 		} catch (e) {
-			resultText.value += "Тестування функцій захищеної сесії " +
+			resultText.value += "Тестування функцій захищеної сесії " + 
 				"завершилося з помилкою: " + e.toString();
 			return false;
 		} finally {
@@ -2221,14 +2101,14 @@ function() {
 			} catch (e) {
 			}
 		}
-
+		
 		return true;
 	},
 //-----------------------------------------------------------------------------
 	loadFilesFromLocalStorage: function(localStorageFolder, loadFunc) {
 		if (!utils.IsStorageSupported())
 			euSign.RaiseError(EU_ERROR_NOT_SUPPORTED);
-
+	
 		if (utils.IsFolderExists(localStorageFolder)) {
 			var files = utils.GetFiles(localStorageFolder);
 			for (var i = 0; i < files.length; i++) {
@@ -2248,7 +2128,7 @@ function() {
 		try {
 			var array = new Uint8Array(fileData);
 			var folderName = null;
-
+			
 			if (fileName.indexOf(".cer") >= 0) {
 				filesListName = 'SelectedCertsList';
 				euSign.SaveCertificate(array);
@@ -2278,7 +2158,7 @@ function() {
 					var fileNameInList = filesList[i].innerText;
 					if (fileNameInList == fileName)
 						fileNameInList += ' (Не завантажено)'
-
+						
 					filesNames.push(fileNameInList);
 				}
 
@@ -2287,11 +2167,11 @@ function() {
 			}
 			alert(e);
 		}
-
-		// euSignTest.updateCertList();
+		
+		euSignTest.updateCertList();
 	},
 	isCertificateExtension: function(fileName) {
-		if ((fileName.indexOf(".cer") >= 0) ||
+		if ((fileName.indexOf(".cer") >= 0) || 
 				(fileName.indexOf(".p7b") >= 0))
 			return true;
 		return false;
@@ -2318,21 +2198,21 @@ function() {
 
 		selectedPage = document.getElementById(pageId);
 		selectedPage.className = 'MainPageMenuPanelSelected';
-
+		
 		return false;
 	},
 	useInternalSignCheckBoxClick: function() {
-		var intSignCheckbox =
+		var intSignCheckbox = 
 			document.getElementById("InternalSignCheckbox");
-		var addCertToIntSignCheckbox =
-			document.getElementById("AddCertToInternalSignCheckbox");
+		var addCertToIntSignCheckbox = 
+			document.getElementById("AddCertToInternalSignCheckbox"); 
 		var signHashCheckbox =
 			document.getElementById("SignHashCheckbox");
-		var verifiedDataText =
+		var verifiedDataText = 
 			document.getElementById("VerifiedDataText");
-		var fileWithSignSelectFile =
+		var fileWithSignSelectFile = 
 			document.getElementById("FileWithSign");
-
+		
 		if (intSignCheckbox.checked) {
 			addCertToIntSignCheckbox.disabled = '';
 			verifiedDataText.disabled = '';
@@ -2346,7 +2226,7 @@ function() {
 		}
 	},
 	signHashCheckBoxClick: function() {
-		var intSignCheckbox =
+		var intSignCheckbox = 
 			document.getElementById("InternalSignCheckbox");
 		var signHashCheckbox =
 			document.getElementById("SignHashCheckbox");
@@ -2365,13 +2245,12 @@ function() {
 			alert(e);
 		}
 
-		document.getElementById('SignAddCAsCertificatesCheckbox').disabled =
-			((signType & EU_SIGN_TYPE_CADES_X_LONG) ==
-				EU_SIGN_TYPE_CADES_X_LONG) ? '' : 'disabled';
+		document.getElementById('SignAddCAsCertificatesCheckbox').disabled = 
+			(signType == EU_SIGN_TYPE_CADES_X_LONG) ? '' : 'disabled';
 	},
 	signAddContentTimestampCheckBoxClick: function() {
 		try {
-			euSign.SetRuntimeParameter(EU_SIGN_INCLUDE_CONTENT_TIME_STAMP_PARAMETER,
+			euSign.SetRuntimeParameter(EU_SIGN_INCLUDE_CONTENT_TIME_STAMP_PARAMETER, 
 				document.getElementById('SignAddContentTimestampCheckbox').checked);
 		} catch (e) {
 			alert(e);
@@ -2379,7 +2258,7 @@ function() {
 	},
 	signAddCAsCertificatesCheckBoxClick: function() {
 		try {
-			euSign.SetRuntimeParameter(EU_SIGN_INCLUDE_CA_CERTIFICATES_PARAMETER,
+			euSign.SetRuntimeParameter(EU_SIGN_INCLUDE_CA_CERTIFICATES_PARAMETER, 
 				document.getElementById('SignAddCAsCertificatesCheckbox').checked);
 		} catch (e) {
 			alert(e);
@@ -2388,7 +2267,7 @@ function() {
 	privateKeyReaded: function (isReaded) {
 		var enabled = '';
 		var disabled = 'disabled';
-
+		
 		if (!isReaded) {
 			enabled = 'disabled';
 			disabled = '';
@@ -2397,14 +2276,24 @@ function() {
 		setStatus('');
 
 		document.getElementById('CAsServersSelect').disabled = disabled;
+		setPointerEvents(document.getElementById('PKeySelectFileButton'), !isReaded);
 		document.getElementById('PKeyFileName').disabled = disabled;
+		document.getElementById('PKCertsSelectZone').hidden = 
+				(!isReaded && euSignTest.loadPKCertsFromFile) ? '' : 'hidden';
 
-		document.getElementById('PKeyReadButton').title =
+		document.getElementById('PKeyReadButton').title = 
 			isReaded ? 'Стерти' : 'Зчитати';
-		document.getElementById('PKeyReadButton').innerHTML =
+		document.getElementById('PKeyReadButton').innerHTML = 
 			isReaded ? 'Стерти' : 'Зчитати';
-		document.getElementById('PKeyReadButton').disabled = false
 
+		document.getElementById('KeyReadedImage').style.display = isReaded ? 
+			"inline" : 'none';
+
+		setPointerEvents(document.getElementById('PKeyShowOwnerInfoButton'), isReaded);
+		setPointerEvents(document.getElementById('PKeyShowCertsInfoButton'), isReaded);
+		setPointerEvents(document.getElementById('PKeySaveInfo'), isReaded);
+		setPointerEvents(document.getElementById('PKeyBlockOwnCertButton'), isReaded);
+		setPointerEvents(document.getElementById('PKeyRevokeOwnCertButton'), isReaded);
 		document.getElementById('PKeyPassword').disabled = disabled;
 		if (!isReaded) {
 			document.getElementById('PKeyPassword').value = '';
@@ -2413,6 +2302,25 @@ function() {
 			document.getElementById('PKeyFileInput').value = null;
 			setPointerEvents(document.getElementById('PKeyReadButton'), false);
 		}
+
+		setPointerEvents(document.getElementById('SignDataButton'), isReaded);
+		document.getElementById('FileToSign').disabled = enabled;
+		setPointerEvents(document.getElementById('SignFileButton'), isReaded);
+		setPointerEvents(document.getElementById('TestSignButton'), isReaded);
+		document.getElementById('TestSignText').disabled = enabled;
+
+		document.getElementById('RecipientsCertsFiles').disabled = enabled;
+		document.getElementById('DataToEnvelopTextEdit').disabled = enabled;
+		setPointerEvents(document.getElementById('EnvelopDataButton'), isReaded);
+		document.getElementById('EnvelopedDataText').disabled = enabled;
+		setPointerEvents(document.getElementById('DevelopedDataButton'), isReaded);
+		document.getElementById('DevelopedDataText').disabled = enabled;
+		setPointerEvents(document.getElementById('TestEnvelopButton'), isReaded);
+		document.getElementById('TestEnvelopText').disabled = enabled;
+
+		document.getElementById('EnvelopFiles').disabled = enabled;
+
+		document.getElementById('RecipientsCertsFiles').value = [];
 	},
 	setSelectPKCertificatesEvents: function() {
 		document.getElementById('ChoosePKCertsInput').addEventListener(
@@ -2421,31 +2329,44 @@ function() {
 					euSignTest.clearPrivateKeyCertificatesList();
 				} else {
 					euSignTest.privateKeyCerts = evt.target.files;
-					euSignTest.setFileItemsToList("SelectedPKCertsList",
-						evt.target.files);
+
+					var output = [];
+					for (var i = 0, item; item = euSignTest.privateKeyCerts[i]; i++) {
+						output.push(item.name);
+					}
+					document.getElementById('SelectedPKCertsList').value = output.join();
+
+					// euSignTest.setFileItemsToList("SelectedPKCertsList",
+					// 	evt.target.files);
 				}
 			}, false);
-
-		document.getElementById('PKCertsDropZone').addEventListener(
-			'dragover', function(evt) {
-				evt.stopPropagation();
-				evt.preventDefault();
-				evt.dataTransfer.dropEffect = 'copy';
-			}, false);
-
-		document.getElementById('PKCertsDropZone').addEventListener(
-			'drop', function(evt) {
-				evt.stopPropagation();
-				evt.preventDefault();
-
-				if (evt.dataTransfer.files.length <= 0) {
-					euSignTest.clearPrivateKeyCertificatesList();
-				} else {
-					euSignTest.privateKeyCerts = evt.dataTransfer.files;
-					euSignTest.setFileItemsToList("SelectedPKCertsList",
-						evt.dataTransfer.files);
-				}
-			}, false);
+		
+		// document.getElementById('PKCertsDropZone').addEventListener(
+		// 	'dragover', function(evt) {
+		// 		evt.stopPropagation();
+		// 		evt.preventDefault();
+		// 		evt.dataTransfer.dropEffect = 'copy';
+		// 	}, false);
+        //
+		// document.getElementById('PKCertsDropZone').addEventListener(
+		// 	'drop', function(evt) {
+		// 		evt.stopPropagation();
+		// 		evt.preventDefault();
+        //
+		// 		if (evt.dataTransfer.files.length <= 0) {
+		// 			euSignTest.clearPrivateKeyCertificatesList();
+		// 		} else {
+		// 			euSignTest.privateKeyCerts = evt.dataTransfer.files;
+		// 			euSignTest.setFileItemsToList("SelectedPKCertsList",
+		// 				evt.dataTransfer.files);
+		// 		}
+		// 	}, false);
+	},
+	clearPrivateKeyCertificatesList: function() {
+		euSignTest.privateKeyCerts = null;
+		document.getElementById('ChoosePKCertsInput').value = null;
+		document.getElementById('SelectedPKCertsList').innerHTML = 
+			"Сертифікати відкритого ключа не обрано" + '<br>';
 	},
 	setItemsToList: function(listId, items) {
 		var output = [];
@@ -2453,7 +2374,7 @@ function() {
 			output.push('<li><strong>', item, '</strong></li>');
 		}
 
-		document.getElementById(listId).innerHTML =
+		document.getElementById(listId).innerHTML = 
 			'<ul>' + output.join('') + '</ul>';
 	},
 	setFileItemsToList: function(listId, items) {
@@ -2462,7 +2383,7 @@ function() {
 			output.push('<li><strong>', item.name, '</strong></li>');
 		}
 
-		document.getElementById(listId).innerHTML =
+		document.getElementById(listId).innerHTML = 
 			'<ul>' + output.join('') + '</ul>';
 	}
 });
@@ -2475,15 +2396,14 @@ var utils = Utils(euSign);
 
 //=============================================================================
 
+function setPointerEvents(element, enable) {
+	element.style.pointerEvents = enable ? "auto" : "none";
+}
+
 function setStatus(message) {
 	if (message != '')
 		message = '(' + message + '...)';
-	console.log(message);
-	//document.getElementById('status').innerHTML = message;
-}
-
-function setPointerEvents(element, enable) {
-	element.style.pointerEvents = enable ? "auto" : "none";
+	document.getElementById('status').innerHTML = message;
 }
 
 function saveFile(fileName, array) {
@@ -2492,19 +2412,41 @@ function saveFile(fileName, array) {
 }
 
 function pageLoaded() {
+	// document.getElementById('CertsAndCRLsFiles').addEventListener(
+	// 	'change', euSignTest.chooseCertsAndCRLs, false);
 	document.getElementById('PKeyFileInput').addEventListener(
 		'change', euSignTest.selectPrivateKeyFile, false);
+	// document.getElementById('RecipientsCertsFiles').addEventListener(
+	// 	'change', euSignTest.chooseRecepientsCertificates, false);
+	// document.getElementById('FileToSign').addEventListener(
+	// 	'change', euSignTest.chooseFileToSign, false);
+	// document.getElementById('FileToVerify').addEventListener(
+	// 	'change', euSignTest.chooseFileToVerify, false);
+	// document.getElementById('FileWithSign').addEventListener(
+	// 	'change', euSignTest.chooseFileToVerify, false);
+	// document.getElementById('EnvelopFiles').addEventListener(
+	// 	'change', euSignTest.chooseEnvelopFile, false);
+
+	var appendMaxFileSizeLimit = function(textLabelId) {
+		var str = document.getElementById(textLabelId).innerHTML;
+		str = str.substring(0, str.length - 1) + 
+			" (не більше " + EU_MAX_DATA_SIZE_MB + " МБ):";
+		document.getElementById(textLabelId).innerHTML = str;
+	}
+
+	// appendMaxFileSizeLimit('ChooseFileForSignTextLabel');
+	// appendMaxFileSizeLimit('ChooseFileForVerifyTextLabel');
+	// appendMaxFileSizeLimit('ChooseFileForEnvelopTextLabel');
 }
 
 function EUSignCPModuleInitialized(isInitialized) {
 	if (isInitialized)
 		euSignTest.initialize();
-	else
+	else 
 		alert("Криптографічну бібліотеку не ініціалізовано");
 }
-
-//=============================================================================
 
 $(function () {
     pageLoaded();
 })
+//=============================================================================

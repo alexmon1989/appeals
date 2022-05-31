@@ -82,3 +82,10 @@ class CustomSetPasswordForm(SetPasswordForm):
                 css_class='row'
             )
         )
+
+
+class AuthFormDSFile(forms.Form):
+    """Форма авторизации с помощью файловой ЭЦП."""
+    key_file = forms.FileField(label='Файл ключа КЕП')
+    cert_file = forms.FileField(label='Файл з сертифікатом', required=False)
+    password = forms.CharField(label='Пароль сертифікату', widget=forms.PasswordInput())
