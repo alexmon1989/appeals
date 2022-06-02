@@ -143,7 +143,7 @@
       </div>
 
       <div class="d-flex">
-        <button type="submit" class="btn btn-primary mt-4">Сформувати заявку</button>
+        <button type="submit" class="btn btn-primary mt-4">Сформувати звернення</button>
       </div>
     </form>
   </div>

@@ -1,10 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from django.utils.translation import ugettext_lazy as _
+from django.utils.functional import cached_property
 from .managers import UserManager
 from backend.core.models import TimeStampModel
-import random
-import string
 
 
 class User(AbstractUser):
@@ -22,8 +21,12 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    @cached_property
     def get_full_name(self):
-        full_name = '%s %s %s' % (self.last_name, self.first_name, self.middle_name)
+        if self.belongs_to_group('Заявник'):
+            return self.certificateowner.pszSubjFullName
+        else:
+            full_name = '%s %s %s' % (self.last_name, self.first_name, self.middle_name)
         return full_name.strip()
 
     def get_groups(self):
@@ -37,6 +40,11 @@ class User(AbstractUser):
     def is_privileged(self) -> bool:
         """Привилегированный пользователь."""
         return self.is_superuser and self.belongs_to_group('Голова апеляційної палати')
+
+    @property
+    def is_applicant(self) -> bool:
+        """Привилегированный пользователь."""
+        return self.belongs_to_group('Заявник')
 
 
 class CertificateOwner(TimeStampModel):

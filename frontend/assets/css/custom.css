@@ -16,7 +16,7 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
     background-color: rgba(232, 232, 232, 0.8);
 }
 
- .overlay-content {
+.overlay-content {
     position: absolute;
     transform: translateY(-50%);
     -webkit-transform: translateY(-50%);
@@ -26,4 +26,8 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
     right: 0;
     text-align: center;
     color: #555;
+}
+
+#middle {
+    min-height: calc(100vh - 80px - 56px);
 }

@@ -1,12 +1,14 @@
 {% extends 'base_cabinet.html' %}
 
-{% block title %}Створення заявки{% endblock %}
+{% block title %}Створення звернення{% endblock %}
 
 {% block main %}
     {% include 'filling/create_application/_partials/header.html' %}
 
     <!-- Primary -->
     <div class="section rounded mb-3">
+        <p class="lead mb-4">Будь ласка, заповніть форму. В процесі заповнення будуть з'являтися нові поля в залежності від вашого вибору.</p>
+
         <applicant-filling-form :obj-kinds="{{ obj_kinds }}"
                                 :claim-kinds="{{ claim_kinds }}"
                                 :claim-fields="{{ claim_fields }}"
