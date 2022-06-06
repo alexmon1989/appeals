@@ -1,21 +1,32 @@
 <template>
   <div>
-    <form id="create-app-form">
+    <p class="lead mb-4">Будь ласка, заповніть форму. В процесі заповнення будуть з'являтися нові поля в залежності від вашого вибору.</p>
+
+    <Form enctype="multipart/form-data" id="create-app-form" @submit="onSubmit" v-slot="{ meta }">
 
       <h2 class="h5 mb-3 text-indigo-800">Вид звернення:</h2>
 
       <div class="row g-4">
         <div class="col-md">
           <div class="form-floating mb-3">
-            <select class="form-select form-select-sm"
-                    id="obj_kind"
-                    v-model="objKindSelected">
-              <option value="" disabled>Оберіть тип</option>
-              <option v-for="objKind in objKinds" :value="objKind.pk">
-                {{ objKind.title }}
-              </option>
-            </select>
+            <Field name="obj_kind"
+                   v-model="objKindSelected"
+                   rules="required"
+                   label="Об’єкт права інтелектуальної власності"
+                   v-slot="{ field, meta }">
+              <select class="form-select form-select-sm"
+                      :class="{ 'is-invalid': !meta.valid && meta.touched }"
+                      id="obj_kind"
+                      v-bind="field"
+              >
+                <option value="" disabled>Оберіть тип</option>
+                <option v-for="objKind in objKinds" :value="objKind.pk">
+                  {{ objKind.title }}
+                </option>
+              </select>
+            </Field>
             <label for="obj_kind">Об’єкт права інтелектуальної власності:</label>
+            <ErrorMessage name="obj_kind" class="invalid-feedback"/>
           </div>
         </div>
         <div class="col-md">
@@ -142,22 +153,30 @@
         </ul>
       </div>
 
-      <div class="d-flex">
-        <button type="submit" class="btn btn-primary mt-4">Сформувати звернення</button>
+      <div class="d-flex justify-content-center mb-2">
+        <button type="submit"
+                :disabled="sending"
+                class="btn btn-primary mt-4"
+        >Сформувати та підписати</button>
       </div>
     </form>
   </div>
 </template>
 
 <script>
+import getDataFromSIS from "@/app/lib/sis"
+import debounce from "lodash.debounce"
+import { Form, Field, ErrorMessage } from 'vee-validate'
+
 import ClaimKindSelect from "./ClaimKindSelect.vue"
 import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
 import ClaimField from "./ClaimField.vue"
-import getDataFromSIS from "@/app/lib/sis"
-import debounce from "lodash.debounce"
 
 export default {
   components: {
+    Form,
+    Field,
+    ErrorMessage,
     ClaimKindSelect,
     ThirdPersonCheckbox,
     ClaimField,
@@ -170,6 +189,10 @@ export default {
   },
 
   data() {
+    const schema = {
+      email: 'required',
+    };
+
     return {
       objKindSelected: '',
       claimKindSelected: '',
@@ -184,6 +207,8 @@ export default {
       stage9Values: {},
       dataLoadedSIS: false,
       errors: [],
+      sending: false,
+      schema,
     }
   },
 
@@ -261,6 +286,27 @@ export default {
       this.thirdPersonDisabled = false
     },
 
+    // Отправка данных на сервер
+    async onSubmit(values) {
+      const formData = new FormData(document.getElementById('create-app-form'))
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      formData.append('csrfmiddlewaretoken', csrftoken)
+
+      this.sending = true
+
+      let response = await fetch('', {
+        method: 'POST',
+        body: formData
+      });
+
+      let result = await response.json();
+
+      this.sending = false
+
+      console.log(result)
+
+      // Отправка
+    }
   },
 
   computed: {

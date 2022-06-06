@@ -1,26 +1,41 @@
 <template>
   <div class="form-floating mb-3">
-    <select class="form-select form-select-sm"
-            id="claim_kind"
-            :disabled="claimKindsFiltered.length === 0"
-            v-model="modelValue"
-            @input="$emit('update:modelValue', parseInt($event.target.value))">
-      <option value="" disabled>Оберіть вид</option>
-      <option v-for="claimKind in claimKindsFiltered" :value="claimKind.pk">
-        {{ claimKind.title }}
-      </option>
-    </select>
+    <Field name="claim_kind"
+           v-model="modelValue"
+           rules="required"
+           label="Об’єкт права інтелектуальної власності"
+           v-slot="{ field, meta }">
+      <select class="form-select form-select-sm"
+              :disabled="claimKindsFiltered.length === 0"
+              :class="{ 'is-invalid': !meta.valid && meta.touched }"
+              @input="$emit('update:modelValue', parseInt($event.target.value))"
+              id="claim_kind"
+              v-bind="field"
+      >
+        <option value="" disabled selected="">Оберіть вид</option>
+        <option v-for="claimKind in claimKindsFiltered" :value="claimKind.pk">
+          {{ claimKind.title }}
+        </option>
+      </select>
+    </Field>
     <label for="claim_kind">Вид звернення</label>
+    <ErrorMessage name="claim_kind" class="invalid-feedback"/>
   </div>
 </template>
 
 <script>
+import { Field, ErrorMessage } from 'vee-validate'
+
 export default {
   name: "ClaimKindSelect",
   props: {
     modelValue: Number,
     claimKinds: Array,
     objKindId: Number,
+  },
+  components: {
+    Field,
+    ErrorMessage,
   },
   emits: ['update:modelValue'],
   computed: {

@@ -1,74 +1,119 @@
 <template>
   <div class="form-floating mb-3" v-if="fieldType === 'text'">
-    <input type="text"
-           class="form-control"
-           :id="fieldId"
-           :placeholder="fieldTitle"
+    <Field :name="fieldId"
            v-model="modelValue"
-           @input="$emit('update:modelValue', $event.target.value)"
-           :disabled="!fieldEditable"
-    >
+           :rules="{'required': fieldRequired}"
+           :label="label"
+           v-slot="{ field, meta }">
+      <input type="text"
+             v-bind="field"
+             :id="fieldId"
+             :disabled="!fieldEditable"
+             class="form-control"
+             :class="{ 'is-invalid': !meta.valid && meta.touched }"
+             :placeholder="fieldTitle"
+             @input="$emit('update:modelValue', $event.target.value)"
+      />
+    </Field>
     <label for="floatingInput">{{ fieldTitle }}</label>
+    <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
+
   <div class="form-floating mb-3" v-else-if="fieldType === 'email'">
-    <input type="email"
-           class="form-control"
-           :id="fieldId"
-           :placeholder="fieldTitle"
+    <Field :name="fieldId"
            v-model="modelValue"
-           @input="$emit('update:modelValue', $event.target.value)"
-           :disabled="!fieldEditable"
-    >
+           :rules="{'required': fieldRequired}"
+           :label="label"
+           v-slot="{ field, meta }">
+      <input type="email"
+             v-bind="field"
+             :id="fieldId"
+             :disabled="!fieldEditable"
+             class="form-control"
+             :class="{ 'is-invalid': !meta.valid && meta.touched }"
+             :placeholder="fieldTitle"
+             @input="$emit('update:modelValue', $event.target.value)"
+      />
+    </Field>
     <label for="floatingInput">{{ fieldTitle }}</label>
+    <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
+
   <div class="form-floating mb-3" v-else-if="fieldType === 'date'">
-    <input type="date"
-           class="form-control"
-           :id="fieldId"
-           :placeholder="fieldTitle"
+    <Field :name="fieldId"
            v-model="modelValue"
-           @input="$emit('update:modelValue', $event.target.value)"
-           :disabled="!fieldEditable"
-    >
+           :rules="{'required': fieldRequired}"
+           :label="label"
+           v-slot="{ field, meta }">
+      <input type="date"
+             v-bind="field"
+             :id="fieldId"
+             :disabled="!fieldEditable"
+             class="form-control"
+             :class="{ 'is-invalid': !meta.valid && meta.touched }"
+             :placeholder="fieldTitle"
+             @input="$emit('update:modelValue', $event.target.value)"
+      />
+    </Field>
     <label for="floatingInput">{{ fieldTitle }}</label>
+    <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
+
   <div class="form-floating mb-3" v-else-if="fieldType === 'textarea'">
-    <textarea class="form-control"
-              placeholder="Leave a comment here"
-              :id="fieldId"
-              :placeholder="fieldTitle"
-              v-model="modelValue"
-              @input="$emit('update:modelValue', $event.target.value)"
-              :disabled="!fieldEditable"
-              style="height: 100px"
-    ></textarea>
+    <Field :name="fieldId"
+           v-model="modelValue"
+           :rules="{'required': fieldRequired}"
+           :label="label"
+           v-slot="{ field, meta }">
+      <textarea class="form-control"
+                :class="{ 'is-invalid': !meta.valid && meta.touched }"
+                v-bind="field"
+                :id="fieldId"
+                :placeholder="fieldTitle"
+                @input="$emit('update:modelValue', $event.target.value)"
+                :disabled="!fieldEditable"
+                style="height: 100px"
+      ></textarea>
+    </Field>
     <label for="floatingInput">{{ fieldTitle }}</label>
+    <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
+
   <div class="mb-3" v-else-if="fieldType === 'file'">
     <p class="d-block mb-2 fw-medium" style="font-size: 18px">{{ fieldTitle }}</p>
 
     <div class="d-flex">
       <!-- static list -->
-      <label class="btn btn-primary btn-sm cursor-pointer position-relative">
-        <input type="file" :name="fieldId"
-               data-file-ext="doc, docx"
-               data-file-max-size-kb-per-file="30000"
-               data-file-ext-err-msg="Allowed:"
-               data-file-exist-err-msg="File already exists:"
-               data-file-size-err-item-msg="File too large!"
-               data-file-size-err-total-msg="Total allowed size exceeded!"
-               data-file-toast-position="bottom-center"
-               :data-file-preview-container="'#' + fieldId + '_preview'"
-               data-file-preview-img-height="60"
-               :data-file-btn-clear="'#' + fieldId + '_remove'"
-               data-file-preview-show-info="true"
-               data-file-preview-list-type="list"
-               class="custom-file-input absolute-full">
-
+      <label class="btn btn-primary btn-soft btn-sm cursor-pointer position-relative">
+        <Field :name="fieldId"
+               :label="label"
+               rules="required"
+               v-slot="{ handleChange, handleBlur, meta }">
+          <input type="file"
+                 :id="fieldId"
+                 :name="fieldId"
+                 @change="handleChange"
+                 @input="handleChangeFile"
+                 data-file-ext="doc, docx"
+                 data-file-max-size-kb-per-file="30000"
+                 data-file-ext-err-msg="Allowed:"
+                 data-file-exist-err-msg="File already exists:"
+                 data-file-size-err-item-msg="File too large!"
+                 data-file-size-err-total-msg="Total allowed size exceeded!"
+                 data-file-toast-position="bottom-center"
+                 :data-file-preview-container="'#' + fieldId + '_preview'"
+                 data-file-preview-img-height="60"
+                 :data-file-btn-clear="'#' + fieldId + '_remove'"
+                 data-file-preview-show-info="true"
+                 data-file-preview-list-type="list"
+                 :data-valid="meta.valid"
+                 class="custom-file-input absolute-full"
+                 :class="{ 'is-invalid': !meta.valid && meta.touched }">
+        </Field>
         <span class="group-icon">
-        <i class="fi fi-arrow-upload"></i>
-        <i class="fi fi-circle-spin fi-spin"></i>
-      </span>
+          <i class="fi fi-arrow-upload"></i>
+          <i class="fi fi-circle-spin fi-spin"></i>
+        </span>
         <span>Обрати файл</span>
       </label>
 
@@ -87,38 +132,47 @@
       {{ fieldHelpText }}
     </div>
 
+    <ErrorMessage :name="fieldId" class="invalid-feedback d-block"/>
+
     <div class="js-file-input-container-multiple-list-static position-relative hide-empty mt-2"
          :id="fieldId + '_preview'"><!-- container --></div>
   </div>
+
   <div class="mb-3" v-else-if="fieldType === 'file_multi'">
     <p class="d-block mb-2 fw-medium" style="font-size: 18px">{{ fieldTitle }}</p>
 
     <div class="d-flex">
       <!-- static list -->
-      <label class="btn btn-primary btn-sm cursor-pointer position-relative">
-        <input multiple type="file" :name="fieldId"
-               data-file-ext="doc, docx"
-               data-file-max-size-kb-per-file="30000"
-               data-file-max-size-kb-total="0"
-               data-file-max-total-files="100"
-               data-file-ext-err-msg="Allowed:"
-               data-file-exist-err-msg="File already exists:"
-               data-file-size-err-item-msg="File too large!"
-               data-file-size-err-total-msg="Total allowed size exceeded!"
-               data-file-size-err-max-msg="Maximum allowed files:"
-               data-file-toast-position="bottom-center"
-               :data-file-preview-container="'#' + fieldId + '_preview'"
-               data-file-preview-img-height="60"
-               :data-file-btn-clear="'#' + fieldId + '_remove'"
-               data-file-preview-show-info="true"
-               data-file-preview-list-type="list"
-               class="custom-file-input absolute-full">
-
+      <label class="btn btn-primary btn-soft btn-sm cursor-pointer position-relative">
+        <Field :name="fieldId"
+               :label="label"
+               rules="required"
+               v-slot="{ handleChange, handleBlur, meta }">
+          <input multiple type="file"
+                 :id="fieldId"
+                 :name="fieldId"
+                 @change="handleChange"
+                 @input="handleChangeFile"
+                 data-file-ext="doc, docx"
+                 data-file-max-size-kb-per-file="30000"
+                 data-file-ext-err-msg="Allowed:"
+                 data-file-exist-err-msg="File already exists:"
+                 data-file-size-err-item-msg="File too large!"
+                 data-file-size-err-total-msg="Total allowed size exceeded!"
+                 data-file-toast-position="bottom-center"
+                 :data-file-preview-container="'#' + fieldId + '_preview'"
+                 data-file-preview-img-height="60"
+                 :data-file-btn-clear="'#' + fieldId + '_remove'"
+                 data-file-preview-show-info="true"
+                 data-file-preview-list-type="list"
+                 class="custom-file-input absolute-full"
+                 :class="{ 'is-invalid': !meta.valid && meta.touched }">
+        </Field>
         <span class="group-icon">
           <i class="fi fi-arrow-upload"></i>
           <i class="fi fi-circle-spin fi-spin"></i>
         </span>
-        <span>Обрати файли</span>
+        <span>Обрати файл</span>
       </label>
 
       <!-- remove button -->
@@ -136,12 +190,17 @@
       {{ fieldHelpText }}
     </div>
 
+    <ErrorMessage :name="fieldId" class="invalid-feedback d-block"/>
+
     <div class="js-file-input-container-multiple-list-static position-relative hide-empty mt-2"
          :id="fieldId + '_preview'"><!-- container --></div>
   </div>
+
 </template>
 
 <script>
+import { Field, ErrorMessage } from 'vee-validate'
+
 export default {
   name: "ClaimField",
   props: {
@@ -153,10 +212,24 @@ export default {
     fieldRequired: Boolean,
     fieldHelpText: String,
   },
+  components: {
+    Field,
+    ErrorMessage
+  },
   emits: ['update:modelValue'],
   mounted() {
     if (this.fieldType === 'file' || this.fieldType === 'file_multiple') {
       $.SOW.core.file_upload.init('input[type="file"].custom-file-input, input[type="file"].form-control');
+    }
+  },
+  computed: {
+    label() {
+      return '"' + this.fieldTitle + '"'
+    },
+  },
+  methods: {
+    handleChangeFile(event) {
+      this.$emit('update:modelValue', event.target.files)
     }
   }
 }

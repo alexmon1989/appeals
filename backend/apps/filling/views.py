@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from ..classifiers.models import ObjKind, ClaimKind
 from .models import ClaimField
@@ -13,6 +14,12 @@ def my_applications_list(request):
 @login_required
 def create_application(request):
     """Отображает страницу со формой создания обращения."""
+    if request.method == 'POST':
+        print(request.POST)
+        print(request.FILES)
+        return JsonResponse({'success': 1})
+
+
     # Типы объектов
     obj_kinds = list(ObjKind.objects.order_by('pk').values('pk', 'title', 'sis_id'))
 
