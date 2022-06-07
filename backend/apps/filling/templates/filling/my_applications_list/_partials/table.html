@@ -5,8 +5,8 @@
 	data-items-per-page="10|15|30|50|100"
 
 -->
-<table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
-       id="table-documents"
+<table class="table-datatable table table-bordered table-hover table-striped small"
+       id="table-claims"
        data-lng-empty="No data available in table"
        data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
        data-lng-filtered="(filtered from _MAX_ total entries)"
@@ -34,40 +34,47 @@
        data-lng-column-visibility="Видимість стовбчиків"
 
        data-enable-export="false"
-
        data-custom-config='{
-        "stateSave": true,
-        "server-side": true,
-        "processing": true,
-        "serverSide": true,
-        "ajax": "/api/cases/?format=datatables",
-        "order": []
-       }'>
+            "stateSave": true,
+            "order": [4, "desc"]
+           }'>
     <thead>
     <tr>
-        <th data-data="case_number_link" data-name="case_number">№</th>
-        <th data-data="app_number">№ заявки</th>
-        <th data-data="obj_kind_title" data-name="obj_kind.title">Вид об'єкта</th>
-        <th data-data="claim_kind_title" data-name="claim_kind.title">Вид заяви</th>
-        <th data-data="obj_title" >Назва об'єкта</th>
-        <th data-data="applicant_name">Апелянт</th>
-        <th data-data="claim_date">Дата подання</th>
-        <th data-data="deadline">Дата, до якої необхідно розглянути</th>
-        <th data-data="hearing">Дата засідання</th>
+        <th class="text-nowrap">№ заявки або ох. документа</th>
+        <th class="text-nowrap">Тип об'єкта</th>
+        <th class="text-nowrap">Вид звернення</th>
+        <th>Статус</th>
+        <th>Створено</th>
     </tr>
     </thead>
-
+    <tbody>
+    {% for claim in claims %}
+        <tr>
+            <td><a href="#" class="fw-bold">{{ claim.obj_number }}</a></td>
+            <td class="text-nowrap">{{ claim.obj_kind.title }}</td>
+            <td>{{ claim.claim_kind.title }}</td>
+            <td class="fw-bold">
+                {% if claim.status == 1 %}
+                    <span class="text-danger">{{ claim.get_status_display }}</span>
+                {% elif claim.status == 2 %}
+                    <span class="text-primary">{{ claim.get_status_display }}</span>
+                {% elif claim.status == 3 %}
+                    <span class="text-success">{{ claim.get_status_display }}</span>
+                {% else %}
+                    {{ claim.get_status_display }}
+                {% endif %}
+            </td>
+            <td class="text-nowrap">{{ claim.created_at|date:"SHORT_DATE_FORMAT" }} {{claim.created_at|time:"h:i:s"}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
     <tfoot>
     <tr>
-        <th>№ справи</th>
-        <th>№ заявки</th>
-        <th>Вид об'єкта</th>
-        <th>Вид заяви</th>
-        <th>Назва об'єкта</th>
-        <th>Апелянт</th>
-        <th>Дата подання</th>
-        <th>Дата, до якої необхідно розглянути</th>
-        <th>Дата засідання</th>
+        <th>№ заявки або ох. документа</th>
+        <th>Тип об'єкта</th>
+        <th>Вид звернення</th>
+        <th>Статус</th>
+        <th>Створено</th>
     </tr>
     </tfoot>
 </table>
