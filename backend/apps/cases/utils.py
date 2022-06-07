@@ -2,21 +2,24 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 from pathlib import Path
+from datetime import date
 
 
 def document_get_folder_path(instance) -> Path:
     """Возвращает путь к каталогу с файлами документа."""
-    return Path('cases') / str(instance.case.pk) / str(instance.pk)
+    d = date.today()
+    return Path('documents') / str(d.year) / str(d.month) / str(d.day) / str(instance.pk)
 
 
 def document_get_original_file_path(instance, file_name: str) -> Path:
-    """Возвращает путь к каталогу с файлами документа."""
+    """Возвращает путь к файлу документа."""
     return document_get_folder_path(instance) / file_name
 
 
 def sign_get_file_path(instance, file_name: str) -> Path:
-    """Возвращает путь к каталогу с файлом цифровой печати."""
-    return document_get_folder_path(instance.document) / file_name
+    """Возвращает путь к файлу цифровой печати."""
+    p = Path(instance.document.file)
+    return p.parent / file_name
 
 
 def set_cell_border(cell, **kwargs):

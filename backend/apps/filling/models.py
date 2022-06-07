@@ -1,6 +1,10 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from backend.core.models import TimeStampModel
-from ..classifiers.models import ClaimKind
+from ..classifiers.models import ClaimKind, ObjKind
+
+
+UserModel = get_user_model()
 
 
 class ClaimField(TimeStampModel):
@@ -51,3 +55,33 @@ class ClaimField(TimeStampModel):
     class Meta:
         verbose_name = "Поле звернення"
         verbose_name_plural = "Поля звернень"
+
+
+class Claim(TimeStampModel):
+    """Модель обращения."""
+    obj_kind = models.ForeignKey(ObjKind, on_delete=models.CASCADE, verbose_name='Тип об\'єкта')
+    claim_kind = models.ForeignKey(ClaimKind, on_delete=models.CASCADE, verbose_name='Вид звернення')
+    obj_number = models.CharField('Номер заявки або охоронного документа', max_length=255)
+    status = models.PositiveIntegerField(
+        'Статус',
+        choices=(
+            (1, 'Потребує підписання документів'),
+            (2, 'Очікує на розгляд'),
+            (3, 'Створено справу'),
+        ),
+        default=1
+    )
+    user = models.ForeignKey(
+        UserModel,
+        on_delete=models.SET_NULL,
+        verbose_name="Користувач",
+        null=True,
+    )
+    json_data = models.TextField('Дані звернення', blank=True, null=True)
+
+    def __str__(self):
+        return self.obj_number
+
+    class Meta:
+        verbose_name = "Звернення"
+        verbose_name_plural = "Звернення"

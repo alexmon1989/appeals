@@ -5,6 +5,8 @@ from backend.core.models import TimeStampModel
 from ..classifiers.models import ObjKind, ClaimKind, DocumentName, DocumentType
 from .utils import sign_get_file_path, document_get_original_file_path
 
+from ..filling.models import Claim
+
 from pathlib import Path
 
 
@@ -75,6 +77,7 @@ class Case(TimeStampModel):
 
 class Document(TimeStampModel):
     """Модель документа дела."""
+    claim = models.ForeignKey(Claim, on_delete=models.SET_NULL, null=True, verbose_name='Звернення')
     case = models.ForeignKey(Case, on_delete=models.SET_NULL, null=True, verbose_name='Справа')
     document_type = models.ForeignKey(DocumentType, on_delete=models.SET_NULL, null=True, verbose_name='Тип документа')
     document_name = models.ForeignKey(
@@ -114,7 +117,7 @@ class Document(TimeStampModel):
     class Meta:
         verbose_name = 'Документ'
         verbose_name_plural = 'Документи'
-        db_table = 'cases_documents_list'
+        db_table = 'documents'
 
 
 class CollegiumMembership(models.Model):
@@ -164,4 +167,4 @@ class Sign(TimeStampModel):
     class Meta:
         verbose_name = 'Цифровий підпис'
         verbose_name_plural = 'Цифрові підписи'
-        db_table = 'cases_documents_signs'
+        db_table = 'documents_signs'

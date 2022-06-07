@@ -1,8 +1,12 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from ..classifiers.models import ObjKind, ClaimKind
-from .models import ClaimField
+from ..classifiers.models import ObjKind, ClaimKind, DocumentName, DocumentType
+from .models import ClaimField, Claim
+from ..cases.models import Document
+
+import json
+import datetime
 
 
 @login_required
@@ -15,10 +19,51 @@ def my_applications_list(request):
 def create_application(request):
     """Отображает страницу со формой создания обращения."""
     if request.method == 'POST':
-        print(request.POST)
-        print(request.FILES)
-        return JsonResponse({'success': 1})
+        stage_3_field = ClaimField.objects.filter(claim_kind=request.POST['claim_kind'], stage=3).first().input_id
 
+        json_data = request.POST.dict()
+        del json_data['csrfmiddlewaretoken']
+        json_data = json.dumps(json_data)
+
+        claim = Claim.objects.create(
+            obj_kind_id=request.POST['obj_kind'],
+            claim_kind_id=request.POST['claim_kind'],
+            obj_number=request.POST[stage_3_field],
+            json_data=json_data,
+            user=request.user
+        )
+
+        # Загрузка файлов
+        stage_9_fields = ClaimField.objects.filter(
+            claim_kind=request.POST['claim_kind'],
+            stage=9,
+            required=True,
+            field_type__in=(ClaimField.FieldType.FILE, ClaimField.FieldType.FILE_MULTIPLE)
+        )
+        for field in stage_9_fields:
+            # Получение имени документа
+            document_name, created = DocumentName.objects.get_or_create(title=field.title)
+            # Сохранение файла
+            if field.field_type == ClaimField.FieldType.FILE:
+                file = request.FILES[field.input_id]
+                Document.objects.create(
+                    claim=claim,
+                    document_name=document_name,
+                    document_type=DocumentType.objects.filter(title='Вхідний').first(),
+                    input_date=datetime.datetime.now(),
+                    file=file
+                )
+            else:
+                files = request.FILES.getlist(f"{field.input_id}[]")
+                for file in files:
+                    Document.objects.create(
+                        claim=claim,
+                        document_name=document_name,
+                        document_type=DocumentType.objects.filter(title='Вхідний').first(),
+                        input_date=datetime.datetime.now(),
+                        file=file
+                    )
+        return JsonResponse({'success': 1, 'claim_id': claim.pk})
 
     # Типы объектов
     obj_kinds = list(ObjKind.objects.order_by('pk').values('pk', 'title', 'sis_id'))
