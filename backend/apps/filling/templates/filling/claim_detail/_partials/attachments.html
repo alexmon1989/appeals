@@ -1,0 +1,61 @@
+{% load extras %}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2 class="h5 mb-3 text-indigo-800">Додатки</h2>
+
+        <table class="table table-striped table-sm">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Тип (назва) документу</th>
+                <th scope="col" class="text-center">Сгенеровано автоматично</th>
+                <th scope="col">Файл</th>
+                <th scope="col" class="text-center">Підписано КЕП</th>
+                <th scope="col">Дії</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for document in documents %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ document.document_name }}</td>
+                    <td class="text-center">
+                        {% if document.auto_generated %}
+                            <span class="text-primary fw-bold">{{ document.auto_generated|yesno }}</span>
+                        {% else %}
+                            {{ document.auto_generated|yesno }}
+                        {% endif %}
+                    </td>
+                    <td><a href="{{ document.file.url }}" target="_blank">{{ document.file|filename }}</a></td>
+                    <td class="text-center">
+                        {% if document.sign_set.count > 0 %}
+                            <span class="text-success fw-bold">так</span>
+                        {% else %}
+                            <span class="text-danger fw-bold">ні</span>
+                        {% endif %}
+                    </td>
+                    <td class="d-flex">
+                        <a href="{{ document.file.url }}" target="_blank" title="Дивитися документ">
+                            <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg"
+                                 fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
+                                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"></path>
+                                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"></path>
+                            </svg>
+                        </a>
+
+                        {% if document.sign_set.count == 0 %}
+                            <a href="#" title="Підписати" class="ps-2">
+                                <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg"
+                                     fill="currentColor" class="bi bi-pen-fill" viewBox="0 0 16 16">
+                                    <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001z"></path>
+                                </svg>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

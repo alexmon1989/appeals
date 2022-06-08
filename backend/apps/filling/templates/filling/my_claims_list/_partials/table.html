@@ -50,13 +50,15 @@
     <tbody>
     {% for claim in claims %}
         <tr>
-            <td><a href="#" class="fw-bold">{{ claim.obj_number }}</a></td>
+            <td><a href="{% url 'claim_detail' pk=claim.pk %}" class="fw-bold">{{ claim.obj_number }}</a></td>
             <td class="text-nowrap">{{ claim.obj_kind.title }}</td>
             <td>{{ claim.claim_kind.title }}</td>
             <td class="fw-bold">
                 {% if claim.status == 1 %}
                     <span class="text-danger">{{ claim.get_status_display }}</span>
                 {% elif claim.status == 2 %}
+                    <span class="text-danger">{{ claim.get_status_display }}</span>
+                {% elif claim.status == 3 %}
                     <span class="text-primary">{{ claim.get_status_display }}</span>
                 {% elif claim.status == 3 %}
                     <span class="text-success">{{ claim.get_status_display }}</span>

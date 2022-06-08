@@ -1,0 +1,48 @@
+{% extends 'base_cabinet.html' %}
+
+{% load extras %}
+
+{% block title %}{{ claim.obj_number }} | Мої звернення{% endblock %}
+
+{% block main %}
+    {% include 'filling/claim_detail/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+
+        <div class="row mb-4">
+            <div class="col">
+                <h4>Детальна інформація звернення</h4>
+            </div>
+
+            {% include 'filling/claim_detail/_partials/claim_status.html' %}
+        </div>
+
+        {% include 'filling/claim_detail/_partials/details.html' %}
+
+        {% include 'filling/claim_detail/_partials/attachments.html' %}
+
+        <div class="d-flex justify-content-center mb-3">
+            <a href="#" data-href="plugins-sow-ajax-confirm.html"
+               class="js-ajax-confirm btn btn-primary mt-2"
+
+               data-ajax-confirm-mode="ajax"
+               data-ajax-confirm-type="secondary"
+
+               data-ajax-confirm-title="Необхідне підтвердження"
+               data-ajax-confirm-body="Ви впевнені що хочете передати заперечення на розгляд?"
+
+               data-ajax-confirm-btn-yes-class="btn-sm btn-primary"
+               data-ajax-confirm-btn-yes-text="Так"
+               data-ajax-confirm-btn-yes-icon="fi fi-check"
+
+               data-ajax-confirm-btn-no-class="btn-sm btn-light"
+               data-ajax-confirm-btn-no-text="Ні"
+               data-ajax-confirm-btn-no-icon="fi fi-close"
+               data-ajax-confirm-callback-function=""
+            >Передати на розгляд</a>
+        </div>
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

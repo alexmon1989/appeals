@@ -4,6 +4,7 @@
            type="checkbox"
            :disabled="disabled"
            id="thirdPerson"
+           name="third_person"
            v-model="modelValue"
            @input="$emit('update:modelValue', $event.target.checked)">
     <label class="form-check-label" for="thirdPerson">

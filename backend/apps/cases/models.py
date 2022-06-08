@@ -91,6 +91,7 @@ class Document(TimeStampModel):
         verbose_name='Оригінальний файл документа',
         upload_to=document_get_original_file_path
     )
+    auto_generated = models.BooleanField('Сгенеровано автоматично', default=False)
 
     @property
     def signed_file(self):
@@ -99,9 +100,10 @@ class Document(TimeStampModel):
         return str(path).replace(path.stem, f"{path.stem}_signs")
 
     def __str__(self):
-        if self.case.case_number:
+        print(self.case)
+        if self.case:
             return f"{self.document_name} (номер справи: {self.case.case_number})"
-        return self.document_name
+        return self.document_name.title
 
     def save(self, *args, **kwargs):
         """Переопределение метода сохранения для обеспечения структуры каталогов."""

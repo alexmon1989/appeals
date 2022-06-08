@@ -288,7 +288,8 @@ export default {
 
     // Отправка данных на сервер
     async onSubmit(values) {
-      const formData = new FormData(document.getElementById('create-app-form'))
+      const form = document.getElementById('create-app-form')
+      const formData = new FormData(form)
       const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
       formData.append('csrfmiddlewaretoken', csrftoken)
 
@@ -303,7 +304,7 @@ export default {
 
       this.sending = false
 
-      console.log(result)
+      location.href = result.claim_url
 
       // Отправка
     }

@@ -8,7 +8,7 @@
       <input type="text"
              v-bind="field"
              :id="fieldId"
-             :disabled="!fieldEditable"
+             :readonly="!fieldEditable"
              class="form-control"
              :class="{ 'is-invalid': !meta.valid && meta.touched }"
              :placeholder="fieldTitle"
@@ -28,7 +28,7 @@
       <input type="email"
              v-bind="field"
              :id="fieldId"
-             :disabled="!fieldEditable"
+             :readonly="!fieldEditable"
              class="form-control"
              :class="{ 'is-invalid': !meta.valid && meta.touched }"
              :placeholder="fieldTitle"
@@ -48,7 +48,7 @@
       <input type="date"
              v-bind="field"
              :id="fieldId"
-             :disabled="!fieldEditable"
+             :readonly="!fieldEditable"
              class="form-control"
              :class="{ 'is-invalid': !meta.valid && meta.touched }"
              :placeholder="fieldTitle"
@@ -71,7 +71,7 @@
                 :id="fieldId"
                 :placeholder="fieldTitle"
                 @input="$emit('update:modelValue', $event.target.value)"
-                :disabled="!fieldEditable"
+                :readonly="!fieldEditable"
                 style="height: 100px"
       ></textarea>
     </Field>
@@ -87,7 +87,7 @@
       <label class="btn btn-primary btn-soft btn-sm cursor-pointer position-relative">
         <Field :name="fieldId"
                :label="label"
-               rules="required"
+               :rules="{'required': fieldRequired}"
                v-slot="{ handleChange, handleBlur, meta }">
           <input type="file"
                  :id="fieldId"
@@ -146,7 +146,7 @@
       <label class="btn btn-primary btn-soft btn-sm cursor-pointer position-relative">
         <Field :name="fieldId"
                :label="label"
-               rules="required"
+               :rules="{'required': fieldRequired}"
                v-slot="{ handleChange, handleBlur, meta }">
           <input multiple type="file"
                  :id="fieldId"

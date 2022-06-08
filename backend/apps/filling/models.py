@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from backend.core.models import TimeStampModel
 from ..classifiers.models import ClaimKind, ObjKind
 
@@ -62,12 +63,14 @@ class Claim(TimeStampModel):
     obj_kind = models.ForeignKey(ObjKind, on_delete=models.CASCADE, verbose_name='Тип об\'єкта')
     claim_kind = models.ForeignKey(ClaimKind, on_delete=models.CASCADE, verbose_name='Вид звернення')
     obj_number = models.CharField('Номер заявки або охоронного документа', max_length=255)
+    third_person = models.BooleanField('Апелянт - третя особа', default=False)
     status = models.PositiveIntegerField(
         'Статус',
         choices=(
             (1, 'Потребує підписання документів'),
-            (2, 'Очікує на розгляд'),
-            (3, 'Створено справу'),
+            (2, 'Очікує передачі на розгляд'),
+            (3, 'Передано на розгляд'),
+            (4, 'Створено справу'),
         ),
         default=1
     )
@@ -81,6 +84,9 @@ class Claim(TimeStampModel):
 
     def __str__(self):
         return self.obj_number
+
+    def get_absolute_url(self):
+        return reverse('claim_detail', kwargs={'pk': self.pk})
 
     class Meta:
         verbose_name = "Звернення"

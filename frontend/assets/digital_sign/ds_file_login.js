@@ -668,7 +668,14 @@ function() {
 				data['csrfmiddlewaretoken'] = document.getElementsByName('csrfmiddlewaretoken')[0].value;
 				$.post( "/users/login/", data, function (data) {
 					if (data.is_logged === 1) {
-						location.href = '/filling/create-application';
+						const queryString = window.location.search;
+						const urlParams = new URLSearchParams(queryString);
+						const next = urlParams.get('next');
+						if (next) {
+							location.href = next;
+						} else {
+							location.href = '/filling/';
+						}
 					} else {
 						document.getElementById('DSLoginErrorsText').innerHTML = 'Авторизація неможлива!';
 						document.getElementById('DSLoginErrors').style.display = '';

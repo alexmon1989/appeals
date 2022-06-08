@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 from django.views import View
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
+from django.contrib import messages
 
 from ..classifiers import services as classifiers_services
 from . import services as filling_services
@@ -17,8 +17,7 @@ class MyClaimsListView(LoginRequiredMixin, ListView):
     context_object_name = 'claims'
 
     def get_queryset(self):
-        return filling_services.get_users_claims_qs(self.request.user)
-
+        return filling_services.claim_get_user_claims_qs(self.request.user)
 
 
 class CreateClaimView(LoginRequiredMixin, View):
@@ -34,7 +33,7 @@ class CreateClaimView(LoginRequiredMixin, View):
         claim_kinds = classifiers_services.get_claim_kinds(bool_as_int=True)
 
         # Возможные поля обращений (зависящие от типа)
-        claim_fields = filling_services.get_claim_fields(bool_as_int=True)
+        claim_fields = filling_services.claim_get_fields(bool_as_int=True)
 
         return render(
             request,
@@ -51,6 +50,26 @@ class CreateClaimView(LoginRequiredMixin, View):
         post_data = request.POST.dict()
         del post_data['csrfmiddlewaretoken']
 
-        claim = filling_services.create_claim(post_data, request.FILES, request.user)
+        claim = filling_services.claim_create(post_data, request.FILES, request.user)
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            'Заявку успішно створено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
+        )
 
-        return JsonResponse({'success': 1, 'claim_id': claim.pk})
+        return JsonResponse({'success': 1, 'claim_url': claim.get_absolute_url()})
+
+
+class ClaimDetailView(LoginRequiredMixin, DetailView):
+    """Отображает страницу с данными обращения."""
+    model = Claim
+    template_name = 'filling/claim_detail/index.html'
+
+    def get_queryset(self):
+        return filling_services.claim_get_user_claims_qs(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['stages'] = filling_services.claim_get_stages_details(self.object)
+        context['documents'] = filling_services.claim_get_documents_qs(self.object.pk, self.request.user.pk)
+        return context

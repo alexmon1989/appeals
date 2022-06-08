@@ -1,10 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.utils.datastructures import MultiValueDict
 from django.http.request import QueryDict
+from django.db.models import Prefetch
 from django.db.models.query import QuerySet
 
 from ..classifiers.models import DocumentName, DocumentType
-from ..cases.models import Document
+from ..cases.models import Document, Sign
 from .models import ClaimField, Claim
 
 from typing import List
@@ -14,12 +15,13 @@ import datetime
 UserModel = get_user_model()
 
 
-def create_claim(post_data: QueryDict, files_data: MultiValueDict, user: UserModel) -> Claim:
+def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserModel) -> Claim:
     """Создаёт обращение пользователя."""
     stage_3_field = ClaimField.objects.filter(claim_kind=post_data['claim_kind'], stage=3).first().input_id
     claim = Claim.objects.create(
         obj_kind_id=post_data['obj_kind'],
         claim_kind_id=post_data['claim_kind'],
+        third_person=post_data.get('third_person', False),
         obj_number=post_data[stage_3_field],
         json_data=json.dumps(post_data),
         user=user
@@ -58,7 +60,7 @@ def create_claim(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
     return claim
 
 
-def get_claim_fields(bool_as_int: bool = False) -> List[ClaimField]:
+def claim_get_fields(bool_as_int: bool = False) -> List[ClaimField]:
     """Вовзращает возможные поля обращений (зависящие от типа)"""
     claim_fields = list(ClaimField.objects.order_by('pk').filter(enabled=True).values(
         'pk',
@@ -79,6 +81,70 @@ def get_claim_fields(bool_as_int: bool = False) -> List[ClaimField]:
     return claim_fields
 
 
-def get_users_claims_qs(user: UserModel) -> QuerySet[Claim]:
+def claim_get_user_claims_qs(user: UserModel) -> QuerySet[Claim]:
     """Возвращает обращения пользователя."""
-    return Claim.objects.filter(user=user).select_related('claim_kind', 'obj_kind')
+    return Claim.objects.filter(
+        user=user
+    ).select_related(
+        'claim_kind', 'obj_kind'
+    ).prefetch_related(
+        'document_set', 'document_set__document_name'
+    )
+
+
+def claim_get_stages_details(claim: Claim) -> dict:
+    """Возвращает данные заявки по этапам ввода формы."""
+    fields = ClaimField.objects.filter(claim_kind=claim.claim_kind, required=True, stage__lt=9)
+    stages = {
+        3: {
+            'title': 'Номер заявки/охоронного документа',
+            'items': [],
+        },
+        4: {
+            'title': 'Дані об\'єкта права інтелектуальної власності',
+            'items': [],
+        },
+        5: {
+            'title': 'Відомості про заявника (апелянта) та власника',
+            'items': [],
+        },
+        6: {
+            'title': 'Відомостей про апелянта (лише у випадку заперечень 3-х осіб і апеляційних заяв)',
+            'items': [],
+        },
+        7: {
+            'title': 'Додаткова інформація',
+            'items': [],
+        },
+        8: {
+            'title': 'Відомості щодо рішення Укрпатенту',
+            'items': [],
+        },
+    }
+
+    claim_data = json.loads(claim.json_data)
+    for field in fields:
+        try:
+            stages[field.stage]['items'].append({
+                'title': field.title,
+                'value': claim_data[field.input_id],
+                'type': field.field_type,
+                'id': field.input_id,
+            })
+        except KeyError:
+            pass
+
+    return stages
+
+
+def claim_get_documents_qs(claim_id: int, user_id: int) -> QuerySet[Document]:
+    """Возвращает список документов обращения."""
+    documents = Document.objects.filter(
+        claim_id=claim_id
+    ).select_related(
+        'document_name'
+    ).prefetch_related(
+        Prefetch('sign_set', queryset=Sign.objects.filter(user_id=user_id))
+    ).order_by('-auto_generated', 'pk')
+
+    return documents
