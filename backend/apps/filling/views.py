@@ -2,17 +2,23 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views import View
+from django.views.generic import ListView
 
 from ..classifiers import services as classifiers_services
 from . import services as filling_services
 from ..common.mixins import LoginRequiredMixin
+from .models import Claim
 
 
-@login_required
-def my_applications_list(request):
-    """Отображает страницу со списком апелляционных дел."""
-    claims = filling_services.get_users_claims_qs(request.user)
-    return render(request, 'filling/my_claims_list/index.html', {'claims': claims})
+class MyClaimsListView(LoginRequiredMixin, ListView):
+    """Отображает страницу со списком обращений."""
+    model = Claim
+    template_name = 'filling/my_claims_list/index.html'
+    context_object_name = 'claims'
+
+    def get_queryset(self):
+        return filling_services.get_users_claims_qs(self.request.user)
+
 
 
 class CreateClaimView(LoginRequiredMixin, View):

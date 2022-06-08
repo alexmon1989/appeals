@@ -23,7 +23,7 @@ class CustomLoginView(SuccessMessageMixin, LoginView):
             return url
 
         if self.request.user.belongs_to_group('Заявник'):
-            return resolve_url('my-applications-list')
+            return resolve_url('my-claims-list')
 
         return resolve_url(settings.LOGIN_REDIRECT_URL)
 
