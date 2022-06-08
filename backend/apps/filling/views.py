@@ -13,7 +13,7 @@ def my_applications_list(request):
 
 
 @login_required
-def create_application(request):
+def create_claim(request):
     """Отображает страницу со формой создания обращения."""
 
     # Создание заявки если был POST-запрос
