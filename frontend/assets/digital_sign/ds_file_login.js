@@ -6,7 +6,7 @@ var URL_GET_KEP_CERTIFICATE_BY_EMAIL = "http://ca.iit.com.ua/services-cmp-getcer
 
 var URL_GET_CERTIFICATES = "/static/digital_sign/CACertificates.p7b?version=1.0.19";
 var URL_CAS = "/static/digital_sign/CAs.json?version=1.0.19";
-var URL_XML_HTTP_PROXY_SERVICE = "http://127.0.0.1/Server/ProxyHandlerCURL.php";
+var URL_XML_HTTP_PROXY_SERVICE = "/Server/ProxyHandlerCURL.php";
 
 //=============================================================================
 

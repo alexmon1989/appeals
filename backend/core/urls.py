@@ -31,7 +31,7 @@ router.register(r'cases/(?P<id>\d+)/documents', cases_views.DocumentsViewSet, ba
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='cases/', permanent=True)),
+    path('', RedirectView.as_view(url='filling/', permanent=True)),
     url('^api/', include(router.urls)),
     path('cases/', include('apps.cases.urls')),
     path('filling/', include('apps.filling.urls')),

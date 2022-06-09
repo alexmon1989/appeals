@@ -80,7 +80,7 @@ class CertificateOwner(TimeStampModel):
         super().save(*args, **kwargs)
         # Создание нового пользователя
         if not self.user:
-            user, created = User.objects.get_or_create(email=self.pszSubjEMail)
+            user, created = User.objects.get_or_create(email=self.pszSerial)
             self.user = user
             self.save()
 
