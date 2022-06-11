@@ -1,8 +1,10 @@
 {% load static %}
+{% load django_vite %}
 
 <!doctype html>
 <html lang="uk" xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    {% vite_hmr_client %}
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %} | АС "Апеляційні справи"</title>
     <meta name="description" content="">
@@ -30,7 +32,7 @@
 <body data-aos-easing="ease-in-out-sine" data-aos-duration="700" data-aos-delay="0">
 
 <div class="section">
-    <div class="container">
+    <div class="container" id="app">
         {% block content %}{% endblock %}
     </div>
 </div>
@@ -51,6 +53,8 @@
 <script src="{% static 'js/core.min.js' %}"></script>
 <script src="{% static 'js/vendor_bundle.min.js' %}"></script>
 {% block extra_scripts %}{% endblock %}
+
+{% vite_asset 'app/main.js' %}
 
 </body>
 </html>

@@ -1,0 +1,22 @@
+{% extends 'registration/base.html' %}
+
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}Авторизація{% endblock %}
+
+{% block content %}
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold">АС "Апеляційні справи"</h1>
+
+        <p class="lead m-0">
+            Для початку роботи авторизуйтесь за допомогою КЕП
+        </p>
+    </div>
+
+    <div class="col-md-9 col-lg-6 mx-auto mb-5">
+        {% csrf_token %}
+
+        <eds-read></eds-read>
+    </div>
+{% endblock %}

@@ -55,7 +55,7 @@ def login_view_ds_file(request):
     )
     return render(
         request,
-        'users/login_ds_file/index.html',
+        'users/login_ds/index.html',
         {
             'form': AuthFormDSFile(),
         }
