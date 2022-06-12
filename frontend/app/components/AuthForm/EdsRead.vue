@@ -3,10 +3,20 @@
 
     <ul class="nav nav-lg nav-pills nav-fill mb-4" id="myTab">
       <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="home-tab" data-bs-toggle="tab" href="#file-form" role="tab">Файловий ключ</a>
+        <a class="nav-link active"
+           id="home-tab"
+           data-bs-toggle="tab"
+           href="#file-form"
+           role="tab"
+           @click="activateTab(0)">Файловий ключ</a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#hardware-form" role="tab">Апаратний ключ</a>
+        <a class="nav-link"
+           id="profile-tab"
+           data-bs-toggle="tab"
+           href="#hardware-form"
+           @click="activateTab(1)"
+           role="tab">Апаратний ключ</a>
       </li>
     </ul>
 
@@ -22,7 +32,16 @@
         />
       </div>
       <div class="tab-pane fade" id="hardware-form" role="tabpanel">
-        Не готове
+        <HardwareKeyContent
+          :is-eus-init="isEusInit"
+          :active-tab="activeTab"
+          :acsk-options="acskOptions"
+          :errors="errors"
+          :processed="processed"
+          @setProcessed="setProcessed"
+          @update="updateHardwareKey"
+          @read-key="readHardwareKeyHandler"
+        />
       </div>
     </div>
 
@@ -34,11 +53,13 @@
   import { EUSInit } from './EUSignConfig'
   import { EUSWorkerInit } from '@/app/lib/ds/js/eus-init'
   import FileKeyContent from './FileKeyContent.vue'
+  import HardwareKeyContent from './HardwareKeyContent.vue'
 
   export default {
     name: 'EdsRead',
     components: {
       FileKeyContent,
+      HardwareKeyContent,
     },
     data () {
       return {
@@ -73,17 +94,33 @@
         console.log(err)
       } finally {
         this.processed = false
+        this.password = ''
+        $.SOW.core.toast.destroy()
       }
     },
     methods: {
+      async activateTab (tab) {
+        this.errors = []
+        this.password = ''
+        this.activeTab = tab
+        this.keyInfo = null
+        if (tab === 1 && !this.$root.euSign) {
+          await this.eusInit();
+        }
+      },
+
       async eusInit() {
         try {
           this.processed = true
           this.$root.euSign = await EUSInit()
           this.isEusInit = true;
         } catch (err) {
-          console.log(err)
-          throw err;
+          // console.log(err)
+          this.errors.push({
+            'errorCode': '',
+            'message': err
+          })
+          // throw err;
         } finally {
           this.processed = false
         }
@@ -93,6 +130,15 @@
         this.password = password
         this.fileKey = fileKey
         this.cmpFileKeyServers = acskSelected.selectAll
+          ? this.acskOptions.filter(server => !server.selectAll).map(server => `${server.cmpAddress}`)
+          : [`${acskSelected.cmpAddress}`]
+      },
+
+      updateHardwareKey ({type, device, password, acskSelected}) {
+        this.password = password
+        this.type = type
+        this.device = device
+        this.cmpHardwareServers = acskSelected.selectAll
           ? this.acskOptions.filter(server => !server.selectAll).map(server => `${server.cmpAddress}`)
           : [`${acskSelected.cmpAddress}`]
       },
@@ -118,6 +164,36 @@
         } finally {
           this.processed = false
         }
+      },
+
+      async readHardwareKeyHandler () {
+        const euSign = this.$root.euSign
+        this.processed = true
+        try {
+          this.errors = []
+          const { password, type, device } = this
+          const { typeIndex, devIndex } = this.device
+          const keyInfo = await euSign.GetKeyInfoSilentlyAsync(typeIndex, devIndex, this.password)
+          const cert = await euSign.GetCertificatesByKeyInfoAsync(keyInfo, this.cmpHardwareServers, this.cmpHardwareServers.map(server => '80'))
+          await euSign.SaveCertificatesAsync(cert)
+          this.makeAlert('Ключ успішно завантажено', 'success')
+          const privateKey = await euSign.ReadPrivateKeySilentlyAsync(typeIndex, devIndex, this.password)
+          this.keyInfo = await euSign.GetPrivateKeyOwnerInfoAsync()
+          console.log('keyInfo: ', this.keyInfo);
+          const { subjCN, issuerCN, serial } = this.keyInfo
+          this.$root.keyInfo = this.keyInfo
+          this.$emit('eds-readed')
+        } catch (err) {
+          console.log(err)
+          const { errorCode, message } = err
+          this.errors.push({ errorCode, message })
+        } finally {
+          this.processed = false
+        }
+      },
+      
+      setProcessed (value) {
+        this.processed = !!value
       },
     }
   }

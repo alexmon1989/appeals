@@ -1,5 +1,7 @@
 <template>
   <Form @submit="readHandler">
+    <spinner v-if="processed"></spinner>
+
     <div class="alert alert-danger alert-dismissible border-1 fade show" role="alert" v-if="errors.length > 0">
       <ul class="list-unstyled mb-0">
         <li v-for="error in errors">
@@ -14,15 +16,16 @@
       <Field name="acsk_file"
              rules="required"
              label="Оберіть АЦСК"
+             v-model="acskSelected"
              v-slot="{ handleChange, handleBlur, meta }">
         <select id="acsk_file"
                 class="form-select"
-                v-model="acskSelected"
                 @change="handleChange"
                 @blur="handleBlur"
                 :class="{ 'is-invalid': !meta.valid && meta.touched }"
                 @input="updateEmit">
-          <option v-for="acsk in acskOptions" :value="acsk">{{ acskLabel(acsk) }}</option>
+          <option v-for="acsk in acskOptions"
+                  :value="acsk">{{ acskLabel(acsk) }}</option>
         </select>
       </Field>
       <ErrorMessage name="acsk_file" class="invalid-feedback" />
@@ -78,6 +81,7 @@
 
 <script>
   import { Form, Field, ErrorMessage } from 'vee-validate'
+  import Spinner from "../Spinner.vue"
 
   export default {
   name: 'FileKeyContent',
@@ -95,13 +99,13 @@
     }
   },
   components: {
-    Form, Field, ErrorMessage
+    Form, Field, ErrorMessage, Spinner
   },
   data () {
     return {
       acskSelected: "",
       password: "",
-      fileKey: null
+      fileKey: null,
     }
   },
   computed: {
@@ -138,6 +142,7 @@
       })
     },
     readHandler () {
+      this.spinnerText = ''
       this.$emit('read-key')
     },
     acskLabel ({ issuerCNs }) {

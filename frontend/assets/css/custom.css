@@ -31,3 +31,8 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
 #middle {
     min-height: calc(100vh - 80px - 56px);
 }
+
+.bg-info {
+  --bs-bg-opacity: 1;
+  background-color: #574fec !important;
+}
