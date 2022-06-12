@@ -1,9 +1,8 @@
 <template>
-  <div class="p-4 p-md-5 card rounded-xl">
-
-    <ul class="nav nav-lg nav-pills nav-fill mb-4" id="myTab">
+  <div>
+    <ul class="nav nav-lg nav-pills nav-fill mb-5" id="myTab">
       <li class="nav-item" role="presentation">
-        <a class="nav-link active"
+        <a class="nav-link active fs-5"
            id="home-tab"
            data-bs-toggle="tab"
            href="#file-form"
@@ -11,7 +10,7 @@
            @click="activateTab(0)">Файловий ключ</a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link"
+        <a class="nav-link fs-5"
            id="profile-tab"
            data-bs-toggle="tab"
            href="#hardware-form"
@@ -100,6 +99,7 @@
     },
     methods: {
       async activateTab (tab) {
+        this.$emit('tab-change')
         this.errors = []
         this.password = ''
         this.activeTab = tab
@@ -191,7 +191,7 @@
           this.processed = false
         }
       },
-      
+
       setProcessed (value) {
         this.processed = !!value
       },

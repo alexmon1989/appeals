@@ -7,6 +7,7 @@ from django.conf import settings
 from django.http import JsonResponse
 import random
 import string
+import json
 
 from .forms import CustomAuthenticationForm, CustomPasswordResetForm, CustomSetPasswordForm, AuthFormDSFile
 from .services import get_certificate
@@ -32,7 +33,8 @@ def login_view_ds_file(request):
     """Страница логина пользователей с помощью файловой ЭЦП."""
     if request.method == 'POST':
         # Проверка валидности ЭЦП
-        cert = get_certificate(request.POST, request.session['secret'])
+        key_data = json.loads(request.body)
+        cert = get_certificate(key_data, request.session['secret'])
 
         if cert:
             user = authenticate(certificate=cert)
