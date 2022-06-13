@@ -176,7 +176,6 @@
           const keyInfo = await euSign.GetKeyInfoSilentlyAsync(typeIndex, devIndex, this.password)
           const cert = await euSign.GetCertificatesByKeyInfoAsync(keyInfo, this.cmpHardwareServers, this.cmpHardwareServers.map(server => '80'))
           await euSign.SaveCertificatesAsync(cert)
-          this.makeAlert('Ключ успішно завантажено', 'success')
           const privateKey = await euSign.ReadPrivateKeySilentlyAsync(typeIndex, devIndex, this.password)
           this.keyInfo = await euSign.GetPrivateKeyOwnerInfoAsync()
           console.log('keyInfo: ', this.keyInfo);
