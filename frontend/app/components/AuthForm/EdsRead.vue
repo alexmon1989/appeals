@@ -15,7 +15,7 @@
            data-bs-toggle="tab"
            href="#hardware-form"
            @click="activateTab(1)"
-           role="tab">Апаратний ключ</a>
+           role="tab">Токен</a>
       </li>
     </ul>
 
