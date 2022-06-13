@@ -3,9 +3,6 @@
     <p class="lead mb-4">Будь ласка, заповніть форму. В процесі заповнення будуть з'являтися нові поля в залежності від вашого вибору.</p>
 
     <Form enctype="multipart/form-data" id="create-app-form" @submit="onSubmit" v-slot="{ meta }">
-
-      <h2 class="h5 mb-3 text-indigo-800">Вид звернення:</h2>
-
       <div class="row g-4">
         <div class="col-md">
           <div class="form-floating mb-3">
@@ -29,6 +26,9 @@
             <ErrorMessage name="obj_kind" class="invalid-feedback"/>
           </div>
         </div>
+      </div>
+
+      <div class="row g-4">
         <div class="col-md">
           <claim-kind-select v-model="claimKindSelected"
                          :claim-kinds="claimKinds"
@@ -37,11 +37,7 @@
         </div>
       </div>
 
-      <third-person-checkbox :disabled="thirdPersonDisabled" v-model="thirdPerson"></third-person-checkbox>
-
       <div v-if="stage3Fields.length > 0 || (stage4Fields.length > 0 && dataLoadedSIS)">
-        <h2 class="h5 my-3 text-indigo-800">Дані об'єкта права інтелектуальної власності:</h2>
-
         <div class="row g-4">
           <div class="col-md" v-for="field in stage3Fields">
             <claim-field :field-title="field.title"
@@ -169,7 +165,6 @@ import debounce from "lodash.debounce"
 import { Form, Field, ErrorMessage } from 'vee-validate'
 
 import ClaimKindSelect from "./ClaimKindSelect.vue"
-import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
 import ClaimField from "./ClaimField.vue"
 
 export default {
@@ -178,7 +173,6 @@ export default {
     Field,
     ErrorMessage,
     ClaimKindSelect,
-    ThirdPersonCheckbox,
     ClaimField,
   },
 
