@@ -92,6 +92,10 @@ class Document(TimeStampModel):
         upload_to=document_get_original_file_path
     )
     auto_generated = models.BooleanField('Сгенеровано автоматично', default=False)
+    claim_document = models.BooleanField(
+        'Подано або сформовано під час подання звернненя',
+        default=False
+    )
 
     @property
     def signed_file(self):

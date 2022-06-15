@@ -1,16 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.utils.datastructures import MultiValueDict
 from django.http.request import QueryDict
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Count
 from django.db.models.query import QuerySet
 
 from ..classifiers.models import DocumentName, DocumentType
 from ..cases.models import Document, Sign
 from .models import ClaimField, Claim
 
-from typing import List
+from typing import List, Type
 import json
 import datetime
+import pathlib
 
 UserModel = get_user_model()
 
@@ -45,7 +46,8 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
                 document_name=document_name,
                 document_type=DocumentType.objects.filter(title='Вхідний').first(),
                 input_date=datetime.datetime.now(),
-                file=file
+                file=file,
+                claim_document=True
             )
         else:
             files = files_data.getlist(f"{field.input_id}[]")
@@ -55,7 +57,8 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
                     document_name=document_name,
                     document_type=DocumentType.objects.filter(title='Вхідний').first(),
                     input_date=datetime.datetime.now(),
-                    file=file
+                    file=file,
+                    claim_document=True
                 )
     return claim
 
@@ -140,11 +143,58 @@ def claim_get_stages_details(claim: Claim) -> dict:
 def claim_get_documents_qs(claim_id: int, user_id: int) -> QuerySet[Document]:
     """Возвращает список документов обращения."""
     documents = Document.objects.filter(
-        claim_id=claim_id
+        claim_id=claim_id,
+        claim_document=True
     ).select_related(
         'document_name'
     ).prefetch_related(
         Prefetch('sign_set', queryset=Sign.objects.filter(user_id=user_id))
-    ).order_by('-auto_generated', 'pk')
+    ).order_by(
+        '-auto_generated',
+        'pk'
+    ).annotate(Count('sign'))
 
     return documents
+
+
+def claim_get_documents_json(claim_id: int, user_id: int) -> str:
+    """Возвращает список документов обращения в формате json."""
+    documents = claim_get_documents_qs(claim_id, user_id)
+    res = []
+    for document in documents:
+        res.append({
+            'id': document.pk,
+            'document_name': document.document_name.title,
+            'auto_generated': document.auto_generated,
+            'file_url': document.file.url,
+            'file_name': pathlib.Path(document.file.name).name,
+            'sign__count': document.sign__count,
+        })
+    return json.dumps(res)
+
+
+def claim_set_status_if_all_docs_signed(claim_id: Type[int]) -> None:
+    """Меняет статус обращения с "1" на "2" (готово к рассмотрению), если все документы подписаны пользователем."""
+    try:
+        claim = Claim.objects.get(pk=claim_id, status=1)
+    except Claim.DoesNotExist:
+        pass
+    else:
+        # Проверка все ли документы, поданные пользователем подписаны.
+        documents = Document.objects.filter(
+            claim=claim,
+            claim_document=True
+        ).prefetch_related(
+            Prefetch(
+                'sign_set',
+                queryset=Sign.objects.filter(user_id=claim.user_id)
+            )
+        )
+        for document in documents:
+            # Какой-то документ не подписан
+            if document.sign_set.count() == 0:
+                return
+
+        # Обновление статуса
+        claim.status = 2
+        claim.save()

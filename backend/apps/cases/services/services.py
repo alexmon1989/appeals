@@ -4,6 +4,8 @@ from django.db.models import Count, Q
 
 from ..models import Case, Document, Sign
 from ..utils import set_cell_border
+from ...filling.models import Claim
+from ...filling import services as filling_services
 
 from typing import Iterable, List
 from pathlib import Path
@@ -115,6 +117,9 @@ def document_add_sign_info_to_file(doc_id: int) -> None:
         # Сохранение
         docx.save(docx_with_signs_file_path)
 
+        # Смена статуса обращения если все документы подписаны
+        filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
+
 
 def document_get_signs_info(doc_id: int) -> List[dict]:
     """Возвращает информацию о подписавших документ."""
@@ -138,7 +143,18 @@ def document_can_be_signed_by_user(document: Document, user: UserModel) -> bool:
     """Проверяет, может ли пользователь подписывать документ."""
     if Sign.objects.filter(document=document, user=user).exists():
         return False
-    return document.document_type.title == 'Вихідний' and case_user_has_access(document.case_id, user)
+
+    if document.claim:
+        applicants = Claim.objects.filter(pk=document.claim.pk, user=user).exists()
+    else:
+        applicants = False
+
+    if document.case:
+        internal_users = document.document_type.title == 'Вихідний' and case_user_has_access(document.case_id, user)
+    else:
+        internal_users = False
+
+    return applicants or internal_users
 
 
 def sign_upload(file, dest: Path) -> bool:

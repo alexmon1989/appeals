@@ -3069,6 +3069,7 @@ function() {
 		return info;
 	},
 	SignDataInternal: function(appendCert, data, asBase64String) {
+		console.log('Hello')
 		if ((typeof data) == 'string')
 			data = this.StringToArray(data);
 

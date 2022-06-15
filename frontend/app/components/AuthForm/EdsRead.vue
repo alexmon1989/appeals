@@ -1,8 +1,8 @@
 <template>
   <div>
-    <ul class="nav nav-lg nav-pills nav-fill mb-5" id="myTab">
+    <ul class="nav nav-lg nav-pills nav-fill mb-3" id="myTab">
       <li class="nav-item" role="presentation">
-        <a class="nav-link active fs-5"
+        <a class="nav-link active fs-6"
            id="home-tab"
            data-bs-toggle="tab"
            href="#file-form"
@@ -10,7 +10,7 @@
            @click="activateTab(0)">Файловий ключ</a>
       </li>
       <li class="nav-item" role="presentation">
-        <a class="nav-link fs-5"
+        <a class="nav-link"
            id="profile-tab"
            data-bs-toggle="tab"
            href="#hardware-form"

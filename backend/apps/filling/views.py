@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.views import View
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 
 from ..classifiers import services as classifiers_services
 from . import services as filling_services
@@ -60,6 +62,7 @@ class CreateClaimView(LoginRequiredMixin, View):
         return JsonResponse({'success': 1, 'claim_url': claim.get_absolute_url()})
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class ClaimDetailView(LoginRequiredMixin, DetailView):
     """Отображает страницу с данными обращения."""
     model = Claim
@@ -71,5 +74,19 @@ class ClaimDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['stages'] = filling_services.claim_get_stages_details(self.object)
-        context['documents'] = filling_services.claim_get_documents_qs(self.object.pk, self.request.user.pk)
+        context['documents'] = filling_services.claim_get_documents_json(self.object.pk, self.request.user.pk)
         return context
+
+
+def claim_status(request, pk):
+    """Возвращает статус заявки в формате JSON."""
+    claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=pk).first()
+    if claim:
+        return JsonResponse({
+            'success': 1,
+            'data': {
+                'status_code': claim.status,
+                'status_verbal': claim.get_status_display()
+            }
+        })
+    return JsonResponse({'success': 0})

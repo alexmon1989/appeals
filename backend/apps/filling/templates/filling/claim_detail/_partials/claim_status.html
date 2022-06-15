@@ -1,12 +1,10 @@
 <div class="col-auto">
-    <div class="text-muted text-uppercase fw-bold">Статус:
+    <div class="text-muted text-uppercase fw-bold" id="claim-status">Статус:
         {% if claim.status == 1 %}
             <span class="text-danger ms-1">{{ claim.get_status_display }}</span>
         {% elif claim.status == 2 %}
-            <span class="text-danger ms-1">{{ claim.get_status_display }}</span>
-        {% elif claim.status == 3 %}
             <span class="text-primary ms-1">{{ claim.get_status_display }}</span>
-        {% elif claim.status == 4 %}
+        {% elif claim.status == 3 %}
             <span class="text-success ms-1">{{ claim.get_status_display }}</span>
         {% endif %}
     </div>

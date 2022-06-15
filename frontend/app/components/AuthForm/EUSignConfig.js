@@ -180,13 +180,20 @@ export function EUSInit () {
 
       euSign.__proto__.SignAsync = async function (data) {
         return new Promise((resolve, reject) => {
-          euSign.Sign(data, resolve, reject)
+          euSign.Sign(true, data, resolve, reject)
         })
       }
 
       euSign.__proto__.SaveCertificatesAsync = async function (cert) {
         return new Promise((resolve, reject) => {
           euSign.SaveCertificates(cert, resolve, reject)
+        })
+      }
+
+      euSign.__proto__.VerifyAsync = async function (signature, data) {
+        const showSignerInfo = {}
+        return new Promise((resolve, reject) => {
+           euSign.Verify(signature, data, showSignerInfo, resolve, reject)
         })
       }
 
