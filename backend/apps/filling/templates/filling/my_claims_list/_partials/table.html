@@ -36,7 +36,7 @@
        data-enable-export="false"
        data-custom-config='{
             "stateSave": true,
-            "order": [4, "desc"]
+            "order": [[4, "desc"]]
            }'>
     <thead>
     <tr>
@@ -57,8 +57,6 @@
                 {% if claim.status == 1 %}
                     <span class="text-danger">{{ claim.get_status_display }}</span>
                 {% elif claim.status == 2 %}
-                    <span class="text-danger">{{ claim.get_status_display }}</span>
-                {% elif claim.status == 3 %}
                     <span class="text-primary">{{ claim.get_status_display }}</span>
                 {% elif claim.status == 3 %}
                     <span class="text-success">{{ claim.get_status_display }}</span>
