@@ -94,7 +94,6 @@
       } finally {
         this.processed = false
         this.password = ''
-        $.SOW.core.toast.destroy()
       }
     },
     methods: {

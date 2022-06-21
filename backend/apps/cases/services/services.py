@@ -7,7 +7,7 @@ from ..utils import set_cell_border
 from ...filling.models import Claim
 from ...filling import services as filling_services
 
-from typing import Iterable, List
+from typing import Iterable, List, Type
 from pathlib import Path
 from docx import Document as DocumentWord
 
@@ -79,7 +79,7 @@ def case_get_documents_list(case_id: int) -> Iterable[Document]:
 
 def document_get_by_id(doc_id: int) -> Document:
     """Возвращает документ по его идентификатору."""
-    doc = Document.objects.filter(pk=doc_id).prefetch_related('sign_set', 'document_type', 'document_name')
+    doc = Document.objects.filter(pk=doc_id).prefetch_related('sign_set', 'document_type')
     return doc.first()
 
 

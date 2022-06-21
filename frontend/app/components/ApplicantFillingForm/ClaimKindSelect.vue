@@ -1,11 +1,12 @@
 <template>
-  <div class="form-floating mb-3">
+  <div class="mb-3">
+    <label class="form-label fw-medium" for="claim_kind">Вид звернення</label>
     <Field name="claim_kind"
            v-model="modelValue"
            rules="required"
            label="Об’єкт права інтелектуальної власності"
            v-slot="{ field, meta }">
-      <select class="form-select form-select-sm"
+      <select class="form-select"
               :disabled="claimKindsFiltered.length === 0"
               :class="{ 'is-invalid': !meta.valid && meta.touched }"
               @input="$emit('update:modelValue', parseInt($event.target.value))"
@@ -18,7 +19,6 @@
         </option>
       </select>
     </Field>
-    <label for="claim_kind">Вид звернення</label>
     <ErrorMessage name="claim_kind" class="invalid-feedback"/>
   </div>
 </template>

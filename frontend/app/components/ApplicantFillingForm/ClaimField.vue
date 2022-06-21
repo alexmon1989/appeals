@@ -1,5 +1,6 @@
 <template>
-  <div class="form-floating mb-3" v-if="fieldType === 'text'">
+  <div class="mb-3" v-if="fieldType === 'text'">
+    <label :for="fieldId" class="form-label fw-medium">{{ fieldTitle }}</label>
     <Field :name="fieldId"
            v-model="modelValue"
            :rules="{'required': fieldRequired}"
@@ -15,11 +16,11 @@
              @input="$emit('update:modelValue', $event.target.value)"
       />
     </Field>
-    <label for="floatingInput">{{ fieldTitle }}</label>
     <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
 
-  <div class="form-floating mb-3" v-else-if="fieldType === 'email'">
+  <div class="mb-3" v-else-if="fieldType === 'email'">
+    <label :for="fieldId" class="fw-medium form-label">{{ fieldTitle }}</label>
     <Field :name="fieldId"
            v-model="modelValue"
            :rules="{'required': fieldRequired}"
@@ -35,11 +36,11 @@
              @input="$emit('update:modelValue', $event.target.value)"
       />
     </Field>
-    <label for="floatingInput">{{ fieldTitle }}</label>
     <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
 
-  <div class="form-floating mb-3" v-else-if="fieldType === 'date'">
+  <div class="mb-3" v-else-if="fieldType === 'date'">
+    <label :for="fieldId" class="fw-medium form-label">{{ fieldTitle }}</label>
     <Field :name="fieldId"
            v-model="modelValue"
            :rules="{'required': fieldRequired}"
@@ -55,11 +56,11 @@
              @input="$emit('update:modelValue', $event.target.value)"
       />
     </Field>
-    <label for="floatingInput">{{ fieldTitle }}</label>
     <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
 
-  <div class="form-floating mb-3" v-else-if="fieldType === 'textarea'">
+  <div class="mb-3" v-else-if="fieldType === 'textarea'">
+    <label :for="fieldId" class="form-label fw-medium">{{ fieldTitle }}</label>
     <Field :name="fieldId"
            v-model="modelValue"
            :rules="{'required': fieldRequired}"
@@ -75,7 +76,6 @@
                 style="height: 100px"
       ></textarea>
     </Field>
-    <label for="floatingInput">{{ fieldTitle }}</label>
     <ErrorMessage :name="fieldId" class="invalid-feedback" />
   </div>
 
@@ -94,11 +94,11 @@
                  :name="fieldId"
                  @change="handleChange"
                  @input="handleChangeFile"
-                 data-file-ext="doc, docx"
+                 :data-file-ext="fieldAllowedExtensions"
                  data-file-max-size-kb-per-file="30000"
-                 data-file-ext-err-msg="Allowed:"
-                 data-file-exist-err-msg="File already exists:"
-                 data-file-size-err-item-msg="File too large!"
+                 data-file-ext-err-msg="Дозволені формати:"
+                 data-file-exist-err-msg="Файл вже вибрано:"
+                 data-file-size-err-item-msg="Файл занадто великий!"
                  data-file-size-err-total-msg="Total allowed size exceeded!"
                  data-file-toast-position="bottom-center"
                  :data-file-preview-container="'#' + fieldId + '_preview'"
@@ -153,11 +153,11 @@
                  :name="fieldId"
                  @change="handleChange"
                  @input="handleChangeFile"
-                 data-file-ext="doc, docx"
+                 :data-file-ext="fieldAllowedExtensions"
                  data-file-max-size-kb-per-file="30000"
-                 data-file-ext-err-msg="Allowed:"
-                 data-file-exist-err-msg="File already exists:"
-                 data-file-size-err-item-msg="File too large!"
+                 data-file-ext-err-msg="Дозволені формати:"
+                 data-file-exist-err-msg="Файл вже вибрано:"
+                 data-file-size-err-item-msg="Файл занадто великий!"
                  data-file-size-err-total-msg="Total allowed size exceeded!"
                  data-file-toast-position="bottom-center"
                  :data-file-preview-container="'#' + fieldId + '_preview'"
@@ -211,6 +211,7 @@ export default {
     fieldEditable: Boolean,
     fieldRequired: Boolean,
     fieldHelpText: String,
+    fieldAllowedExtensions: String,
   },
   components: {
     Field,

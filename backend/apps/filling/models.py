@@ -34,6 +34,19 @@ class ClaimField(TimeStampModel):
         choices=FieldType.choices,
         default=FieldType.TEXT
     )
+    allowed_extensions = models.CharField(
+        'Дозволені формати файлу',
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text='Перелічте дозволені формати через кому (напр, ".doc, .docx"). '
+                  'Має ефект тільки якщо тип поля - "Поле вибору файла".'
+    )
+    base_doc = models.BooleanField(
+        'Базовий документ для формування документу звернення',
+        default=False,
+        help_text='Має ефект тільки якщо тип поля - "Поле вибору файла".'
+    )
     stage = models.PositiveIntegerField(
         'Етап вводу на формі',
         choices=(

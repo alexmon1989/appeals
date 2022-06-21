@@ -1,11 +1,16 @@
 from django.contrib import admin
-from .models import DocumentType, DocumentName, ObjKind, ClaimKind
+from .models import DocumentType, ObjKind, ClaimKind
 
 
-@admin.register(DocumentType, DocumentName)
+@admin.register(DocumentType)
 class Admin(admin.ModelAdmin):
     ordering = ('pk',)
-    list_display = ('title', 'created_at', 'updated_at')
+    list_display = ('title', 'direction', 'origin', 'code', 'created_at', 'updated_at')
+    list_filter = ('direction', 'origin',)
+    search_fields = ('title',)
+
+    def get_queryset(self, request):
+        return DocumentType.objects.prefetch_related('claim_kinds', 'claim_kinds__obj_kind')
 
 
 @admin.register(ClaimKind)

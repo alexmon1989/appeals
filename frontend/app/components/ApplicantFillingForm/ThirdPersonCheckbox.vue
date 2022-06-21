@@ -1,5 +1,5 @@
 <template>
-  <div class="form-check mt-2 mb-4">
+  <div class="form-check mt-2 mb-4" style="display: none">
     <input class="form-check-input form-check-input-default"
            type="checkbox"
            :disabled="disabled"

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Case, CollegiumMembership, Document, Sign
+from .models import Case, CollegiumMembership, Document, Sign, DocumentTemplate
 from .services import services
 
 
@@ -46,3 +46,10 @@ class CaseAdmin(admin.ModelAdmin):
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
     inlines = (SignInline,)
+
+
+@admin.register(DocumentTemplate)
+class DocumentTemplateAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+    )

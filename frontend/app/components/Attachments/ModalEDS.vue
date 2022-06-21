@@ -27,7 +27,7 @@
               <tbody>
               <tr v-for="(document, index) in documents">
                 <th scope="row" v-html="index + 1"></th>
-                <td>{{ document.document_name }}</td>
+                <td>{{ document.document_type }}</td>
                 <td class="fw-bold">
                   <span class="text-success" v-if=" document.sign__count">так</span><span class="text-danger" v-else>ні</span>
                 </td>
@@ -138,6 +138,7 @@ export default {
 
           // Подписание файла
           let eds = await euSign.SignAsync(data)
+          // eds = Uint8Array.from(atob(eds), c => c.charCodeAt(0))
           console.log(eds)
 
           // Данные подписи

@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 from backend.core.models import TimeStampModel
-from ..classifiers.models import ObjKind, ClaimKind, DocumentName, DocumentType
+from ..classifiers.models import ObjKind, ClaimKind, DocumentType
 from .utils import sign_get_file_path, document_get_original_file_path
 
 from ..filling.models import Claim
@@ -80,9 +80,6 @@ class Document(TimeStampModel):
     claim = models.ForeignKey(Claim, on_delete=models.SET_NULL, null=True, verbose_name='Звернення')
     case = models.ForeignKey(Case, on_delete=models.SET_NULL, null=True, verbose_name='Справа')
     document_type = models.ForeignKey(DocumentType, on_delete=models.SET_NULL, null=True, verbose_name='Тип документа')
-    document_name = models.ForeignKey(
-        DocumentName, on_delete=models.SET_NULL, null=True, verbose_name='Назва документа'
-    )
     registration_number = models.CharField('Реєстраційний номер', max_length=255, null=True, blank=True)
     registration_date = models.DateField('Дата реєстрації', null=True, blank=True)
     output_date = models.DateField('Дата відправлення', null=True, blank=True)
@@ -104,10 +101,7 @@ class Document(TimeStampModel):
         return str(path).replace(path.stem, f"{path.stem}_signs")
 
     def __str__(self):
-        print(self.case)
-        if self.case:
-            return f"{self.document_name} (номер справи: {self.case.case_number})"
-        return self.document_name.title
+        return self.document_type.title
 
     def save(self, *args, **kwargs):
         """Переопределение метода сохранения для обеспечения структуры каталогов."""
@@ -174,3 +168,18 @@ class Sign(TimeStampModel):
         verbose_name = 'Цифровий підпис'
         verbose_name_plural = 'Цифрові підписи'
         db_table = 'documents_signs'
+
+
+class DocumentTemplate(TimeStampModel):
+    """Модель шаблона документа."""
+    title = models.CharField('Назва шаблону', max_length=512)
+    file = models.FileField('Файл', upload_to='doc-templates/')
+    documents_types = models.ManyToManyField(DocumentType, verbose_name='Типи документів', blank=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Шаблон документу'
+        verbose_name_plural = 'Шаблони документів'
+        db_table = 'documents_templates'

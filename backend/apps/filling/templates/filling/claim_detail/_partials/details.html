@@ -9,16 +9,21 @@
 
         {% for item in stages.3.items %}
             <div class="text-muted text-uppercase">{{ item.title }}</div>
-            <div class="fw-medium mb-3">{{ item.value|linebreaksbr }}</div>
+            <div class="fw-medium mb-3">
+                {{ item.value|linebreaksbr }}
+            </div>
         {% endfor %}
 
         {% for item in stages.4.items %}
             <div class="text-muted text-uppercase">{{ item.title }}</div>
-            <div class="fw-medium mb-3">{{ item.value|linebreaksbr }}</div>
+            <div class="fw-medium mb-3">
+                {% if 'date' in item.id %}
+                    {{ item.value|to_date:"%Y-%m-%d"|date:"SHORT_DATE_FORMAT" }}
+                {% else %}
+                    {{ item.value|linebreaksbr }}
+                {% endif %}
+            </div>
         {% endfor %}
-
-        <div class="text-muted text-uppercase">Апелянт - третя особа</div>
-        <div class="fw-medium mb-3">{{ claim.third_person|yesno }}</div>
     </div>
 
     <div class="col">
@@ -69,7 +74,7 @@
                     <div class="text-muted text-uppercase">{{ item.title }}</div>
                     <div class="fw-medium mb-3">
                         {% if item.type == 'date' %}
-                            {{ item.value|to_date:"%Y-%m-%d"|date }}
+                            {{ item.value|to_date:"%Y-%m-%d"|date:"SHORT_DATE_FORMAT" }}
                         {% else %}
                             {{ item.value|linebreaksbr }}
                         {% endif %}

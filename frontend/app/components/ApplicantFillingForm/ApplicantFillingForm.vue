@@ -1,17 +1,16 @@
 <template>
   <div>
-    <p class="lead mb-4">Будь ласка, заповніть форму. В процесі заповнення будуть з'являтися нові поля в залежності від вашого вибору.</p>
-
     <Form enctype="multipart/form-data" id="create-app-form" @submit="onSubmit" v-slot="{ meta }">
       <div class="row g-4">
         <div class="col-md">
-          <div class="form-floating mb-3">
+          <div class="mb-3">
+            <label class="form-label fw-medium" for="obj_kind">Об’єкт права інтелектуальної власності</label>
             <Field name="obj_kind"
                    v-model="objKindSelected"
                    rules="required"
                    label="Об’єкт права інтелектуальної власності"
                    v-slot="{ field, meta }">
-              <select class="form-select form-select-sm"
+              <select class="form-select"
                       :class="{ 'is-invalid': !meta.valid && meta.touched }"
                       id="obj_kind"
                       v-bind="field"
@@ -22,7 +21,6 @@
                 </option>
               </select>
             </Field>
-            <label for="obj_kind">Об’єкт права інтелектуальної власності:</label>
             <ErrorMessage name="obj_kind" class="invalid-feedback"/>
           </div>
         </div>
@@ -65,7 +63,8 @@
 
       <div class="row g-4" v-if="(stage5Fields.length > 0 || stage6Fields.length > 0) && dataLoadedSIS">
         <div class="col-md" v-if="stage5Fields.length > 0">
-          <h2 class="h5 my-3 text-indigo-800">Відомості про заявника/власника:</h2>
+          <h2 class="h5 my-3 text-indigo-800" v-if="isApplication">Відомості про заявника:</h2>
+          <h2 class="h5 my-3 text-indigo-800" v-else>Відомості про власника:</h2>
 
           <div class="row">
             <div class="col-12" v-for="field in stage5Fields">
@@ -82,7 +81,7 @@
         </div>
 
         <div class="col-md" v-if="stage6Fields.length > 0 && dataLoadedSIS">
-            <h2 class="h5 my-3 text-indigo-800">Відомості про апелянта (третю особу):</h2>
+            <h2 class="h5 my-3 text-indigo-800">Відомості про апелянта:</h2>
 
             <div class="col-12" v-for="field in stage6Fields">
               <claim-field :field-title="field.title"
@@ -130,7 +129,7 @@
       </div>
 
       <div v-if="stage9Fields.length > 0 && dataLoadedSIS">
-        <h2 class="h5 my-3 text-indigo-800">Додатки (файли):</h2>
+        <h2 class="h5 mb-3 mt-4 text-indigo-800">Додатки (файли):</h2>
 
         <claim-field v-for="field in stage9Fields"
                      :field-title="field.title"
@@ -139,6 +138,7 @@
                      :field-editable="!!field.editable"
                      :field-required="!!field.required"
                      :field-help-text="field.help_text"
+                     :field-allowed-extensions="field.allowed_extensions"
                      v-model="stage9Values[field.input_id]"
         ></claim-field>
       </div>
@@ -151,7 +151,7 @@
 
       <div class="d-flex justify-content-center mb-2">
         <button type="submit"
-                :disabled="sending"
+                :disabled="sending || !dataLoadedSIS"
                 class="btn btn-primary mt-4"
         >Сформувати та підписати</button>
       </div>
@@ -166,6 +166,7 @@ import { Form, Field, ErrorMessage } from 'vee-validate'
 
 import ClaimKindSelect from "./ClaimKindSelect.vue"
 import ClaimField from "./ClaimField.vue"
+// import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
 
 export default {
   components: {
@@ -174,6 +175,7 @@ export default {
     ErrorMessage,
     ClaimKindSelect,
     ClaimField,
+    // ThirdPersonCheckbox,
   },
 
   props: {
@@ -277,6 +279,7 @@ export default {
           return
         }
       }
+      this.thirdPerson = false
       this.thirdPersonDisabled = false
     },
 
@@ -286,6 +289,7 @@ export default {
       const formData = new FormData(form)
       const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
       formData.append('csrfmiddlewaretoken', csrftoken)
+      formData.append('third_person', this.thirdPerson | 0)
 
       this.sending = true
 
@@ -372,6 +376,13 @@ export default {
       }
 
       return []
+    },
+
+    isApplication() {
+      if (this.stage3Fields.length > 0) {
+        return this.stage3Fields[0]['input_id'] === 'app_number'
+      }
+      return false
     }
   }
 }

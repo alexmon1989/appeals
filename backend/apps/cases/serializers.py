@@ -2,7 +2,7 @@ from django.template.loader import render_to_string
 
 from rest_framework import serializers
 from .models import Document, Sign, Case
-from ..classifiers.models import DocumentName, DocumentType, ClaimKind, ObjKind
+from ..classifiers.models import DocumentType, ClaimKind, ObjKind
 
 
 class ClaimKindSerializer(serializers.ModelSerializer):
@@ -21,17 +21,6 @@ class ObjKindSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ObjKind
-        fields = (
-            'id',
-            'title',
-        )
-
-
-class DocumentNameSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = DocumentName
         fields = (
             'id',
             'title',
@@ -65,7 +54,6 @@ class SignTypeSerializer(serializers.ModelSerializer):
 
 class DocumentSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    document_name = DocumentNameSerializer()
     document_type = DocumentTypeSerializer()
     document_name_title = serializers.ReadOnlyField(source='document_name.title')
     document_type_title = serializers.ReadOnlyField(source='document_type.title')

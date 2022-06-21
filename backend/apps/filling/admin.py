@@ -7,10 +7,10 @@ from .forms import ClaimFieldForm
 @admin.register(ClaimField)
 class Admin(admin.ModelAdmin):
     ordering = ('pk',)
-    list_display = ('title', 'get_obj_kind', 'claim_kind', 'field_type', 'stage', 'enabled', 'created_at', 'updated_at')
+    list_display = ('title', 'get_obj_kind', 'claim_kind', 'field_type', 'stage', 'created_at', 'updated_at')
     form = ClaimFieldForm
     list_filter = ('stage', 'claim_kind__obj_kind__title')
-    list_editable = ('enabled',)
+    search_fields = ('title',)
 
     def get_queryset(self, request):
         return ClaimField.objects.select_related('claim_kind', 'claim_kind__obj_kind')

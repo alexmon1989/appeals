@@ -13,7 +13,7 @@
       <tbody>
       <tr v-for="(document, index) in documents">
         <td class="fw-bold" v-html="index + 1"></td>
-        <td>{{ document.document_name }}</td>
+        <td>{{ document.document_type }}</td>
         <td class="text-center">
           <span class="text-primary fw-bold" v-if="document.auto_generated">так</span>
           <span v-else>ні</span>
@@ -74,7 +74,7 @@ export default {
 
       $.SOW.core.toast.show('success-soft',
           '',
-          'Документ <b>' + document.document_name + '</b> успішно підписано.' ,
+          'Документ <b>' + document.document_type + '</b> успішно підписано.' ,
           'top-end',
           0,
           true
