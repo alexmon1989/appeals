@@ -4,10 +4,10 @@
       <thead>
       <tr>
         <th scope="col">#</th>
-        <th scope="col">Тип (назва) документу</th>
-        <th scope="col" class="text-center">Сгенеровано автоматично</th>
-        <th scope="col">Файл</th>
-        <th scope="col" class="text-center">Підписано КЕП</th>
+        <th scope="col" class="text-center">Тип (назва) документу</th>
+        <th scope="col" class="text-center text-nowrap">Сгенеровано автоматично</th>
+        <th scope="col" class="text-center">Файл</th>
+        <th scope="col" class="text-center text-nowrap">Підписано КЕП</th>
       </tr>
       </thead>
       <tbody>
