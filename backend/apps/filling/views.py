@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.http import JsonResponse, Http404
 from django.views import View
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
@@ -56,7 +56,7 @@ class CreateClaimView(LoginRequiredMixin, View):
         messages.add_message(
             request,
             messages.SUCCESS,
-            'Заявку успішно створено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
+            'Звернення успішно створено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
         )
 
         return JsonResponse({'success': 1, 'claim_url': claim.get_absolute_url()})
@@ -90,3 +90,17 @@ def claim_status(request, pk):
             }
         })
     return JsonResponse({'success': 0})
+
+
+def claim_delete(request, pk):
+    """Удаление обращения."""
+    claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=pk, status__lt=3).first()
+    if claim:
+        claim.delete()
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            'Звернення успішно видалено.'
+        )
+        return redirect('my-claims-list')
+    raise Http404()
