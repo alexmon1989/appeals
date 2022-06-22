@@ -237,8 +237,8 @@ def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:
         '{{ DECISION_RECEIVE_DATE }}': claim_data.get('decision_receive_date', ''),
         '{{ APPLICANT_TITLE }}': claim_data.get('applicant_title', '').replace('\r\n', '\n'),
         '{{ REGISTRATION_NUMBER }}': claim_data.get('registration_number'),
-        '{{ OWNER_TITLE }}': claim_data.get('owner_title').replace('\r\n', '\n'),
-        '{{ OWNER_ADDRESS }}': claim_data.get('owner_address').replace('\r\n', '\n'),
+        '{{ OWNER_TITLE }}': claim_data.get('owner_title', '').replace('\r\n', '\n'),
+        '{{ OWNER_ADDRESS }}': claim_data.get('owner_address', '').replace('\r\n', '\n'),
         '{{ WELL_KNOWN_DATE }}': claim_data.get('well_known_date'),
         '{{ WELL_KNOWN_CLASSES }}': claim_data.get('well_known_classes', '').replace('\r\n', '\n'),
     }
@@ -262,7 +262,7 @@ def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:
                                          or claim_data.get('owner_address', '').replace('\r\n', '\n')
         res['{{ REPRESENT_TITLE }}'] = claim_data.get('represent_title', '').replace('\r\n', '\n')
         res['{{ REPRESENT_ADDRESS }}'] = claim_data.get('represent_address', '').replace('\r\n', '\n')
-        res['{{ MAILING_ADDRESS }}'] = claim_data.get('mailing_address', '')
+        res['{{ MAILING_ADDRESS }}'] = claim_data.get('mailing_address', '').replace('\r\n', '\n')
         res['{{ CONTACTS_PHONE }}'] = claim_data.get('phone', '')
         res['{{ CONTACTS_EMAIL }}'] = claim_data.get('email', '')
 

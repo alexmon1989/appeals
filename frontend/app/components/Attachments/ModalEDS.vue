@@ -21,14 +21,14 @@
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">Тип (назва) документу</th>
-                <th scope="col">Підписано КЕП</th>
+                <th scope="col" class="text-nowrap text-center">Підписано КЕП</th>
               </tr>
               </thead>
               <tbody>
               <tr v-for="(document, index) in documents">
                 <th scope="row" v-html="index + 1"></th>
                 <td>{{ document.document_type }}</td>
-                <td class="fw-bold">
+                <td class="fw-bold text-center">
                   <span class="text-success" v-if=" document.sign__count">так</span><span class="text-danger" v-else>ні</span>
                 </td>
               </tr>
