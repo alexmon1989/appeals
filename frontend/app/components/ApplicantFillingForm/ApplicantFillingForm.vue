@@ -61,6 +61,10 @@
         </div>
       </div>
 
+      <div v-if="processed"
+           class="text-primary"
+      >Будь ласка, зачекайте, завантажуємо дані об'кта інтелектуальної власності...</div>
+
       <div class="row g-4" v-if="(stage5Fields.length > 0 || stage6Fields.length > 0) && dataLoadedSIS">
         <div class="col-md" v-if="stage5Fields.length > 0">
           <h2 class="h5 my-3 text-indigo-800" v-if="isApplication">Відомості про заявника:</h2>
@@ -167,6 +171,7 @@ import { Form, Field, ErrorMessage } from 'vee-validate'
 import ClaimKindSelect from "./ClaimKindSelect.vue"
 import ClaimField from "./ClaimField.vue"
 // import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
+import Spinner from "../Spinner.vue"
 
 export default {
   components: {
@@ -175,6 +180,7 @@ export default {
     ErrorMessage,
     ClaimKindSelect,
     ClaimField,
+    Spinner,
     // ThirdPersonCheckbox,
   },
 
@@ -185,10 +191,6 @@ export default {
   },
 
   data() {
-    const schema = {
-      email: 'required',
-    };
-
     return {
       objKindSelected: '',
       claimKindSelected: '',
@@ -204,7 +206,7 @@ export default {
       dataLoadedSIS: false,
       errors: [],
       sending: false,
-      schema,
+      processed: false,
     }
   },
 
@@ -235,6 +237,7 @@ export default {
   created() {
     this.loadDataFromSIS = debounce(async (newValue, oldValue) => {
 
+      this.processed = true
       this.dataLoadedSIS = false
       this.errors = []
 
@@ -261,6 +264,7 @@ export default {
         //  this.errors.push('Помилка звернення до API СІС.')
         //}
       }
+      this.processed = false
     }, 1000);
   },
 
