@@ -120,7 +120,7 @@ def claim_get_user_claims_qs(user: UserModel) -> QuerySet[Claim]:
 
 def claim_get_stages_details(claim: Claim) -> dict:
     """Возвращает данные заявки по этапам ввода формы."""
-    fields = ClaimField.objects.filter(claim_kind=claim.claim_kind, required=True, stage__lt=9)
+    fields = ClaimField.objects.filter(claim_kind=claim.claim_kind, stage__lt=9)
     stages = {
         3: {
             'title': 'Номер заявки/охоронного документа',
@@ -131,11 +131,11 @@ def claim_get_stages_details(claim: Claim) -> dict:
             'items': [],
         },
         5: {
-            'title': 'Відомості про заявника (апелянта) та власника',
+            'title': 'Відомості про заявника або власника',
             'items': [],
         },
         6: {
-            'title': 'Відомостей про апелянта (лише у випадку заперечень 3-х осіб і апеляційних заяв)',
+            'title': 'Відомості про апелянта',
             'items': [],
         },
         7: {
@@ -151,14 +151,20 @@ def claim_get_stages_details(claim: Claim) -> dict:
     claim_data = json.loads(claim.json_data)
     for field in fields:
         try:
-            stages[field.stage]['items'].append({
-                'title': field.title,
-                'value': claim_data[field.input_id],
-                'type': field.field_type,
-                'id': field.input_id,
-            })
+            if claim_data[field.input_id]:
+                stages[field.stage]['items'].append({
+                    'title': field.title,
+                    'value': claim_data[field.input_id],
+                    'type': field.field_type,
+                    'id': field.input_id,
+                })
         except KeyError:
             pass
+
+    if stages[3]['items'][0]['id'] == 'app_number':
+        stages[5]['title'] = 'Відомості про заявника'
+    else:
+        stages[5]['title'] = 'Відомості про власника'
 
     return stages
 
