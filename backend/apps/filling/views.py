@@ -5,6 +5,7 @@ from django.views.generic import ListView, DetailView
 from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 
 from ..classifiers import services as classifiers_services
 from . import services as filling_services
@@ -78,6 +79,7 @@ class ClaimDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+@login_required
 def claim_status(request, pk):
     """Возвращает статус заявки в формате JSON."""
     claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=pk).first()
@@ -92,6 +94,7 @@ def claim_status(request, pk):
     return JsonResponse({'success': 0})
 
 
+@login_required
 def claim_delete(request, pk):
     """Удаление обращения."""
     claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=pk, status__lt=3).first()
