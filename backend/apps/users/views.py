@@ -43,7 +43,7 @@ def login_view_ds_file(request):
                 messages.add_message(
                     request,
                     messages.SUCCESS,
-                    f'Авторизація успішна. Вітаємо, {request.user.certificateowner.pszSubjFullName}'
+                    f'Авторизація успішна. Вітаємо, {cert.pszSubjFullName}'
                 )
                 return JsonResponse({
                     'is_logged': 1

@@ -24,7 +24,7 @@ class User(AbstractUser):
     @cached_property
     def get_full_name(self):
         if self.belongs_to_group('Заявник'):
-            return self.certificateowner.pszSubjFullName
+            return self.certificateowner_set.first().pszSubjFullName
         else:
             full_name = '%s %s %s' % (self.last_name, self.first_name, self.middle_name)
         return full_name.strip()
@@ -49,7 +49,7 @@ class User(AbstractUser):
 
 class CertificateOwner(TimeStampModel):
     """Модель данных владельца сертификата ЭЦП."""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Користувач')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, verbose_name='Користувач')
     pszIssuer = models.CharField('Ім’я ЦСК, що видав сертифікат', max_length=255, blank=True, null=True)
     pszIssuerCN = models.CharField('Реквізити ЦСК, що видав сертифікат', max_length=255, blank=True, null=True)
     pszSerial = models.CharField('Реєстраційний номер сертифіката', max_length=255, blank=True, null=True)
@@ -80,7 +80,8 @@ class CertificateOwner(TimeStampModel):
         super().save(*args, **kwargs)
         # Создание нового пользователя
         if not self.user:
-            user, created = User.objects.get_or_create(email=self.pszSerial)
+            email = self.pszSubjDRFOCode or self.pszSubjEDRPOUCode
+            user, created = User.objects.get_or_create(email=email)
             self.user = user
             self.save()
 
