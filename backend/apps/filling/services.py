@@ -263,7 +263,7 @@ def claim_get_documents(claim_id: int, user_id: int) -> list:
         res.append({
             'id': document.pk,
             'document_type': document.document_type.title,
-            'auto_generated': document.auto_generated,
+            'auto_generated': int(document.auto_generated),
             'file_url': document.file.url,
             'file_name': Path(document.file.name).name,
             'sign__count': document.sign__count,
