@@ -19,7 +19,7 @@
           <span v-else>ні</span>
         </td>
         <td>
-          <a :href="document.file_url" target="_blank">{{ document.file_name }}</a>
+          <a :href="getDocUrl(document)" target="_blank">{{ document.file_name }}</a>
         </td>
         <td class="text-center">
           <span class="text-success fw-bold" v-if="document.sign__count">так</span>
@@ -109,7 +109,17 @@ export default {
       } else {
         console.log("Error getting claim status: " + response.status)
       }
-    }
+    },
+
+     getDocUrl(document) {
+       if (document.sign__count > 0) {
+         const fileExt = document.file_name.split('.').pop();
+         const signedFileName = document.file_name.replace('.' + fileExt, '_signs.' + fileExt)
+         return document.file_url.replace(document.file_name, signedFileName)
+       } else {
+         return document.file_url
+       }
+     },
   }
 }
 </script>
