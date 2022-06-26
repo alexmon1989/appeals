@@ -82,12 +82,16 @@
   <div class="mb-3" v-else-if="fieldType === 'file'">
     <p class="d-block mb-2 fw-medium" style="font-size: 18px">{{ fieldTitle }}</p>
 
+    <div class="mb-2 small" v-if="documents.length > 0">
+      Зараз: <a target="_blank" :href="documents[0].file_url">{{ documents[0].file_name }}</a>
+    </div>
+
     <div class="d-flex">
       <!-- static list -->
       <label class="btn btn-primary btn-soft btn-sm cursor-pointer position-relative">
         <Field :name="fieldId"
                :label="label"
-               :rules="{'required': fieldRequired}"
+               :rules="fileFieldRequired"
                v-slot="{ handleChange, handleBlur, meta }">
           <input type="file"
                  :id="fieldId"
@@ -122,6 +126,7 @@
          title="Очистити"
          data-bs-toggle="tooltip"
          :id="fieldId + '_remove'"
+         @click="$emit('update:modelValue', undefined)"
          class="js-file-input-btn-multiple-list-static-remove hide btn btn-secondary btn-sm ms-2">
         <i class="fi fi-close"></i>
         Очистити
@@ -141,12 +146,33 @@
   <div class="mb-3" v-else-if="fieldType === 'file_multi'">
     <p class="d-block mb-2 fw-medium" style="font-size: 18px">{{ fieldTitle }}</p>
 
+    <div class="mb-2 small" v-if="documents.length > 0">
+      <div class="d-flex">
+        <div class="me-2">Зараз:</div>
+        <div class="d-flex flex-column">
+          <div v-for="doc in documents">
+            <a class="me-2"
+               target="_blank"
+               :href="doc.file_url"
+            >{{ doc.file_name }}</a>
+            <input type="checkbox"
+                   class="me-1"
+                   name="delete_doc_id"
+                   v-model="deleteDocIds"
+                   @change="onDeleteDocCheckboxClick(fieldId)"
+                   :value="doc.id" :id="'doc_' + doc.id">
+            <label :for="'doc_' + doc.id">видалити</label><br>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="d-flex">
       <!-- static list -->
       <label class="btn btn-primary btn-soft btn-sm cursor-pointer position-relative">
         <Field :name="fieldId"
                :label="label"
-               :rules="{'required': fieldRequired}"
+               :rules="fileFieldRequired"
                v-slot="{ handleChange, handleBlur, meta }">
           <input multiple type="file"
                  :id="fieldId"
@@ -180,6 +206,7 @@
          title="Очистити"
          data-bs-toggle="tooltip"
          :id="fieldId + '_remove'"
+         @click="$emit('update:modelValue', undefined)"
          class="js-file-input-btn-multiple-list-static-remove hide btn btn-secondary btn-sm ms-2">
         <i class="fi fi-close"></i>
         Очистити
@@ -212,6 +239,13 @@ export default {
     fieldRequired: Boolean,
     fieldHelpText: String,
     fieldAllowedExtensions: String,
+    initial_documents: Array,
+  },
+  data() {
+    return {
+      deleteDocIds: [],
+      documents: []
+    }
   },
   components: {
     Field,
@@ -219,6 +253,10 @@ export default {
   },
   emits: ['update:modelValue'],
   mounted() {
+    if (this.initial_documents !== undefined) {
+      this.documents = this.initial_documents
+    }
+
     if (this.fieldType === 'file' || this.fieldType === 'file_multiple') {
       $.SOW.core.file_upload.init('input[type="file"].custom-file-input, input[type="file"].form-control');
     }
@@ -231,6 +269,37 @@ export default {
   methods: {
     handleChangeFile(event) {
       this.$emit('update:modelValue', event.target.files)
+    },
+
+    fileFieldRequired(value) {
+      if (this.fieldRequired && this.modelValue === undefined) {
+        if (this.fieldType === 'file') {
+          if (this.documents.length === 0) {
+            return 'Оберіть файл'
+          }
+        } else { // file_multi
+          if (this.documents.length > 0) {
+            for (let i = 0; i < this.documents.length; i++) {
+              if (!this.deleteDocIds.includes(this.documents[i].id)) {
+                return true
+              }
+            }
+            return 'Оберіть хоча б один файл або не видаляйте існуючий'
+          } else {
+            return 'Оберіть файл(и)'
+          }
+        }
+      }
+
+      return true
+    },
+
+    onDeleteDocCheckboxClick(fieldId) {
+      document.getElementById(fieldId).dispatchEvent(new Event('change'));
+      if (this.modelValue === undefined) {
+        const btnRemove = document.getElementById(fieldId + '_remove')
+        btnRemove.className += " hide"
+      }
     }
   }
 }

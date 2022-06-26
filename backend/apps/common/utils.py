@@ -83,7 +83,12 @@ def docx_replace(doc, data):
                             inline[index].text = text
                 # print(p.text)
 
-# usage
-# doc = docx.Document('path/to/template.docx')
-# docx_replace(doc, dict(ItemOne='replacement text', ItemTwo="Some replacement text\nand some more")
-# doc.save('path/to/destination.docx')
+
+def qdict_to_dict(qdict):
+    """Convert a Django QueryDict to a Python dict.
+
+    Single-value fields are put in directly, and for multi-value fields, a list
+    of all values is stored at the field's key.
+
+    """
+    return {k: v[0] if len(v) == 1 else v for k, v in qdict.lists()}

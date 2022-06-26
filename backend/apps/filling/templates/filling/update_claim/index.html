@@ -1,0 +1,21 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Редагування звернення{% endblock %}
+
+{% block main %}
+    {% include 'filling/update_claim/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+
+        <applicant-filling-form :obj-kinds="{{ obj_kinds }}"
+                                :claim-kinds="{{ claim_kinds }}"
+                                :claim-fields="{{ claim_fields }}"
+                                :initial-data="{{ initial_data }}"
+                                :documents="{{ documents }}"
+        ></applicant-filling-form>
+
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

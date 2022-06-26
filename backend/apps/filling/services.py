@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.utils.datastructures import MultiValueDict
 from django.http.request import QueryDict
-from django.db.models import Prefetch, Count
+from django.db.models import Prefetch, Count, Q
 from django.db.models.query import QuerySet
 from django.core.files.base import ContentFile
 
@@ -52,7 +52,6 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
     stage_9_fields = ClaimField.objects.filter(
         claim_kind=post_data['claim_kind'],
         stage=9,
-        required=True,
         field_type__in=(ClaimField.FieldType.FILE, ClaimField.FieldType.FILE_MULTIPLE)
     )
     for field in stage_9_fields:
@@ -68,7 +67,7 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
                 file=file,
                 claim_document=True,
             )
-            if field.base_doc:
+            if doc_type.base_doc:
                 # Создание файла обращения (с шапкой)
                 document_create_main_claim_doc_file(claim, doc)
         else:
@@ -81,6 +80,76 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
                     file=file,
                     claim_document=True
                 )
+
+    return claim
+
+
+def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user: UserModel) -> Claim:
+    """Редактирует обращение пользователя."""
+    claim = claim_get_user_claims_qs(user).filter(pk=сlaim_id).first()
+
+    # Удаление документов, которые указал пользователь и тех, которые генерируются автоматически
+    try:
+        docs_to_delete_ids = post_data['delete_doc_id']
+        if type(docs_to_delete_ids) is not list:
+            docs_to_delete_ids = [docs_to_delete_ids]
+        del post_data['delete_doc_id']
+    except KeyError:
+        Document.objects.filter(claim=claim, auto_generated=True).delete()
+    else:
+        Document.objects.filter(Q(pk__in=docs_to_delete_ids) | Q(claim=claim, auto_generated=True)).delete()
+
+    stage_3_field = ClaimField.objects.filter(claim_kind=post_data['claim_kind'], stage=3).first().input_id
+
+    # Обновление текстовых данных обращения
+    claim.obj_kind_id = post_data['obj_kind']
+    claim.claim_kind_id = post_data['claim_kind']
+    claim.third_person = post_data.get('third_person', False)
+    claim.obj_number = post_data[stage_3_field]
+    claim.json_data = json.dumps(claim_process_input_data(post_data))
+    claim.user = user
+    claim.save()
+
+    # Загрузка файлов
+    stage_9_fields = ClaimField.objects.filter(
+        claim_kind=post_data['claim_kind'],
+        stage=9,
+        field_type__in=(ClaimField.FieldType.FILE, ClaimField.FieldType.FILE_MULTIPLE)
+    )
+    for field in stage_9_fields:
+        if field.input_id in files_data or f"{field.input_id}[]" in files_data:
+            # Получение типа документа
+            doc_type, created = DocumentType.objects.get_or_create(title=field.title)
+            # Сохранение файла
+            if field.field_type == ClaimField.FieldType.FILE:
+                # Удаление "старого" документа этого типа
+                Document.objects.filter(claim=claim, document_type=doc_type).delete()
+                # Загрузка нового документа
+                file = files_data[field.input_id]
+                Document.objects.create(
+                    claim=claim,
+                    document_type=doc_type,
+                    input_date=datetime.datetime.now(),
+                    file=file,
+                    claim_document=True,
+                )
+            else:
+                files = files_data.getlist(f"{field.input_id}[]")
+                for file in files:
+                    Document.objects.create(
+                        claim=claim,
+                        document_type=doc_type,
+                        input_date=datetime.datetime.now(),
+                        file=file,
+                        claim_document=True
+                    )
+
+    # Формирование основного документа обращения (заявления)
+    base_doc = Document.objects.filter(claim=claim, document_type__base_doc=True).first()
+    if base_doc:
+        document_create_main_claim_doc_file(claim, base_doc)
+        claim.status = 1
+        claim.save()
 
     return claim
 
@@ -180,13 +249,13 @@ def claim_get_documents_qs(claim_id: int, user_id: int) -> QuerySet[Document]:
         Prefetch('sign_set', queryset=Sign.objects.filter(user_id=user_id))
     ).order_by(
         '-auto_generated',
-        'pk'
+        'document_type'
     ).annotate(Count('sign'))
 
     return documents
 
 
-def claim_get_documents_json(claim_id: int, user_id: int) -> str:
+def claim_get_documents(claim_id: int, user_id: int) -> list:
     """Возвращает список документов обращения в формате json."""
     documents = claim_get_documents_qs(claim_id, user_id)
     res = []
@@ -199,7 +268,7 @@ def claim_get_documents_json(claim_id: int, user_id: int) -> str:
             'file_name': Path(document.file.name).name,
             'sign__count': document.sign__count,
         })
-    return json.dumps(res)
+    return res
 
 
 def claim_set_status_if_all_docs_signed(claim_id: Type[int]) -> None:

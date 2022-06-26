@@ -10,7 +10,10 @@ from django.contrib.auth.decorators import login_required
 from ..classifiers import services as classifiers_services
 from . import services as filling_services
 from ..common.mixins import LoginRequiredMixin
+from ..common.utils import qdict_to_dict
 from .models import Claim
+
+import json
 
 
 class MyClaimsListView(LoginRequiredMixin, ListView):
@@ -75,7 +78,7 @@ class ClaimDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['stages'] = filling_services.claim_get_stages_details(self.object)
-        context['documents'] = filling_services.claim_get_documents_json(self.object.pk, self.request.user.pk)
+        context['documents'] = filling_services.claim_get_documents(self.object.pk, self.request.user.pk)
         return context
 
 
@@ -107,3 +110,58 @@ def claim_delete(request, pk):
         )
         return redirect('my-claims-list')
     raise Http404()
+
+
+class ClaimUpdateView(LoginRequiredMixin, View):
+    """Отображает страницу редактирвоания обращения."""
+
+    template_name = 'filling/update_claim/index.html'
+
+    def get(self, request, *args, **kwargs):
+        # Данные заявки
+        claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=self.kwargs['pk']).first()
+        stages = filling_services.claim_get_stages_details(claim)
+        documents = filling_services.claim_get_documents(claim.pk, self.request.user.pk)
+
+        initial_data = {
+            'obj_kind_id': claim.obj_kind.id,
+            'claim_kind_id': claim.claim_kind.id,
+            'stages_data': stages,
+            'documents': documents,
+        }
+
+        # Типы объектов
+        obj_kinds = classifiers_services.get_obj_kinds_list()
+
+        # Типы обращений
+        claim_kinds = classifiers_services.get_claim_kinds(bool_as_int=True)
+
+        # Возможные поля обращений (зависящие от типа)
+        claim_fields = filling_services.claim_get_fields(bool_as_int=True)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                'claim': claim,
+                'initial_data': initial_data,
+                'obj_kinds': obj_kinds,
+                'claim_kinds': claim_kinds,
+                'claim_fields': claim_fields,
+            }
+        )
+
+    def post(self, request, *args, **kwargs):
+        """Обрабатывает POST-запрос, редактирует обращение."""
+
+        post_data = qdict_to_dict(request.POST)
+        del post_data['csrfmiddlewaretoken']
+
+        claim = filling_services.claim_edit(self.kwargs['pk'], post_data, request.FILES, request.user)
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            'Звернення успішно відредаговано. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
+        )
+
+        return JsonResponse({'success': 1, 'claim_url': claim.get_absolute_url()})

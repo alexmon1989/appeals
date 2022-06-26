@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Form enctype="multipart/form-data" id="create-app-form" @submit="onSubmit" v-slot="{ meta }">
+    <Form enctype="multipart/form-data" id="app-form" @submit="onSubmit" v-slot="{ meta }">
       <div class="row g-4">
         <div class="col-md">
           <div class="mb-3">
@@ -143,6 +143,7 @@
                      :field-required="!!field.required"
                      :field-help-text="field.help_text"
                      :field-allowed-extensions="field.allowed_extensions"
+                     :initial_documents="getFieldDocuments(field.title)"
                      v-model="stage9Values[field.input_id]"
         ></claim-field>
       </div>
@@ -157,7 +158,7 @@
         <button type="submit"
                 :disabled="sending || !dataLoadedSIS"
                 class="btn btn-primary mt-4"
-        >Сформувати та підписати</button>
+        >{{ btnText }}</button>
       </div>
     </form>
   </div>
@@ -166,12 +167,13 @@
 <script>
 import getDataFromSIS from "@/app/lib/sis"
 import debounce from "lodash.debounce"
-import { Form, Field, ErrorMessage } from 'vee-validate'
+import {ErrorMessage, Field, Form} from 'vee-validate'
 
 import ClaimKindSelect from "./ClaimKindSelect.vue"
 import ClaimField from "./ClaimField.vue"
 // import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
 import Spinner from "../Spinner.vue"
+import { getCookie } from '@/app/lib/until'
 
 export default {
   components: {
@@ -188,6 +190,7 @@ export default {
     objKinds: Array,
     claimKinds: Array,
     claimFields: Array,
+    initialData: Object,
   },
 
   data() {
@@ -207,6 +210,8 @@ export default {
       errors: [],
       sending: false,
       processed: false,
+      initialDataLoading: false,
+      documents: false,
     }
   },
 
@@ -229,7 +234,9 @@ export default {
 
     stage3Values: {
         handler(...args){
+          if (!this.initialDataLoading) {
             this.loadDataFromSIS(...args)
+          }
         }, deep: true
     }
   },
@@ -272,6 +279,52 @@ export default {
     this.loadDataFromSIS.cancel();
   },
 
+  mounted() {
+    if (this.initialData) {
+      this.initialDataLoading = true
+      this.objKindSelected = this.initialData.obj_kind_id
+      this.$nextTick(() => {
+        this.claimKindSelected = this.initialData.claim_kind_id
+        this.$nextTick(() => {
+          this.dataLoadedSIS = true
+          this.initialData.stages_data[3].items.forEach((item) => {
+            this.stage3Values[item.id] = item.value
+          })
+
+          this.$nextTick(() => {
+            this.initialData.stages_data[4].items.forEach((item) => {
+              if (item.id.includes('date')) {
+                const d = new Date(item.value)
+                const year = d.getFullYear()
+                const month = `${d.getMonth() + 1}`.padStart(2, "0")
+                const day = `${d.getDate()}`.padStart(2, "0")
+                this.stage4Values[item.id] = [day, month, year].join(".")
+              } else {
+                this.stage4Values[item.id] = item.value
+              }
+            })
+            this.initialData.stages_data[5].items.forEach((item) => {
+              this.stage5Values[item.id] = item.value
+            })
+            this.initialData.stages_data[6].items.forEach((item) => {
+              this.stage6Values[item.id] = item.value
+            })
+            this.initialData.stages_data[7].items.forEach((item) => {
+              this.stage7Values[item.id] = item.value
+            })
+            this.initialData.stages_data[8].items.forEach((item) => {
+              this.stage8Values[item.id] = item.value
+            })
+
+            this.initialDataLoading = false
+          })
+        })
+      })
+
+      this.documents = this.initialData.documents
+    }
+  },
+
   methods: {
     // Изменяет значение и возможность редактирования чекбокса ThirdPersonCheckbox
     changeThirdPersonCheckbox(claimKindId) {
@@ -289,9 +342,9 @@ export default {
 
     // Отправка данных на сервер
     async onSubmit(values) {
-      const form = document.getElementById('create-app-form')
+      const form = document.getElementById('app-form')
       const formData = new FormData(form)
-      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      const csrftoken = getCookie('csrftoken')
       formData.append('csrfmiddlewaretoken', csrftoken)
       formData.append('third_person', this.thirdPerson | 0)
 
@@ -307,16 +360,25 @@ export default {
       this.sending = false
 
       location.href = result.claim_url
+    },
 
-      // Отправка
-    }
+    // Возвращает список документов поля (если есть начальные данные (редактирование обращения))
+    getFieldDocuments(fieldTitle) {
+      if (this.initialData && this.initialData.documents !== undefined) {
+        return this.initialData.documents.filter(item => item.document_type === fieldTitle)
+      }
+    },
   },
 
   computed: {
 
     // Id выбранного типа объекта в СИС
     sisId() {
-      return this.objKinds.find(item => this.objKindSelected === item.pk).sis_id
+      if (this.objKindSelected) {
+        return this.objKinds.find(item => this.objKindSelected === item.pk).sis_id
+      } else {
+        return ''
+      }
     },
 
     // Поля ввода данных на этапе 3
@@ -387,6 +449,10 @@ export default {
         return this.stage3Fields[0]['input_id'] === 'app_number'
       }
       return false
+    },
+
+    btnText() {
+      return this.initialData ? 'Зберегти' : 'Сформувати та підписати'
     }
   }
 }

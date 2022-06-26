@@ -53,6 +53,10 @@ class DocumentType(TimeStampModel):
     origin = models.CharField("Походження", max_length=16, choices=Origin.choices, null=True, blank=True)
     code = models.CharField("Код (ідентифікатор) документа", null=True, blank=True, max_length=255)
     create_with_claim = models.BooleanField('Створювати автоматично разом із зверненням', default=False)
+    base_doc = models.BooleanField(
+        'Базовий документ для формування документу звернення',
+        default=False,
+    )
     claim_kinds = models.ManyToManyField(ClaimKind, verbose_name='Види звернень', blank=True)
 
     def __str__(self):
