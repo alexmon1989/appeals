@@ -181,7 +181,7 @@ def claim_get_user_claims_qs(user: UserModel) -> QuerySet[Claim]:
     return Claim.objects.filter(
         user=user
     ).select_related(
-        'claim_kind', 'obj_kind'
+        'claim_kind', 'obj_kind', 'case'
     ).prefetch_related(
         'document_set', 'document_set__document_type'
     )

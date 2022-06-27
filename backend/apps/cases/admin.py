@@ -24,19 +24,9 @@ class CaseAdmin(admin.ModelAdmin):
     inlines = (CollegiumMembershipInline, DocumentInline)
     list_display = (
         'case_number',
-        'app_number',
-        'obj_title',
-        'obj_kind',
-        'applicant_name',
-        'claim_date',
-    )
-    list_filter = (
-        'obj_kind',
     )
     search_fields = (
         'case_number',
-        'app_number',
-        'obj_title',
     )
 
     def get_queryset(self, request):

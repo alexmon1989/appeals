@@ -5,7 +5,7 @@
         {% elif claim.status == 2 %}
             <span class="text-primary ms-1">{{ claim.get_status_display }}</span>
         {% elif claim.status == 3 %}
-            <span class="text-success ms-1">{{ claim.get_status_display }}</span>
+            <span class="text-success ms-1">{{ claim.get_status_display }} №{{ claim.case.case_number }}</span>
         {% endif %}
     </div>
 </div>

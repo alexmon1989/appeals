@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.db.models import Count, Q
@@ -7,7 +9,7 @@ from ..utils import set_cell_border
 from ...filling.models import Claim
 from ...filling import services as filling_services
 
-from typing import Iterable, List, Type
+from typing import Iterable, List, Union
 from pathlib import Path
 from docx import Document as DocumentWord
 
@@ -75,6 +77,32 @@ def case_get_documents_list(case_id: int) -> Iterable[Document]:
     ).order_by('-created_at')
 
     return queryset
+
+
+def case_generate_next_number() -> str:
+    """Генерирует следующий номер дела."""
+    cur_year = datetime.datetime.now().year
+    last_case = Case.objects.filter(created_at__year=cur_year).order_by('-created_at').first()
+    if last_case:
+        last_case_num = last_case.case_number.split('/')[0]
+        last_case_num = str(int(last_case_num) + 1).zfill(4)
+        return f"{last_case_num}/{cur_year}"
+    else:
+        return f"0001/{cur_year}"
+
+
+def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
+    """Создаёт дело на основе обращения."""
+    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status=2).first()
+    if claim:
+        case = Case.objects.create(
+            claim=claim,
+            case_number=case_generate_next_number(),
+        )
+        claim.status = 3
+        claim.save()
+        return case
+    return None
 
 
 def document_get_by_id(doc_id: int) -> Document:

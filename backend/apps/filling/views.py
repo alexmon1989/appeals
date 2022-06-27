@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponseBadRequest
 from django.views import View
 from django.views.generic import ListView, DetailView
-from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 
@@ -12,8 +12,7 @@ from . import services as filling_services
 from ..common.mixins import LoginRequiredMixin
 from ..common.utils import qdict_to_dict
 from .models import Claim
-
-import json
+from ..cases.services import services as case_services
 
 
 class MyClaimsListView(LoginRequiredMixin, ListView):
@@ -119,7 +118,7 @@ class ClaimUpdateView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         # Данные заявки
-        claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=self.kwargs['pk']).first()
+        claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=self.kwargs['pk'], status__lt=3).first()
         stages = filling_services.claim_get_stages_details(claim)
         documents = filling_services.claim_get_documents(claim.pk, self.request.user.pk)
 
@@ -165,3 +164,18 @@ class ClaimUpdateView(LoginRequiredMixin, View):
         )
 
         return JsonResponse({'success': 1, 'claim_url': claim.get_absolute_url()})
+
+
+@login_required
+def case_create(request, claim_id):
+    """Создаёт дело на основе обращения."""
+    case = case_services.case_create_from_claim(claim_id, request.user)
+    if case:
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            f'Справу {case.case_number} успішно створено.'
+        )
+        return redirect('claim_detail', pk=claim_id)
+    else:
+        return HttpResponseBadRequest('Ви не можете передати звернення, тому що документи не було підписано.')

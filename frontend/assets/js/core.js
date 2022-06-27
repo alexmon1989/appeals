@@ -18005,8 +18005,13 @@ if ( window.NodeList && !NodeList.prototype.forEach ) {
                           jQuery('.btn-confirm-yes', _target).removeClass('disabled').prop('disabled', false);
 
                           if(typeof $.SOW.core.toast === 'object') {
+							  console.log(XMLHttpRequest.responseText, textStatus, errorThrown)
 
-                              $.SOW.core.toast.show('danger', '404 Error', 'Unexpected Internal error!',  'top-center', 0, true);
+							  if (XMLHttpRequest.responseText) {
+								  $.SOW.core.toast.show('danger', 'Помилка!', XMLHttpRequest.responseText,  'top-center', 0, true);
+							  } else {
+								  $.SOW.core.toast.show('danger', '404 Error', 'Unexpected Internal error!',  'top-center', 0, true);
+							  }
                               jQuery(_target).modal('hide');
 
                           } else {

@@ -15,24 +15,8 @@ UserModel = get_user_model()
 
 class Case(TimeStampModel):
     """Модель дела."""
+    claim = models.OneToOneField(Claim, on_delete=models.SET_NULL, verbose_name='Звернення', null=True, blank=True)
     case_number = models.CharField('Номер справи', max_length=255, blank=True, null=True)
-    app_number = models.CharField('Номер заявки (охоронного документа)', max_length=255)
-    obj_kind = models.ForeignKey(
-        ObjKind,
-        on_delete=models.SET_NULL,
-        verbose_name="Вид об'єкта промислової власності",
-        null=True,
-    )
-    claim_kind = models.ForeignKey(
-        ClaimKind,
-        on_delete=models.SET_NULL,
-        verbose_name="Вид заяви/заперечення",
-        null=True,
-    )
-    obj_title = models.CharField("Назва об'єкта", max_length=255)
-    applicant_name = models.CharField("Найменування апелянта (заявника)", max_length=255)
-    applicant_represent = models.CharField("Найменування представника апелянта", max_length=255, blank=True)
-    mailing_address = models.CharField("Адреса для листування", max_length=255, blank=True)
     collegium = models.ManyToManyField(
         UserModel,
         verbose_name='Члени колегії',
@@ -62,12 +46,11 @@ class Case(TimeStampModel):
         blank=True,
         related_name='papers_owner',
     )
-    claim_date = models.DateField('Дата подання заперечення (заяви)', null=True, blank=True)
-    deadline = models.DateField('Дата, до якої необхідно розглянути заперечення', null=True, blank=True)
+    deadline = models.DateField('Дата, до якої необхідно розглянути звернення', null=True, blank=True)
     hearing = models.DateField('Дата призначенного засідання', null=True, blank=True)
 
     def __str__(self):
-        return f"{self.obj_title} ({self.app_number})"
+        return self.case_number
 
     class Meta:
         verbose_name = 'Справа'
