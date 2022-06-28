@@ -68,7 +68,7 @@
 
 import Spinner from '../Spinner.vue'
 import EdsRead from "../AuthForm/EdsRead.vue"
-import { getFileUint8Array, uploadSign } from "../../lib/until"
+import { getFileUint8Array, uploadSign } from "../../src/until"
 
 export default {
   name: "ModalEDS",

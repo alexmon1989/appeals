@@ -17,7 +17,7 @@
 
 <script>
 import EdsRead from './EdsRead.vue'
-import { getCookie } from '@/app/lib/until'
+import { getCookie } from '@/app/src/until'
 
 export default {
   name: "AuthForm",

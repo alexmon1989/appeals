@@ -165,7 +165,7 @@
 </template>
 
 <script>
-import getDataFromSIS from "@/app/lib/sis"
+import getDataFromSIS from "@/app/src/sis"
 import debounce from "lodash.debounce"
 import {ErrorMessage, Field, Form} from 'vee-validate'
 
@@ -173,7 +173,7 @@ import ClaimKindSelect from "./ClaimKindSelect.vue"
 import ClaimField from "./ClaimField.vue"
 // import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
 import Spinner from "../Spinner.vue"
-import { getCookie } from '@/app/lib/until'
+import { getCookie } from '@/app/src/until'
 
 export default {
   components: {

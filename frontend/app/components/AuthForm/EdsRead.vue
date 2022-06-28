@@ -48,9 +48,9 @@
 </template>
 
 <script>
-  import CAs from "@/app/lib/ds/eus/CAs"
+  import CAs from "@/app/src/ds/eus/CAs"
   import { EUSInit } from './EUSignConfig'
-  import { EUSWorkerInit } from '@/app/lib/ds/js/eus-init'
+  import { EUSWorkerInit } from '@/app/src/ds/js/eus-init'
   import FileKeyContent from './FileKeyContent.vue'
   import HardwareKeyContent from './HardwareKeyContent.vue'
 

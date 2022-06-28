@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-*s(p5vw4!r(x!&d-lj=ljhvb%%^(#p2sy_jp*n_p1zp1yb(a$m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -38,8 +38,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'debug_toolbar',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'rest_framework',
+    'django_vite',
+
     'apps.users',
+    'apps.classifiers',
     'apps.cases',
+    'apps.common',
+    'apps.filling',
 ]
 
 MIDDLEWARE = [
@@ -50,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -66,6 +76,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'extras': 'templates.templatetags.extras',
+            },
         },
     },
 ]
@@ -116,6 +129,14 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Where ViteJS assets are built.
+DJANGO_VITE_ASSETS_PATH = BASE_DIR / "../frontend" / "dist"
+DJANGO_VITE_MANIFEST_PATH = DJANGO_VITE_ASSETS_PATH / "app" / "manifest.json"
+
+# If use HMR or not.
+DJANGO_VITE_DEV_MODE = False
+if not DJANGO_VITE_DEV_MODE:
+    DJANGO_VITE_STATIC_URL_PREFIX = 'app'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -124,8 +145,15 @@ STATIC_URL = '/static/'
 STATIC_ROOT = (BASE_DIR / "../static")
 STATICFILES_DIRS = (
     BASE_DIR / "../frontend/assets",
+    BASE_DIR / "../frontend/app/src",
+    # BASE_DIR / "../frontend/dist",
+    DJANGO_VITE_ASSETS_PATH
 )
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = (BASE_DIR / "../media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -133,7 +161,11 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesSto
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
-
+AUTH_METHOD = 'ds'  # 'common' если авторизация по email-password
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'apps.users.backends.EUSignBackend',
+)
 LOGIN_URL = LOGOUT_REDIRECT_URL = '/users/login/'
 LOGIN_REDIRECT_URL = 'cases-list'
 
@@ -145,3 +177,28 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 LOCALE_PATHS = (
     BASE_DIR / "../locale",
 )
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework_datatables.renderers.DatatablesRenderer',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_datatables.filters.DatatablesFilterBackend',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'PAGE_SIZE': 50,
+}
+
+import sys
+sys.path.append('lib/EUSignCP/Interface/64')
+
+VALIDATE_DS = False

@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from backend.core.models import TimeStampModel
+from ..common.models import TimeStampModel
 from ..classifiers.models import ObjKind, ClaimKind, DocumentType
 from .utils import sign_get_file_path, document_get_original_file_path
 

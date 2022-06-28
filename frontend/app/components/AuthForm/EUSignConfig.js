@@ -1,6 +1,6 @@
 /* eslint-disable */
-import * as IEUSignCP from '@/app/lib/ds/js/eusw.umd'
-import { randomString } from '@/app/lib/until'
+import * as IEUSignCP from '@/app/src/ds/js/eusw.umd'
+import { randomString } from '@/app/src/until'
 
 let euSign = null
 
