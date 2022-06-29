@@ -4,6 +4,10 @@ from django.http.request import QueryDict
 from django.db.models import Prefetch, Count, Q
 from django.db.models.query import QuerySet
 from django.core.files.base import ContentFile
+from django.conf import settings
+
+from elasticsearch import Elasticsearch
+from elasticsearch_dsl import Search, Q as Q_Es
 
 from docx import Document as PyDocxDocument
 from docx.shared import Pt
@@ -21,6 +25,7 @@ import datetime
 import tempfile
 import uuid
 import os
+
 
 UserModel = get_user_model()
 
@@ -476,3 +481,26 @@ def application_fixed_mark_status_code(data: dict) -> int:
         if 'Т-08' in doc['DocRecord']['DocType'] and result < 4000:
             result = 4000
     return result
+
+
+def application_get_data_from_es(obj_num_type: str, obj_number: str, obj_kind_id_sis: int, obj_state: int) -> dict:
+    """Получает данные заявки из ElasticSearch СИС."""
+    client = Elasticsearch(settings.ELASTIC_HOST, timeout=settings.ELASTIC_TIMEOUT)
+
+    if obj_num_type == 'registration_number':
+        obj_num_type = 'protective_doc_number'
+
+    query_string = f"search_data.{obj_num_type}.exact:{obj_number} AND " \
+                   f"Document.idObjType:{obj_kind_id_sis} AND " \
+                   f"search_data.obj_state:{obj_state}"
+
+    q = Q_Es(
+        'query_string',
+        query=query_string
+    )
+
+    s = Search(using=client, index=settings.ELASTIC_INDEX_NAME).query(q).execute()
+
+    if not s:
+        return {}
+    return s[0].to_dict()
