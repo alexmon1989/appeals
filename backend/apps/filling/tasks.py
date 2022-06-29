@@ -3,11 +3,6 @@ from .services import application_user_belongs_to_app, application_is_published,
 
 
 @app.task
-def test_task():
-    return 'Success'
-
-
-@app.task
 def get_app_data_from_es(obj_num_type: str,
                          obj_number: str,
                          obj_kind_id_sis: int,

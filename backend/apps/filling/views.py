@@ -215,6 +215,7 @@ def get_data_from_sis(request):
     )
 
 
+@login_required
 def get_task_result(request, task_id: str):
     """Возвращает JSON с результатами выполнения задачи."""
     task_result = AsyncResult(task_id)
