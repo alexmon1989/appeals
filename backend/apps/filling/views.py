@@ -9,14 +9,13 @@ from django.contrib.auth.decorators import login_required
 
 from celery.result import AsyncResult
 
-from ..classifiers import services as classifiers_services
 from . import services as filling_services
 from ..common.mixins import LoginRequiredMixin
 from ..common.utils import qdict_to_dict
 from .models import Claim
 from ..cases.services import services as case_services
 from ..users import services as users_services
-from .tasks import get_app_data_from_es
+from .tasks import get_app_data_from_es_task, get_filling_form_data_task
 
 
 class MyClaimsListView(LoginRequiredMixin, ListView):
@@ -35,24 +34,7 @@ class CreateClaimView(LoginRequiredMixin, View):
     template_name = 'filling/create_claim/index.html'
 
     def get(self, request, *args, **kwargs):
-        # Типы объектов
-        obj_kinds = classifiers_services.get_obj_kinds_list()
-
-        # Типы обращений
-        claim_kinds = classifiers_services.get_claim_kinds(bool_as_int=True)
-
-        # Возможные поля обращений (зависящие от типа)
-        claim_fields = filling_services.claim_get_fields(bool_as_int=True)
-
-        return render(
-            request,
-            self.template_name,
-            {
-                'obj_kinds': obj_kinds,
-                'claim_kinds': claim_kinds,
-                'claim_fields': claim_fields,
-            }
-        )
+        return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
         """Обрабатывает POST-запрос, создаёт обращение."""
@@ -133,24 +115,12 @@ class ClaimUpdateView(LoginRequiredMixin, View):
             'documents': documents,
         }
 
-        # Типы объектов
-        obj_kinds = classifiers_services.get_obj_kinds_list()
-
-        # Типы обращений
-        claim_kinds = classifiers_services.get_claim_kinds(bool_as_int=True)
-
-        # Возможные поля обращений (зависящие от типа)
-        claim_fields = filling_services.claim_get_fields(bool_as_int=True)
-
         return render(
             request,
             self.template_name,
             {
                 'claim': claim,
                 'initial_data': initial_data,
-                'obj_kinds': obj_kinds,
-                'claim_kinds': claim_kinds,
-                'claim_fields': claim_fields,
             }
         )
 
@@ -200,7 +170,7 @@ def get_data_from_sis(request):
     user_names = list(set(users_services.certificate_get_user_names(request.session['cert_id'])))
 
     # Создание асинхронной задачи для Celery
-    task = get_app_data_from_es.delay(
+    task = get_app_data_from_es_task.delay(
         obj_num_type,
         obj_number,
         obj_kind_id_sis,
@@ -225,3 +195,14 @@ def get_task_result(request, task_id: str):
         "task_result": task_result.result
     }
     return JsonResponse(result)
+
+
+@login_required
+def get_filling_form_data(request):
+    """Создаёт задачу на получение данных для формы подачи обращения."""
+    task = get_filling_form_data_task.delay()
+    return JsonResponse(
+        {
+            "task_id": task.id,
+        }
+    )

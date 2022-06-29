@@ -173,7 +173,7 @@ import ClaimKindSelect from "./ClaimKindSelect.vue"
 import ClaimField from "./ClaimField.vue"
 // import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
 import Spinner from "../Spinner.vue"
-import { getCookie } from '@/app/src/until'
+import { getCookie, getTaskResult } from '@/app/src/until'
 
 export default {
   components: {
@@ -187,14 +187,18 @@ export default {
   },
 
   props: {
-    objKinds: Array,
-    claimKinds: Array,
-    claimFields: Array,
+    // objKinds: Array,
+    // claimKinds: Array,
+    // claimFields: Array,
     initialData: Object,
   },
 
   data() {
     return {
+      objKinds: [],
+      claimKinds: [],
+      claimFields: [],
+
       objKindSelected: '',
       claimKindSelected: '',
       thirdPerson: false,
@@ -278,7 +282,9 @@ export default {
     this.loadDataFromSIS.cancel();
   },
 
-  mounted() {
+  async mounted() {
+    await this.getFormData()
+
     if (this.initialData) {
       this.initialDataLoading = true
       this.objKindSelected = this.initialData.obj_kind_id
@@ -367,6 +373,21 @@ export default {
         return this.initialData.documents.filter(item => item.document_type === fieldTitle)
       }
     },
+
+    // Получает стартовую информация для формы (типы объектов, обращений, поля)
+    async getFormData() {
+      const url = "/filling/get-filling-form-data/"
+      let response = await fetch(url)
+      if (response.ok) {
+        let json = await response.json()
+        const taskId = json.task_id
+
+        const taskResult = await getTaskResult(taskId)
+        this.objKinds = taskResult.obj_kinds
+        this.claimKinds = taskResult.claim_kinds
+        this.claimFields = taskResult.claim_fields
+      }
+    }
   },
 
   computed: {

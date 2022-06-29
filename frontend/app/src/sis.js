@@ -1,3 +1,5 @@
+import { getTaskResult } from '@/app/src/until'
+
 const APP_STRUCTURE = {
     'app_date': '',
     'obj_title': '',
@@ -238,26 +240,6 @@ function formatDataInvUmLd(data, objState) {
 
     return res
 }
-
-
-async function getTaskResult(taskId, maxRetries = 20, currentTry = 1) {
-    const url = '/filling/get-task-result/' + taskId
-
-    let response = await fetch(url)
-    let json = await response.json()
-
-    if (json.task_status === 'SUCCESS') {
-        return json.task_result
-    } else if (json.task_status === 'PENDING') {
-        if (currentTry === maxRetries) {
-            throw new Error("Max retries count reached.")
-        }
-        currentTry++
-        await new Promise(r => setTimeout(r, 2000));
-        return await getTaskResult(taskId, maxRetries, currentTry)
-    }
-}
-
 
 // Получает данные заявки/охранного документа из СИС и возвращает их в отформатированном виде
 async function getDataFromSIS(numType, num, objKindIdSIS) {

@@ -60,31 +60,32 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
         field_type__in=(ClaimField.FieldType.FILE, ClaimField.FieldType.FILE_MULTIPLE)
     )
     for field in stage_9_fields:
-        # Получение типа документа
-        doc_type, created = DocumentType.objects.get_or_create(title=field.title)
-        # Сохранение файла
-        if field.field_type == ClaimField.FieldType.FILE:
-            file = files_data[field.input_id]
-            doc = Document.objects.create(
-                claim=claim,
-                document_type=doc_type,
-                input_date=datetime.datetime.now(),
-                file=file,
-                claim_document=True,
-            )
-            if doc_type.base_doc:
-                # Создание файла обращения (с шапкой)
-                document_create_main_claim_doc_file(claim, doc)
-        else:
-            files = files_data.getlist(f"{field.input_id}[]")
-            for file in files:
-                Document.objects.create(
+        if field.input_id in files_data or f"{field.input_id}[]" in files_data:
+            # Получение типа документа
+            doc_type, created = DocumentType.objects.get_or_create(title=field.title)
+            # Сохранение файла
+            if field.field_type == ClaimField.FieldType.FILE:
+                file = files_data[field.input_id]
+                doc = Document.objects.create(
                     claim=claim,
                     document_type=doc_type,
                     input_date=datetime.datetime.now(),
                     file=file,
-                    claim_document=True
+                    claim_document=True,
                 )
+                if doc_type.base_doc:
+                    # Создание файла обращения (с шапкой)
+                    document_create_main_claim_doc_file(claim, doc)
+            else:
+                files = files_data.getlist(f"{field.input_id}[]")
+                for file in files:
+                    Document.objects.create(
+                        claim=claim,
+                        document_type=doc_type,
+                        input_date=datetime.datetime.now(),
+                        file=file,
+                        claim_document=True
+                    )
 
     return claim
 

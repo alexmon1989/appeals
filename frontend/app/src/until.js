@@ -82,3 +82,22 @@ export const uploadSign = async function (documentId, signData, signInfo) {
   const response = await fetch(request)
   return await response.json()
 }
+
+
+export const getTaskResult = async function (taskId, maxRetries = 20, currentTry = 1) {
+    const url = '/filling/get-task-result/' + taskId
+
+    let response = await fetch(url)
+    let json = await response.json()
+
+    if (json.task_status === 'SUCCESS') {
+        return json.task_result
+    } else if (json.task_status === 'PENDING') {
+        if (currentTry === maxRetries) {
+            throw new Error("Max retries count reached.")
+        }
+        currentTry++
+        await new Promise(r => setTimeout(r, 2000));
+        return await getTaskResult(taskId, maxRetries, currentTry)
+    }
+}
