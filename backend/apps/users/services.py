@@ -151,3 +151,11 @@ def get_certificate(post_data, secret):
             cert.save()
 
     return cert
+
+
+def certificate_get_user_names(cert_id: int) -> list:
+    """Возвращает список имён пользователя из сертификата (pszSubjFullName, pszSubjCN)."""
+    cert = CertificateOwner.objects.filter(pk=cert_id).first()
+    if cert:
+        return [cert.pszSubjFullName, cert.pszSubjCN]
+    return []

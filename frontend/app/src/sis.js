@@ -239,12 +239,34 @@ function formatDataInvUmLd(data, objState) {
     return res
 }
 
+
+async function getTaskResult(taskId, maxRetries = 20, currentTry = 1) {
+    const url = '/filling/get-task-result/' + taskId
+
+    let response = await fetch(url)
+    let json = await response.json()
+
+    if (json.task_status === 'SUCCESS') {
+        return json.task_result
+    } else if (json.task_status === 'PENDING') {
+        if (currentTry === maxRetries) {
+            throw new Error("Max retries count reached.")
+        }
+        currentTry++
+        await new Promise(r => setTimeout(r, 2000));
+        return await getTaskResult(taskId, maxRetries, currentTry)
+    }
+}
+
+
 // Получает данные заявки/охранного документа из СИС и возвращает их в отформатированном виде
 async function getDataFromSIS(numType, num, objKindIdSIS) {
     let objState = numType === 'app_number' ? 1 : 2
-    let url = 'https://sis.ukrpatent.org/api/v1/open-data/search/?strict_search=true'
-    url += '&' + numType + '=' + num
-    url += '&obj_type=' + objKindIdSIS
+    // let url = 'https://sis.ukrpatent.org/api/v1/open-data/search/?strict_search=true'
+    let url = '/filling/get-data-from-sis/'
+    url += '?obj_num_type=' + numType
+    url += '&obj_number=' + num
+    url += '&obj_kind_id_sis=' + objKindIdSIS
     url += '&obj_state=' + objState
 
     let response = await fetch(url)
@@ -252,33 +274,38 @@ async function getDataFromSIS(numType, num, objKindIdSIS) {
 
     if (response.ok) {
         let json = await response.json()
+        const taskId = json.task_id
 
-        // Проверка есть ли открытые библ. данные по объекту
-        if (json.length === 0 || Object.keys(json[0]['data']).length === 1) {
+        const taskResult = await getTaskResult(taskId)
+
+        // Проверка есть ли библ. данные по объекту
+        if (Object.keys(taskResult).length === 0) {
             return res
         }
 
+        const data = taskResult.data
         switch(objKindIdSIS) {
           case 1:
-              res = formatDataInvUmLd(json[0]['data'], objState);
+              res = formatDataInvUmLd(data, objState);
               break
           case 2:
-              res = formatDataInvUmLd(json[0]['data'], objState);
+              res = formatDataInvUmLd(data, objState);
               break
           case 3:
-              res = formatDataInvUmLd(json[0]['data'], objState);
+              res = formatDataInvUmLd(data, objState);
               break
           case 4:
-              res = formatDataTM(json[0]['data'], objState);
+              res = formatDataTM(data, objState);
               break
           case 6:
-              res = formatDataID(json[0]['data'], objState);
+              res = formatDataID(data, objState);
               break
           default:
               throw new Error("Unknown object type")
         }
 
         return res
+
     } else {
         throw new Error("HTTP Error: " + response.status)
     }

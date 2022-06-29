@@ -7,12 +7,16 @@ from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 
+from celery.result import AsyncResult
+
 from ..classifiers import services as classifiers_services
 from . import services as filling_services
 from ..common.mixins import LoginRequiredMixin
 from ..common.utils import qdict_to_dict
 from .models import Claim
 from ..cases.services import services as case_services
+from ..users import services as users_services
+from .tasks import get_app_data_from_es
 
 
 class MyClaimsListView(LoginRequiredMixin, ListView):
@@ -179,3 +183,44 @@ def case_create(request, claim_id):
         return redirect('claim_detail', pk=claim_id)
     else:
         return HttpResponseBadRequest('Ви не можете передати звернення, тому що документи не було підписано.')
+
+
+@login_required
+def get_data_from_sis(request):
+    """Создаёт задачу на получение данных из СИС по объекту."""
+    try:
+        obj_num_type = request.GET['obj_num_type']
+        obj_number = request.GET['obj_number']
+        obj_kind_id_sis = int(request.GET['obj_kind_id_sis'])
+        obj_state = int(request.GET['obj_state'])
+    except KeyError:
+        return HttpResponseBadRequest('Wrong request parameters.')
+
+    # Имена пользователя из сертификата эцп
+    user_names = list(set(users_services.certificate_get_user_names(request.session['cert_id'])))
+
+    # Создание асинхронной задачи для Celery
+    task = get_app_data_from_es.delay(
+        obj_num_type,
+        obj_number,
+        obj_kind_id_sis,
+        obj_state,
+        user_names,
+    )
+
+    return JsonResponse(
+        {
+            "task_id": task.id,
+        }
+    )
+
+
+def get_task_result(request, task_id: str):
+    """Возвращает JSON с результатами выполнения задачи."""
+    task_result = AsyncResult(task_id)
+    result = {
+        "task_id": task_id,
+        "task_status": task_result.status,
+        "task_result": task_result.result
+    }
+    return JsonResponse(result)

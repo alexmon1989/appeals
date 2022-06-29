@@ -40,6 +40,10 @@ def login_view_ds_file(request):
             user = authenticate(certificate=cert)
             if user is not None:
                 login(request, user)
+
+                # Идентификатор сертификата, с помощью которого пользователь авторизировался
+                request.session['cert_id'] = cert.id
+
                 messages.add_message(
                     request,
                     messages.SUCCESS,

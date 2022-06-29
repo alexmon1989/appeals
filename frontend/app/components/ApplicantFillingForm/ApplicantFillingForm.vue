@@ -249,30 +249,29 @@ export default {
       this.errors = []
 
       if (Object.values(newValue)[0]) {
-        //try {
-        let data = await getDataFromSIS(Object.keys(newValue)[0], Object.values(newValue)[0], this.sisId)
-        console.log(data)
+        try {
+          let data = await getDataFromSIS(Object.keys(newValue)[0], Object.values(newValue)[0], this.sisId)
 
-        if (Object.keys(data).length === 0) {
-          this.errors.push('Опублікованих даних щодо об\'єкта не було знайдено. Подача звернення неможлива.')
-        } else {
+          if (Object.keys(data).length === 0) {
+            this.errors.push('Опублікованих даних щодо об\'єкта не було знайдено (або ви не маєте доступу до них). Подача звернення неможлива.')
+          } else {
 
-          // Заполнение полей шагов 4, 5
-          this.stage4Fields.forEach(field => {
-            this.stage4Values[field['input_id']] = data[field['input_id']]
-          })
-          this.stage5Fields.forEach(field => {
-            this.stage5Values[field['input_id']] = data[field['input_id']]
-          })
+            // Заполнение полей шагов 4, 5
+            this.stage4Fields.forEach(field => {
+              this.stage4Values[field['input_id']] = data[field['input_id']]
+            })
+            this.stage5Fields.forEach(field => {
+              this.stage5Values[field['input_id']] = data[field['input_id']]
+            })
 
-          this.dataLoadedSIS = true
+            this.dataLoadedSIS = true
+          }
+        } catch (e) {
+          this.errors.push('Помилка отримання інформації із СІС.')
         }
-        //} catch (e) {
-        //  this.errors.push('Помилка звернення до API СІС.')
-        //}
       }
       this.processed = false
-    }, 1000);
+    }, 1000)
   },
 
   beforeUnmount() {

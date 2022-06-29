@@ -391,3 +391,88 @@ def document_create_main_claim_doc_file(claim: Claim, base_doc: Document) -> Doc
         os.remove(tmp_file_path)
 
         return doc
+
+
+def application_is_published(data: dict) -> bool:
+    """Определяет, опубликована ли заявка."""
+    if data['search_data']['obj_state'] == 2:  # охранные документы всегда опубликованы
+        return True
+
+    if data['Document']['idObjType'] == 1:  # изобретения
+        return 'I_43.D' in data['Claim']
+
+    if data['Document']['idObjType'] == 4:  # торговые марки
+        date_441 = data['TradeMark']['TrademarkDetails'].get('Code_441')
+        if date_441:
+            return True
+        mark_status = application_fixed_mark_status_code(data)
+        app_date = datetime.datetime.strptime(data['search_data']['app_date'][:10], '%Y-%m-%d')
+        date_441_start = datetime.datetime.strptime('2020-08-18', '%Y-%m-%d')
+        return mark_status > 2000 and app_date < date_441_start
+
+    if data['Document']['idObjType'] in (2, 3, 5, 6):  # остальные типы объектов не публикуются
+        return False
+
+
+def application_user_belongs_to_app(data: dict, user_names: list) -> bool:
+    """Определяет, принадлежит пользователь к заявке."""
+    allowed_persons = []
+
+    for person_type in ('applicant', 'inventor', 'owner', 'agent'):
+        try:
+            allowed_persons += [x['name'] for x in data['search_data'][person_type]]
+        except KeyError:
+            pass
+
+    # Адреса для листування (ТМ)
+    try:
+        allowed_persons.append(
+            data['TradeMark']['TrademarkDetails']['CorrespondenceAddress']['CorrespondenceAddressBook'][
+                'Name']['FreeFormatNameLine']
+        )
+    except KeyError:
+        pass
+
+    # Адреса для листування (ПЗ)
+    try:
+        allowed_persons.append(
+            data['Design']['DesignDetails']['CorrespondenceAddress']['CorrespondenceAddressBook'][
+                'FormattedNameAddress']['Name']['FreeFormatName']['FreeFormatNameDetails']['FreeFormatNameLine']
+        )
+    except KeyError:
+        pass
+
+    # Адреса для листування (заявки на винаходи, корисні моделі)
+    try:
+        allowed_persons.append(data['Claim']['I_98'])
+    except KeyError:
+        pass
+
+    # Адреса для листування (охоронні документи на винаходи, корисні моделі)
+    try:
+        allowed_persons.append(data['Patent']['I_98'])
+    except KeyError:
+        pass
+
+    # Удаление None-объектов
+    allowed_persons = list(filter(lambda item: item is not None, allowed_persons))
+
+    # Замена латинских I, i на кириллицу
+    user_names = [x.replace('I', 'І').replace('i', 'і') for x in user_names]
+    allowed_persons = [x.replace('I', 'І').replace('i', 'і') for x in allowed_persons]
+
+    # Проверка на вхождение
+    return any([person for person in allowed_persons for user_name in user_names if user_name.upper() in person.upper()])
+
+
+def application_fixed_mark_status_code(data: dict) -> int:
+    """Анализирует список документов и возвращает код статуса согласно их наличию."""
+    result = int(data['Document'].get('MarkCurrentStatusCodeType', 0))
+    for doc in data['TradeMark'].get('DocFlow', {}).get('Documents', []):
+        if ('ТM-1.1' in doc['DocRecord']['DocType'] or 'ТМ-1.1' in doc['DocRecord']['DocType']) and result < 2000:
+            result = 3000
+        if ('Т-05' in doc['DocRecord']['DocType'] or 'Т-5' in doc['DocRecord']['DocType']) and result < 3000:
+            result = 3000
+        if 'Т-08' in doc['DocRecord']['DocType'] and result < 4000:
+            result = 4000
+    return result
