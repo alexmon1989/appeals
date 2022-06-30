@@ -353,6 +353,11 @@ export default {
       formData.append('csrfmiddlewaretoken', csrftoken)
       formData.append('third_person', this.thirdPerson | 0)
 
+      // Fix files (по неизвестным причинам в полях файлов (не multiple) содержаться два одинаковых файла)
+      for (var prop in this.stage9Values) {
+        formData.set(prop, this.stage9Values[prop][0])
+      }
+
       this.sending = true
 
       let response = await fetch('', {
@@ -362,9 +367,14 @@ export default {
 
       let result = await response.json();
 
-      this.sending = false
+      if (result.claim_url) {
+        location.href = result.claim_url
+      } else {
+        const taskResult = await getTaskResult(result.task_id)
+        location.href = taskResult.claim_url
+      }
 
-      location.href = result.claim_url
+      this.sending = false
     },
 
     // Возвращает список документов поля (если есть начальные данные (редактирование обращения))

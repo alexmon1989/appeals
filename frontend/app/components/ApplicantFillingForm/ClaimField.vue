@@ -231,7 +231,7 @@ import { Field, ErrorMessage } from 'vee-validate'
 export default {
   name: "ClaimField",
   props: {
-    modelValue: String,
+    modelValue: Object,
     fieldType: String,
     fieldId: String,
     fieldTitle: String,

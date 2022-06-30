@@ -159,3 +159,35 @@ def certificate_get_user_names(cert_id: int) -> list:
     if cert:
         return [cert.pszSubjFullName, cert.pszSubjCN]
     return []
+
+
+def certificate_get_data(cert_id: int):
+    """Возвращает данные сертификата"""
+    cert = CertificateOwner.objects.filter(pk=cert_id).defer('id', 'user_id').values().first()
+    return cert
+
+
+def user_get_or_create_from_cert(cert_data: dict):
+    """Создаёт и/или возвращает пользователя из данных сертификата ЭЦП."""
+    cert, created = CertificateOwner.objects.get_or_create(
+        pszSerial=cert_data['pszSerial'],
+        defaults={
+            'pszIssuer': cert_data['pszIssuer'],
+            'pszIssuerCN': cert_data['pszIssuerCN'],
+            'pszSubject': cert_data['pszSubject'],
+            'pszSubjCN': cert_data['pszSubjCN'],
+            'pszSubjOrg': cert_data['pszSubjOrg'],
+            'pszSubjOrgUnit': cert_data['pszSubjOrgUnit'],
+            'pszSubjTitle': cert_data['pszSubjTitle'],
+            'pszSubjState': cert_data['pszSubjState'],
+            'pszSubjFullName': cert_data['pszSubjFullName'],
+            'pszSubjAddress': cert_data['pszSubjAddress'],
+            'pszSubjPhone': cert_data['pszSubjPhone'],
+            'pszSubjEMail': cert_data['pszSubjEMail'],
+            'pszSubjDNS': cert_data['pszSubjDNS'],
+            'pszSubjEDRPOUCode': cert_data['pszSubjEDRPOUCode'],
+            'pszSubjDRFOCode': cert_data['pszSubjDRFOCode'],
+            'pszSubjLocality': cert_data['pszSubjLocality'],
+        }
+    )
+    return cert.user

@@ -1,14 +1,15 @@
 from core.celery import app
 from . import services as filling_services
+from ..users import services as users_services
 from ..classifiers import services as classifiers_services
 
 
 @app.task
 def get_app_data_from_es_task(obj_num_type: str,
-                         obj_number: str,
-                         obj_kind_id_sis: int,
-                         obj_state: int,
-                         cert_names: list) -> dict:
+                              obj_number: str,
+                              obj_kind_id_sis: int,
+                              obj_state: int,
+                              cert_names: list) -> dict:
     """Возвращает данные объекта напрямую из ElasticSearch СИС."""
     hit = filling_services.application_get_data_from_es(obj_num_type, obj_number, obj_kind_id_sis, obj_state)
 
@@ -44,3 +45,11 @@ def get_filling_form_data_task() -> dict:
         # Возможные поля обращений (зависящие от типа)
         'claim_fields': filling_services.claim_get_fields(bool_as_int=True)
     }
+
+
+@app.task
+def create_claim_task(post_data, files_data, cert_data: dict) -> dict:
+    """Создаёт обращение."""
+    user = users_services.user_get_or_create_from_cert(cert_data)
+    claim = filling_services.claim_create(post_data, files_data, user)
+    return {'claim_url': claim.get_absolute_url()}

@@ -15,7 +15,8 @@ from ..common.utils import qdict_to_dict
 from .models import Claim
 from ..cases.services import services as case_services
 from ..users import services as users_services
-from .tasks import get_app_data_from_es_task, get_filling_form_data_task
+from .tasks import get_app_data_from_es_task, get_filling_form_data_task, create_claim_task
+from .utils import files_to_base64
 
 
 class MyClaimsListView(LoginRequiredMixin, ListView):
@@ -41,14 +42,22 @@ class CreateClaimView(LoginRequiredMixin, View):
         post_data = request.POST.dict()
         del post_data['csrfmiddlewaretoken']
 
-        claim = filling_services.claim_create(post_data, request.FILES, request.user)
+        task = create_claim_task.delay(
+            post_data,
+            files_to_base64(request.FILES),
+            users_services.certificate_get_data(self.request.session['cert_id'])
+        )
         messages.add_message(
             request,
             messages.SUCCESS,
             'Звернення успішно створено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
         )
 
-        return JsonResponse({'success': 1, 'claim_url': claim.get_absolute_url()})
+        return JsonResponse(
+            {
+                "task_id": task.id,
+            }
+        )
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -126,7 +135,6 @@ class ClaimUpdateView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         """Обрабатывает POST-запрос, редактирует обращение."""
-
         post_data = qdict_to_dict(request.POST)
         del post_data['csrfmiddlewaretoken']
 

@@ -85,7 +85,7 @@ export const uploadSign = async function (documentId, signData, signInfo) {
 
 
 export const getTaskResult = async function (taskId, maxRetries = 20, currentTry = 1) {
-    const url = '/filling/get-task-result/' + taskId
+    const url = '/filling/get-task-result/' + taskId + '/'
 
     let response = await fetch(url)
     let json = await response.json()

@@ -17,6 +17,7 @@ from ..classifiers.models import DocumentType
 from ..cases.models import Document, Sign, DocumentTemplate
 from .models import ClaimField, Claim
 from ..common.utils import docx_replace
+from .utils import base64_to_temp_file
 
 from typing import List, Type
 from pathlib import Path
@@ -25,6 +26,7 @@ import datetime
 import tempfile
 import uuid
 import os
+import base64
 
 
 UserModel = get_user_model()
@@ -65,27 +67,42 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
             doc_type, created = DocumentType.objects.get_or_create(title=field.title)
             # Сохранение файла
             if field.field_type == ClaimField.FieldType.FILE:
-                file = files_data[field.input_id]
+                # Создание документа
                 doc = Document.objects.create(
                     claim=claim,
                     document_type=doc_type,
                     input_date=datetime.datetime.now(),
-                    file=file,
                     claim_document=True,
                 )
+
+                file_data = files_data[field.input_id][0]
+
+                # Сохранение файла во временный каталог
+                tmp_file_path = base64_to_temp_file(file_data['content'])
+
+                # Сохранение файла в постоянный каталог и в БД
+                document_save_file(doc, file_data['name'], tmp_file_path, True)
+
                 if doc_type.base_doc:
                     # Создание файла обращения (с шапкой)
                     document_create_main_claim_doc_file(claim, doc)
             else:
-                files = files_data.getlist(f"{field.input_id}[]")
-                for file in files:
-                    Document.objects.create(
+                files_data = files_data[f"{field.input_id}[]"]
+
+                for file_data in files_data:
+                    # Создание документа
+                    doc = Document.objects.create(
                         claim=claim,
                         document_type=doc_type,
                         input_date=datetime.datetime.now(),
-                        file=file,
                         claim_document=True
                     )
+
+                    # Сохранение файла во временный каталог
+                    tmp_file_path = base64_to_temp_file(file_data['content'])
+
+                    # Сохранение файла в постоянный каталог и в БД
+                    document_save_file(doc, file_data['name'], tmp_file_path, True)
 
     return claim
 
@@ -505,3 +522,16 @@ def application_get_data_from_es(obj_num_type: str, obj_number: str, obj_kind_id
     if not s:
         return {}
     return s[0].to_dict()
+
+
+def document_save_file(doc: Document, file_name: str, tmp_file_path: Path, remove_file: bool = False) -> None:
+    """Сохраняет файл документа с диска."""
+    # Сохранение файла в постоянный каталог
+    with open(tmp_file_path, "rb") as fh:
+        with ContentFile(fh.read()) as file_content:
+            doc.file.save(file_name, file_content)
+            doc.save()
+
+    # Удаление временного файла
+    if remove_file:
+        os.remove(tmp_file_path)
