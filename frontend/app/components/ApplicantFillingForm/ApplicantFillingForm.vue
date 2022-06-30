@@ -191,6 +191,7 @@ export default {
     // claimKinds: Array,
     // claimFields: Array,
     initialData: Object,
+    documents: Object,
   },
 
   data() {

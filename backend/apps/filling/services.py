@@ -43,7 +43,7 @@ def claim_process_input_data(data: dict) -> dict:
     return data
 
 
-def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserModel) -> Claim:
+def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Claim:
     """Создаёт обращение пользователя."""
     stage_3_field = ClaimField.objects.filter(claim_kind=post_data['claim_kind'], stage=3).first().input_id
     claim = Claim.objects.create(
@@ -87,9 +87,9 @@ def claim_create(post_data: QueryDict, files_data: MultiValueDict, user: UserMod
                     # Создание файла обращения (с шапкой)
                     document_create_main_claim_doc_file(claim, doc)
             else:
-                files_data = files_data[f"{field.input_id}[]"]
+                files = files_data[f"{field.input_id}[]"]
 
-                for file_data in files_data:
+                for file_data in files:
                     # Создание документа
                     doc = Document.objects.create(
                         claim=claim,
@@ -327,7 +327,8 @@ def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:
     claim_data = json.loads(claim.json_data)
 
     res = {
-        '{{ OBJ_KIND_TITLE }}': claim.claim_kind.template_title,
+        '{{ OBJ_KIND_TITLE }}': claim.obj_kind.title,
+        '{{ CLAIM_KIND_TITLE }}': claim.claim_kind.template_title,
         '{{ OBJ_TITLE }}': claim_data['obj_title'],
         '{{ APP_NUMBER }}': claim_data['app_number'],
         '{{ APP_DATE }}': claim_data['app_date'],

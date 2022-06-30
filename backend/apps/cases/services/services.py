@@ -117,7 +117,7 @@ def document_add_sign_info_to_file(doc_id: int) -> None:
     document = document_get_by_id(doc_id)
     signs = document_get_signs_info(doc_id)
 
-    if signs:
+    if signs and Path(str(document.file)).suffix == '.docx':
         # Открытие документа
         docx_file_path = Path(settings.MEDIA_ROOT) / Path(str(document.file))
         docx_with_signs_file_path = docx_file_path.parent / f"{docx_file_path.stem}_signs.docx"
@@ -145,8 +145,8 @@ def document_add_sign_info_to_file(doc_id: int) -> None:
         # Сохранение
         docx.save(docx_with_signs_file_path)
 
-        # Смена статуса обращения если все документы подписаны
-        filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
+    # Смена статуса обращения если все документы подписаны
+    filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
 
 
 def document_get_signs_info(doc_id: int) -> List[dict]:

@@ -18,7 +18,7 @@
           <span class="text-primary fw-bold" v-if="document.auto_generated">так</span>
           <span v-else>ні</span>
         </td>
-        <td>
+        <td class="text-nowrap">
           <a :href="getDocUrl(document)" target="_blank">{{ document.file_name }}</a>
         </td>
         <td class="text-center">
@@ -112,10 +112,11 @@ export default {
     },
 
      getDocUrl(document) {
-       if (document.sign__count > 0) {
-         const fileExt = document.file_name.split('.').pop();
+       const fileExt = document.file_name.split('.').pop()
+       if (document.sign__count > 0 && fileExt === 'docx') {
          const signedFileName = document.file_name.replace('.' + fileExt, '_signs.' + fileExt)
-         return document.file_url.replace(document.file_name, signedFileName)
+
+         return document.file_url.substring(0, document.file_url.lastIndexOf("/")) + '/' + signedFileName
        } else {
          return document.file_url
        }

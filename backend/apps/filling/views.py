@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, reverse
 from django.http import JsonResponse, Http404, HttpResponseBadRequest
 from django.views import View
 from django.views.generic import ListView, DetailView
@@ -158,7 +158,7 @@ def case_create(request, claim_id):
             messages.SUCCESS,
             f'Справу {case.case_number} успішно створено.'
         )
-        return redirect('claim_detail', pk=claim_id)
+        return JsonResponse({'url': reverse('claim_detail', kwargs={'pk': claim_id})})
     else:
         return HttpResponseBadRequest('Ви не можете передати звернення, тому що документи не було підписано.')
 
