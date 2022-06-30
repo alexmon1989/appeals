@@ -356,7 +356,11 @@ export default {
 
       // Fix files (по неизвестным причинам в полях файлов (не multiple) содержаться два одинаковых файла)
       for (var prop in this.stage9Values) {
-        formData.set(prop, this.stage9Values[prop][0])
+        if (this.stage9Values[prop] !== undefined) {
+          formData.set(prop, this.stage9Values[prop][0])
+        } else {
+          formData.delete(prop)
+        }
       }
 
       this.sending = true
