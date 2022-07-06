@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, reverse
 from django.http import JsonResponse, Http404, HttpResponseBadRequest
 from django.views import View
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView
+from django.views.generic.base import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
 from django.utils.decorators import method_decorator
@@ -15,7 +16,7 @@ from ..common.utils import qdict_to_dict
 from .models import Claim
 from ..cases.services import services as case_services
 from ..users import services as users_services
-from .tasks import get_app_data_from_es_task, get_filling_form_data_task, create_claim_task
+from .tasks import get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task
 from .utils import files_to_base64
 
 
@@ -38,7 +39,7 @@ class CreateClaimView(LoginRequiredMixin, View):
         return render(request, self.template_name)
 
     def post(self, request, *args, **kwargs):
-        """Обрабатывает POST-запрос, создаёт обращение."""
+        """Обрабатывает POST-запрос, создаёт обращение (задачу на создание)."""
         post_data = request.POST.dict()
         del post_data['csrfmiddlewaretoken']
 
@@ -61,18 +62,17 @@ class CreateClaimView(LoginRequiredMixin, View):
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
-class ClaimDetailView(LoginRequiredMixin, DetailView):
+class ClaimDetailView(LoginRequiredMixin, TemplateView):
     """Отображает страницу с данными обращения."""
-    model = Claim
     template_name = 'filling/claim_detail/index.html'
-
-    def get_queryset(self):
-        return filling_services.claim_get_user_claims_qs(self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['stages'] = filling_services.claim_get_stages_details(self.object)
-        context['documents'] = filling_services.claim_get_documents(self.object.pk, self.request.user.pk)
+        task = get_claim_data_task.delay(
+            kwargs['pk'],
+            users_services.certificate_get_data(self.request.session['cert_id'])
+        )
+        context['task_id'] = task.id
         return context
 
 

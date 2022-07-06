@@ -21,12 +21,12 @@ from .utils import base64_to_temp_file
 
 from typing import List, Type
 from pathlib import Path
+from distutils.dir_util import copy_tree
 import json
 import datetime
 import tempfile
 import uuid
 import os
-import base64
 
 
 UserModel = get_user_model()
@@ -319,6 +319,42 @@ def claim_set_status_if_all_docs_signed(claim_id: Type[int]) -> None:
         # Обновление статуса
         claim.status = 2
         claim.save()
+
+
+def claim_get_data_by_id(claim_id: int, user: UserModel) -> dict:
+    """Возвращает данные обращения пользователя."""
+    claim = claim_get_user_claims_qs(user).filter(pk=claim_id).first()
+    if claim:
+        res = {
+            'claim_data': {
+                'obj_number': claim.obj_number,
+                'obj_kind': claim.obj_kind.title,
+                'status_verbal': claim.get_status_display(),
+                'status': claim.status,
+            },
+            'stages': claim_get_stages_details(claim),
+            'documents': claim_get_documents(claim, user.pk)
+        }
+
+        if claim.status == 3:
+            res['claim_data']['case_number'] = claim.case.case_number
+
+        return res
+    return {}
+
+
+def claim_copy_docs_to_external_server(claim_id: int) -> None:
+    """Копирует документы с внутреннего сервера на внешний """
+    documents = Document.objects.filter(claim_id=claim_id)
+    for doc in documents:
+        # Каталог с документом на внутреннем сервере
+        doc_folder_relative = Path(str(doc.file)).parent
+        from_folder_path = settings.MEDIA_ROOT / doc_folder_relative
+
+        # Каталог с документом на внешнем сервере
+        to_folder_path = settings.EXTERNAL_MEDIA_ROOT / doc_folder_relative
+
+        copy_tree(str(from_folder_path), str(to_folder_path))
 
 
 def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:

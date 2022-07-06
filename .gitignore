@@ -154,5 +154,6 @@ cython_debug/
 /backend/core/settings.py
 /static/
 /media/
+/media_external/
 /database/
 /node_modules/

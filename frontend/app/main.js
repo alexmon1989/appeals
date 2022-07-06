@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import ApplicantFillingForm from './components/ApplicantFillingForm/ApplicantFillingForm.vue'
 import AuthForm from './components/AuthForm/AuthForm.vue'
 import ClaimAttachments from './components/Attachments/ClaimAttachments.vue'
+import ClaimDetails from './components/ClaimDetails/ClaimDetails.vue'
 import { defineRule, configure } from 'vee-validate'
 import AllRules from '@vee-validate/rules'
 import { localize, setLocale } from '@vee-validate/i18n'
@@ -24,6 +25,7 @@ const app = createApp({
         ApplicantFillingForm,
         AuthForm,
         ClaimAttachments,
+        ClaimDetails
     }
 })
 

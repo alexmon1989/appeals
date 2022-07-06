@@ -134,7 +134,7 @@ DJANGO_VITE_ASSETS_PATH = BASE_DIR / "../frontend" / "dist"
 DJANGO_VITE_MANIFEST_PATH = DJANGO_VITE_ASSETS_PATH / "app" / "manifest.json"
 
 # If use HMR or not.
-DJANGO_VITE_DEV_MODE = False
+DJANGO_VITE_DEV_MODE = True
 if not DJANGO_VITE_DEV_MODE:
     DJANGO_VITE_STATIC_URL_PREFIX = 'app'
 
@@ -202,3 +202,19 @@ import sys
 sys.path.append('lib/EUSignCP/Interface/64')
 
 VALIDATE_DS = False
+
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_EMAIL_TASK_CONFIG = {
+    'ignore_result': True,
+}
+
+ELASTIC_HOST = ''
+ELASTIC_INDEX_NAME = ''
+ELASTIC_TIMEOUT = 60
+
+# Каталог на внешнем сервере для временного хранения документов обращений
+EXTERNAL_MEDIA_ROOT = (BASE_DIR / "../media_external")
