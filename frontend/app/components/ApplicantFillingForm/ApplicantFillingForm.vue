@@ -1,166 +1,186 @@
 <template>
   <div>
-    <Form enctype="multipart/form-data" id="app-form" @submit="onSubmit" v-slot="{ meta }">
-      <div class="row g-4">
-        <div class="col-md">
-          <div class="mb-3">
-            <label class="form-label fw-medium" for="obj_kind">Об’єкт права інтелектуальної власності</label>
-            <Field name="obj_kind"
-                   v-model="objKindSelected"
-                   rules="required"
-                   label="Об’єкт права інтелектуальної власності"
-                   v-slot="{ field, meta }">
-              <select class="form-select"
-                      :class="{ 'is-invalid': !meta.valid && meta.touched }"
-                      id="obj_kind"
-                      v-bind="field"
-              >
-                <option value="" disabled>Оберіть тип</option>
-                <option v-for="objKind in objKinds" :value="objKind.pk">
-                  {{ objKind.title }}
-                </option>
-              </select>
-            </Field>
-            <ErrorMessage name="obj_kind" class="invalid-feedback"/>
-          </div>
-        </div>
-      </div>
 
-      <div class="row g-4">
-        <div class="col-md">
-          <claim-kind-select v-model="claimKindSelected"
-                         :claim-kinds="claimKinds"
-                         :obj-kind-id="objKindSelected"
-          ></claim-kind-select>
-        </div>
-      </div>
+    <div class="alert alert-danger" role="alert" v-if="error_500">
+      <ul class="list-unstyled mb-0">
+        <li><b>Помилка 500.</b> Помилка сервера.</li>
+      </ul>
+    </div>
 
-      <div v-if="stage3Fields.length > 0 || (stage4Fields.length > 0 && dataLoadedSIS)">
+    <div class="alert alert-danger" role="alert" v-if="error_404">
+      <ul class="list-unstyled mb-0">
+        <li><b>Помилка 404.</b> Звернення не існує.</li>
+      </ul>
+    </div>
+
+    <div class="section rounded mb-3" v-if="!error_500 && !error_404">
+      <Form enctype="multipart/form-data"
+            id="app-form"
+            class="section rounded mb-3"
+            @submit="onSubmit"
+            v-slot="{ meta }">
+        <spinner v-if="initialDataLoading"></spinner>
         <div class="row g-4">
-          <div class="col-md" v-for="field in stage3Fields">
-            <claim-field :field-title="field.title"
-                         :field-id="field.input_id"
-                         :field-type="field.field_type"
-                         :field-editable="!!field.editable"
-                         :field-required="!!field.required"
-                         :field-help-text="field.help_text"
-                         v-model="stage3Values[field.input_id]"
-            ></claim-field>
-          </div>
-
-          <div class="col-md" v-for="field in stage4Fields" v-if="dataLoadedSIS">
-            <claim-field :field-title="field.title"
-                         :field-id="field.input_id"
-                         :field-type="field.field_type"
-                         :field-editable="!!field.editable"
-                         :field-required="!!field.required"
-                         :field-help-text="field.help_text"
-                         v-model="stage4Values[field.input_id]"
-            ></claim-field>
+          <div class="col-md">
+            <div class="mb-3">
+              <label class="form-label fw-medium" for="obj_kind">Об’єкт права інтелектуальної власності</label>
+              <Field name="obj_kind"
+                     v-model="objKindSelected"
+                     rules="required"
+                     label="Об’єкт права інтелектуальної власності"
+                     v-slot="{ field, meta }">
+                <select class="form-select"
+                        :class="{ 'is-invalid': !meta.valid && meta.touched }"
+                        id="obj_kind"
+                        v-bind="field"
+                >
+                  <option value="" disabled>Оберіть тип</option>
+                  <option v-for="objKind in objKinds" :value="objKind.pk">
+                    {{ objKind.title }}
+                  </option>
+                </select>
+              </Field>
+              <ErrorMessage name="obj_kind" class="invalid-feedback"/>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="processed"
-           class="text-primary"
-      >Будь ласка, зачекайте, завантажуємо дані об'кта інтелектуальної власності...</div>
+        <div class="row g-4">
+          <div class="col-md">
+            <claim-kind-select v-model="claimKindSelected"
+                           :claim-kinds="claimKinds"
+                           :obj-kind-id="objKindSelected"
+            ></claim-kind-select>
+          </div>
+        </div>
 
-      <div class="row g-4" v-if="(stage5Fields.length > 0 || stage6Fields.length > 0) && dataLoadedSIS">
-        <div class="col-md" v-if="stage5Fields.length > 0">
-          <h2 class="h5 my-3 text-indigo-800" v-if="isApplication">Відомості про заявника:</h2>
-          <h2 class="h5 my-3 text-indigo-800" v-else>Відомості про власника:</h2>
-
-          <div class="row">
-            <div class="col-12" v-for="field in stage5Fields">
+        <div v-if="stage3Fields.length > 0 || (stage4Fields.length > 0 && dataLoadedSIS)">
+          <div class="row g-4">
+            <div class="col-md" v-for="field in stage3Fields">
               <claim-field :field-title="field.title"
                            :field-id="field.input_id"
                            :field-type="field.field_type"
                            :field-editable="!!field.editable"
                            :field-required="!!field.required"
                            :field-help-text="field.help_text"
-                           v-model="stage5Values[field.input_id]"
+                           v-model="stage3Values[field.input_id]"
               ></claim-field>
             </div>
-          </div>
-        </div>
 
-        <div class="col-md" v-if="stage6Fields.length > 0 && dataLoadedSIS">
-            <h2 class="h5 my-3 text-indigo-800">Відомості про апелянта:</h2>
-
-            <div class="col-12" v-for="field in stage6Fields">
+            <div class="col-md" v-for="field in stage4Fields" v-if="dataLoadedSIS">
               <claim-field :field-title="field.title"
                            :field-id="field.input_id"
                            :field-type="field.field_type"
                            :field-editable="!!field.editable"
                            :field-required="!!field.required"
                            :field-help-text="field.help_text"
-                           v-model="stage6Values[field.input_id]"
+                           v-model="stage4Values[field.input_id]"
               ></claim-field>
             </div>
-        </div>
-      </div>
-
-      <div v-if="stage7Fields.length > 0 && dataLoadedSIS">
-        <h2 class="h5 my-3 text-indigo-800">Додаткова інформація</h2>
-
-        <claim-field v-for="field in stage7Fields"
-                     :field-title="field.title"
-                     :field-id="field.input_id"
-                     :field-type="field.field_type"
-                     :field-editable="!!field.editable"
-                     :field-required="!!field.required"
-                     :field-help-text="field.help_text"
-                     v-model="stage7Values[field.input_id]"
-        ></claim-field>
-      </div>
-
-      <div v-if="stage8Fields.length > 0 && dataLoadedSIS">
-
-        <h2 class="h5 my-3 text-indigo-800">Відомості щодо рішення Укрпатенту:</h2>
-
-        <div class="row g-4">
-          <div class="col-md" v-for="field in stage8Fields">
-            <claim-field :field-title="field.title"
-                         :field-id="field.input_id"
-                         :field-type="field.field_type"
-                         :field-editable="!!field.editable"
-                         :field-required="!!field.required"
-                         :field-help-text="field.help_text"
-                         v-model="stage8Values[field.input_id]"
-            ></claim-field>
           </div>
         </div>
-      </div>
 
-      <div v-if="stage9Fields.length > 0 && dataLoadedSIS">
-        <h2 class="h5 mb-3 mt-4 text-indigo-800">Додатки (файли):</h2>
+        <div v-if="processed"
+             class="text-primary"
+        >Будь ласка, зачекайте, завантажуємо дані об'кта інтелектуальної власності...</div>
 
-        <claim-field v-for="field in stage9Fields"
-                     :field-title="field.title"
-                     :field-id="field.input_id"
-                     :field-type="field.field_type"
-                     :field-editable="!!field.editable"
-                     :field-required="!!field.required"
-                     :field-help-text="field.help_text"
-                     :field-allowed-extensions="field.allowed_extensions"
-                     :initial_documents="getFieldDocuments(field.title)"
-                     v-model="stage9Values[field.input_id]"
-        ></claim-field>
-      </div>
+        <div class="row g-4" v-if="(stage5Fields.length > 0 || stage6Fields.length > 0) && dataLoadedSIS">
+          <div class="col-md" v-if="stage5Fields.length > 0">
+            <h2 class="h5 my-3 text-indigo-800" v-if="isApplication">Відомості про заявника:</h2>
+            <h2 class="h5 my-3 text-indigo-800" v-else>Відомості про власника:</h2>
 
-      <div class="alert alert-danger" role="alert" v-if="errors.length > 0">
-        <ul class="list-unstyled mb-0">
-          <li v-for="error in errors">{{ error }}</li>
-        </ul>
-      </div>
+            <div class="row">
+              <div class="col-12" v-for="field in stage5Fields">
+                <claim-field :field-title="field.title"
+                             :field-id="field.input_id"
+                             :field-type="field.field_type"
+                             :field-editable="!!field.editable"
+                             :field-required="!!field.required"
+                             :field-help-text="field.help_text"
+                             v-model="stage5Values[field.input_id]"
+                ></claim-field>
+              </div>
+            </div>
+          </div>
 
-      <div class="d-flex justify-content-center mb-2">
-        <button type="submit"
-                :disabled="sending || !dataLoadedSIS"
-                class="btn btn-primary mt-4"
-        >{{ btnText }}</button>
-      </div>
-    </form>
+          <div class="col-md" v-if="stage6Fields.length > 0 && dataLoadedSIS">
+              <h2 class="h5 my-3 text-indigo-800">Відомості про апелянта:</h2>
+
+              <div class="col-12" v-for="field in stage6Fields">
+                <claim-field :field-title="field.title"
+                             :field-id="field.input_id"
+                             :field-type="field.field_type"
+                             :field-editable="!!field.editable"
+                             :field-required="!!field.required"
+                             :field-help-text="field.help_text"
+                             v-model="stage6Values[field.input_id]"
+                ></claim-field>
+              </div>
+          </div>
+        </div>
+
+        <div v-if="stage7Fields.length > 0 && dataLoadedSIS">
+          <h2 class="h5 my-3 text-indigo-800">Додаткова інформація</h2>
+
+          <claim-field v-for="field in stage7Fields"
+                       :field-title="field.title"
+                       :field-id="field.input_id"
+                       :field-type="field.field_type"
+                       :field-editable="!!field.editable"
+                       :field-required="!!field.required"
+                       :field-help-text="field.help_text"
+                       v-model="stage7Values[field.input_id]"
+          ></claim-field>
+        </div>
+
+        <div v-if="stage8Fields.length > 0 && dataLoadedSIS">
+
+          <h2 class="h5 my-3 text-indigo-800">Відомості щодо рішення Укрпатенту:</h2>
+
+          <div class="row g-4">
+            <div class="col-md" v-for="field in stage8Fields">
+              <claim-field :field-title="field.title"
+                           :field-id="field.input_id"
+                           :field-type="field.field_type"
+                           :field-editable="!!field.editable"
+                           :field-required="!!field.required"
+                           :field-help-text="field.help_text"
+                           v-model="stage8Values[field.input_id]"
+              ></claim-field>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="stage9Fields.length > 0 && dataLoadedSIS">
+          <h2 class="h5 mb-3 mt-4 text-indigo-800">Додатки (файли):</h2>
+
+          <claim-field v-for="field in stage9Fields"
+                       :field-title="field.title"
+                       :field-id="field.input_id"
+                       :field-type="field.field_type"
+                       :field-editable="!!field.editable"
+                       :field-required="!!field.required"
+                       :field-help-text="field.help_text"
+                       :field-allowed-extensions="field.allowed_extensions"
+                       :initial_documents="getFieldDocuments(field.title)"
+                       v-model="stage9Values[field.input_id]"
+          ></claim-field>
+        </div>
+
+        <div class="alert alert-danger" role="alert" v-if="errors.length > 0">
+          <ul class="list-unstyled mb-0">
+            <li v-for="error in errors">{{ error }}</li>
+          </ul>
+        </div>
+
+        <div class="d-flex justify-content-center mb-2">
+          <button type="submit"
+                  :disabled="sending || !dataLoadedSIS"
+                  class="btn btn-primary mt-4"
+          >{{ btnText }}</button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -171,7 +191,6 @@ import {ErrorMessage, Field, Form} from 'vee-validate'
 
 import ClaimKindSelect from "./ClaimKindSelect.vue"
 import ClaimField from "./ClaimField.vue"
-// import ThirdPersonCheckbox from "./ThirdPersonCheckbox.vue"
 import Spinner from "../Spinner.vue"
 import { getCookie, getTaskResult } from '@/app/src/until'
 
@@ -183,15 +202,10 @@ export default {
     ClaimKindSelect,
     ClaimField,
     Spinner,
-    // ThirdPersonCheckbox,
   },
 
   props: {
-    // objKinds: Array,
-    // claimKinds: Array,
-    // claimFields: Array,
-    initialData: Object,
-    documents: Object,
+    initialDataTaskId: String,
   },
 
   data() {
@@ -213,9 +227,12 @@ export default {
       stage9Values: {},
       dataLoadedSIS: false,
       errors: [],
+      error_404: false,
+      error_500: false,
       sending: false,
       processed: false,
       initialDataLoading: false,
+      initialData: false,
       documents: false,
     }
   },
@@ -284,50 +301,70 @@ export default {
   },
 
   async mounted() {
-    await this.getFormData()
+    this.initialDataLoading = true
 
-    if (this.initialData) {
-      this.initialDataLoading = true
-      this.objKindSelected = this.initialData.obj_kind_id
-      this.$nextTick(() => {
-        this.claimKindSelected = this.initialData.claim_kind_id
+    try {
+      await this.getFormData()
+    } catch (e) {
+      this.error_500 = true
+      return
+    }
+
+    if (this.initialDataTaskId) {
+      try {
+        this.initialData = await getTaskResult(this.initialDataTaskId)
+      } catch (e) {
+        this.error_500 = true
+        return
+      }
+
+      if (Object.keys(this.initialData).length === 0) {
+          this.error_404 = true
+          return
+      } else {
+        this.objKindSelected = this.initialData.claim_data.obj_kind_id
         this.$nextTick(() => {
-          this.dataLoadedSIS = true
-          this.initialData.stages_data[3].items.forEach((item) => {
-            this.stage3Values[item.id] = item.value
-          })
-
+          this.claimKindSelected = this.initialData.claim_data.claim_kind_id
           this.$nextTick(() => {
-            this.initialData.stages_data[4].items.forEach((item) => {
-              if (item.id.includes('date')) {
-                const d = new Date(item.value)
-                const year = d.getFullYear()
-                const month = `${d.getMonth() + 1}`.padStart(2, "0")
-                const day = `${d.getDate()}`.padStart(2, "0")
-                this.stage4Values[item.id] = [day, month, year].join(".")
-              } else {
-                this.stage4Values[item.id] = item.value
-              }
-            })
-            this.initialData.stages_data[5].items.forEach((item) => {
-              this.stage5Values[item.id] = item.value
-            })
-            this.initialData.stages_data[6].items.forEach((item) => {
-              this.stage6Values[item.id] = item.value
-            })
-            this.initialData.stages_data[7].items.forEach((item) => {
-              this.stage7Values[item.id] = item.value
-            })
-            this.initialData.stages_data[8].items.forEach((item) => {
-              this.stage8Values[item.id] = item.value
+            this.dataLoadedSIS = true
+            this.initialData.stages[3].items.forEach((item) => {
+              this.stage3Values[item.id] = item.value
             })
 
-            this.initialDataLoading = false
+            this.$nextTick(() => {
+              this.initialData.stages[4].items.forEach((item) => {
+                if (item.id.includes('date')) {
+                  const d = new Date(item.value)
+                  const year = d.getFullYear()
+                  const month = `${d.getMonth() + 1}`.padStart(2, "0")
+                  const day = `${d.getDate()}`.padStart(2, "0")
+                  this.stage4Values[item.id] = [day, month, year].join(".")
+                } else {
+                  this.stage4Values[item.id] = item.value
+                }
+              })
+              this.initialData.stages[5].items.forEach((item) => {
+                this.stage5Values[item.id] = item.value
+              })
+              this.initialData.stages[6].items.forEach((item) => {
+                this.stage6Values[item.id] = item.value
+              })
+              this.initialData.stages[7].items.forEach((item) => {
+                this.stage7Values[item.id] = item.value
+              })
+              this.initialData.stages[8].items.forEach((item) => {
+                this.stage8Values[item.id] = item.value
+              })
+
+              this.initialDataLoading = false
+            })
           })
         })
-      })
+      }
 
       this.documents = this.initialData.documents
+    } else {
+      this.initialDataLoading = false
     }
   },
 
@@ -372,12 +409,8 @@ export default {
 
       let result = await response.json();
 
-      if (result.claim_url) {
-        location.href = result.claim_url
-      } else {
-        const taskResult = await getTaskResult(result.task_id)
-        location.href = taskResult.claim_url
-      }
+      const taskResult = await getTaskResult(result.task_id)
+      location.href = taskResult.claim_url
 
       this.sending = false
     },

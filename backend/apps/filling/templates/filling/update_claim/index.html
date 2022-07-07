@@ -6,14 +6,7 @@
     {% include 'filling/update_claim/_partials/header.html' %}
 
     <!-- Primary -->
-    <div class="section rounded mb-3">
-
-        <applicant-filling-form
-                                :initial-data="{{ initial_data }}"
-                                :documents="{{ documents }}"
-        ></applicant-filling-form>
-
-    </div>
+    <applicant-filling-form initial-data-task-id="{{ task_id }}"></applicant-filling-form>
     <!-- /Primary -->
 
 {% endblock %}

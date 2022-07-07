@@ -143,29 +143,44 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
         if field.input_id in files_data or f"{field.input_id}[]" in files_data:
             # Получение типа документа
             doc_type, created = DocumentType.objects.get_or_create(title=field.title)
+
+            # Удаление "старого" документа этого типа
+            Document.objects.filter(claim=claim, document_type=doc_type).delete()
+
             # Сохранение файла
             if field.field_type == ClaimField.FieldType.FILE:
-                # Удаление "старого" документа этого типа
-                Document.objects.filter(claim=claim, document_type=doc_type).delete()
-                # Загрузка нового документа
-                file = files_data[field.input_id]
-                Document.objects.create(
+                # Создание документа
+                doc = Document.objects.create(
                     claim=claim,
                     document_type=doc_type,
                     input_date=datetime.datetime.now(),
-                    file=file,
                     claim_document=True,
                 )
+
+                file_data = files_data[field.input_id][0]
+
+                # Сохранение файла во временный каталог
+                tmp_file_path = base64_to_temp_file(file_data['content'])
+
+                # Сохранение файла в постоянный каталог и в БД
+                document_save_file(doc, file_data['name'], tmp_file_path, True)
             else:
-                files = files_data.getlist(f"{field.input_id}[]")
-                for file in files:
-                    Document.objects.create(
+                files = files_data[f"{field.input_id}[]"]
+
+                for file_data in files:
+                    # Создание документа
+                    doc = Document.objects.create(
                         claim=claim,
                         document_type=doc_type,
                         input_date=datetime.datetime.now(),
-                        file=file,
                         claim_document=True
                     )
+
+                    # Сохранение файла во временный каталог
+                    tmp_file_path = base64_to_temp_file(file_data['content'])
+
+                    # Сохранение файла в постоянный каталог и в БД
+                    document_save_file(doc, file_data['name'], tmp_file_path, True)
 
     # Формирование основного документа обращения (заявления)
     base_doc = Document.objects.filter(claim=claim, document_type__base_doc=True).first()
@@ -321,14 +336,17 @@ def claim_set_status_if_all_docs_signed(claim_id: Type[int]) -> None:
         claim.save()
 
 
-def claim_get_data_by_id(claim_id: int, user: UserModel) -> dict:
+def claim_get_data_by_id(claim_id: int, user: UserModel, **kwargs) -> dict:
     """Возвращает данные обращения пользователя."""
-    claim = claim_get_user_claims_qs(user).filter(pk=claim_id).first()
+    claim = claim_get_user_claims_qs(user).filter(pk=claim_id, **kwargs).first()
     if claim:
         res = {
             'claim_data': {
                 'obj_number': claim.obj_number,
                 'obj_kind': claim.obj_kind.title,
+                'obj_kind_id': claim.obj_kind.id,
+                'claim_kind': claim.claim_kind.title,
+                'claim_kind_id': claim.claim_kind.id,
                 'status_verbal': claim.get_status_display(),
                 'status': claim.status,
             },

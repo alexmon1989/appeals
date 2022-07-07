@@ -56,11 +56,19 @@ def create_claim_task(post_data, files_data, cert_data: dict) -> dict:
 
 
 @app.task
-def get_claim_data_task(claim_id: int, cert_data: dict) -> dict:
+def edit_claim_task(claim_id, post_data, files_data, cert_data: dict) -> dict:
+    """Редактирует обращение."""
+    user = users_services.user_get_or_create_from_cert(cert_data)
+    claim = filling_services.claim_edit(claim_id, post_data, files_data, user)
+    return {'claim_url': claim.get_absolute_url()}
+
+
+@app.task
+def get_claim_data_task(claim_id: int, cert_data: dict, **kwargs) -> dict:
     """Возвращает данные обращения пользователя."""
     # Получение данных обращения
     user = users_services.user_get_or_create_from_cert(cert_data)
-    claim = filling_services.claim_get_data_by_id(claim_id, user)
+    claim = filling_services.claim_get_data_by_id(claim_id, user, **kwargs)
 
     # Копирование документов обращения
     if claim:

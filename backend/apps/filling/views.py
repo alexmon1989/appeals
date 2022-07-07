@@ -16,7 +16,8 @@ from ..common.utils import qdict_to_dict
 from .models import Claim
 from ..cases.services import services as case_services
 from ..users import services as users_services
-from .tasks import get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task
+from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task,
+                    edit_claim_task)
 from .utils import files_to_base64
 
 
@@ -112,24 +113,17 @@ class ClaimUpdateView(LoginRequiredMixin, View):
     template_name = 'filling/update_claim/index.html'
 
     def get(self, request, *args, **kwargs):
-        # Данные заявки
-        claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=self.kwargs['pk'], status__lt=3).first()
-        stages = filling_services.claim_get_stages_details(claim)
-        documents = filling_services.claim_get_documents(claim.pk, self.request.user.pk)
-
-        initial_data = {
-            'obj_kind_id': claim.obj_kind.id,
-            'claim_kind_id': claim.claim_kind.id,
-            'stages_data': stages,
-            'documents': documents,
-        }
+        task = get_claim_data_task.delay(
+            kwargs['pk'],
+            users_services.certificate_get_data(self.request.session['cert_id']),
+            status__lt=3
+        )
 
         return render(
             request,
             self.template_name,
             {
-                'claim': claim,
-                'initial_data': initial_data,
+                'task_id': task.id
             }
         )
 
@@ -138,14 +132,20 @@ class ClaimUpdateView(LoginRequiredMixin, View):
         post_data = qdict_to_dict(request.POST)
         del post_data['csrfmiddlewaretoken']
 
-        claim = filling_services.claim_edit(self.kwargs['pk'], post_data, request.FILES, request.user)
+        task = edit_claim_task.delay(
+            self.kwargs['pk'],
+            post_data,
+            files_to_base64(request.FILES),
+            users_services.certificate_get_data(self.request.session['cert_id'])
+        )
+
         messages.add_message(
             request,
             messages.SUCCESS,
             'Звернення успішно відредаговано. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
         )
 
-        return JsonResponse({'success': 1, 'claim_url': claim.get_absolute_url()})
+        return JsonResponse({'task_id': task.id})
 
 
 @login_required
