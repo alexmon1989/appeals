@@ -49,11 +49,6 @@ class CreateClaimView(LoginRequiredMixin, View):
             files_to_base64(request.FILES),
             users_services.certificate_get_data(self.request.session['cert_id'])
         )
-        messages.add_message(
-            request,
-            messages.SUCCESS,
-            'Звернення успішно створено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
-        )
 
         return JsonResponse(
             {
@@ -139,12 +134,6 @@ class ClaimUpdateView(LoginRequiredMixin, View):
             users_services.certificate_get_data(self.request.session['cert_id'])
         )
 
-        messages.add_message(
-            request,
-            messages.SUCCESS,
-            'Звернення успішно відредаговано. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
-        )
-
         return JsonResponse({'task_id': task.id})
 
 
@@ -214,3 +203,23 @@ def get_filling_form_data(request):
             "task_id": task.id,
         }
     )
+
+
+@login_required
+def set_message(request, level, message):
+    """Добавляет сообщение Django."""
+    message_level = messages.INFO
+    if level == 'success':
+        message_level = messages.SUCCESS
+    elif level == 'danger':
+        message_level = messages.ERROR
+    elif level == 'warning':
+        message_level = messages.WARNING
+
+    messages.add_message(
+        request,
+        message_level,
+        message
+    )
+
+    return JsonResponse({'success': 1})

@@ -402,15 +402,29 @@ export default {
 
       this.sending = true
 
+      $.SOW.core.toast.show('info-soft',
+          '',
+          'Відбувається збереження інформації. Будь ласка, зачекайте...' ,
+          'top-end',
+          0,
+          true
+      )
+
       let response = await fetch('', {
         method: 'POST',
         body: formData
-      });
+      })
 
       let result = await response.json();
 
-      const taskResult = await getTaskResult(result.task_id)
-      location.href = taskResult.claim_url
+      try {
+        const taskResult = await getTaskResult(result.task_id)
+        const message = 'Дані успішно збережено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
+        await fetch('/filling/set-message/success/' + message + '/')
+        location.href = taskResult.claim_url
+      } catch (e) {
+        this.errors.push('Помилка 500. Помилка сервера.')
+      }
 
       this.sending = false
     },
