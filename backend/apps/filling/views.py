@@ -17,7 +17,7 @@ from .models import Claim
 from ..cases.services import services as case_services
 from ..users import services as users_services
 from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task,
-                    edit_claim_task)
+                    edit_claim_task, delete_claim_task)
 from .utils import files_to_base64
 
 
@@ -90,16 +90,15 @@ def claim_status(request, pk):
 @login_required
 def claim_delete(request, pk):
     """Удаление обращения."""
-    claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=pk, status__lt=3).first()
-    if claim:
-        claim.delete()
-        messages.add_message(
-            request,
-            messages.SUCCESS,
-            'Звернення успішно видалено.'
-        )
-        return redirect('my-claims-list')
-    raise Http404()
+    task = delete_claim_task.delay(
+        pk,
+        users_services.certificate_get_data(request.session['cert_id'])
+    )
+    return JsonResponse(
+        {
+            "task_id": task.id,
+        }
+    )
 
 
 class ClaimUpdateView(LoginRequiredMixin, View):

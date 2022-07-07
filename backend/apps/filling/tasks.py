@@ -75,3 +75,14 @@ def get_claim_data_task(claim_id: int, cert_data: dict, **kwargs) -> dict:
         filling_services.claim_copy_docs_to_external_server(claim_id)
 
     return claim
+
+
+@app.task
+def delete_claim_task(claim_id: int, cert_data: dict) -> dict:
+    """Удаляет обращение пользователя."""
+    user = users_services.user_get_or_create_from_cert(cert_data)
+    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id).first()
+    if claim:
+        claim.delete()
+        return {'success': 1}
+    return {'success': 0, 'message': 'not found'}

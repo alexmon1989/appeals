@@ -1,10 +1,11 @@
 <template>
   <div class="d-flex justify-content-between mt-5 mb-3" v-if="status < 3">
     <div>
-      <a data-href="{% url 'claim_delete' pk=claim.pk %}"
+      <a :data-href="'/filling/claim-delete/' + claimId + '/'"
          class="js-ajax-confirm btn btn-danger"
 
          data-ajax-confirm-type="danger"
+         data-ajax-confirm-mode="ajax"
 
          data-ajax-confirm-size="modal-md"
          data-ajax-confirm-centered="false"
@@ -18,7 +19,8 @@
 
          data-ajax-confirm-btn-no-class="btn-secondary btn-sm"
          data-ajax-confirm-btn-no-text="Закрити"
-         data-ajax-confirm-btn-no-icon="fi fi-close">
+         data-ajax-confirm-btn-no-icon="fi fi-close"
+         data-ajax-confirm-callback-function="onDeleteClaim">
         <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-x-lg"
              viewBox="0 0 16 16">
           <path fill-rule="evenodd"
@@ -67,11 +69,40 @@
 </template>
 
 <script>
+import { getTaskResult } from '@/app/src/until'
+
 export default {
   name: "Buttons",
   props: ["status", "claimId"],
   mounted() {
      $.SOW.core.ajax_confirm.init('.js-ajax-confirm')
+
+    window.onDeleteClaim = async function (el, data) {
+      try {
+        const res = await getTaskResult(data.task_id)
+        if (res.success === 1) {
+          const message = 'Звернення успішно видалено.'
+          await fetch('/filling/set-message/success/' + message + '/')
+          location.href = '/filling/'
+        } else {
+          $.SOW.core.toast.show('danger',
+              '',
+              'Помилка 404. Звернення не існує.',
+              'top-end',
+              0,
+              true
+          )
+        }
+      } catch (e) {
+        $.SOW.core.toast.show('danger',
+            '',
+            'Помилка 500. Помилка сервера.',
+            'top-end',
+            0,
+            true
+        )
+      }
+    }
   }
 }
 </script>
