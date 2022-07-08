@@ -19,7 +19,7 @@ from .models import ClaimField, Claim
 from ..common.utils import docx_replace
 from .utils import base64_to_temp_file
 
-from typing import List, Type
+from typing import List, Type, Union
 from pathlib import Path
 from distutils.dir_util import copy_tree
 import json
@@ -107,9 +107,11 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
     return claim
 
 
-def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user: UserModel) -> Claim:
+def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user: UserModel) -> Union[Claim, None]:
     """Редактирует обращение пользователя."""
-    claim = claim_get_user_claims_qs(user).filter(pk=сlaim_id).first()
+    claim = claim_get_user_claims_qs(user).filter(pk=сlaim_id, status__lt=3).first()
+    if not claim:
+        return None
 
     # Удаление документов, которые указал пользователь и тех, которые генерируются автоматически
     try:

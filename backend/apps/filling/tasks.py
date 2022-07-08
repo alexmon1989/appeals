@@ -1,5 +1,6 @@
 from core.celery import app
 from . import services as filling_services
+from ..cases.services import services as cases_services
 from ..users import services as users_services
 from ..classifiers import services as classifiers_services
 
@@ -81,8 +82,17 @@ def get_claim_data_task(claim_id: int, cert_data: dict, **kwargs) -> dict:
 def delete_claim_task(claim_id: int, cert_data: dict) -> dict:
     """Удаляет обращение пользователя."""
     user = users_services.user_get_or_create_from_cert(cert_data)
-    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id).first()
+    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status__lt=3).first()
     if claim:
         claim.delete()
         return {'success': 1}
     return {'success': 0, 'message': 'not found'}
+
+
+@app.task
+def create_case_task(claim_id: int, cert_data: dict) -> dict:
+    user = users_services.user_get_or_create_from_cert(cert_data)
+    case = cases_services.case_create_from_claim(claim_id, user)
+    if case:
+        return {'success': 1, 'case_number': case.case_number}
+    return {'success': 0, 'message': 'Ви не можете передати звернення, тому що документи не було підписано.'}

@@ -57,7 +57,7 @@
        data-ajax-confirm-btn-no-class="btn-sm btn-light"
        data-ajax-confirm-btn-no-text="Ні"
        data-ajax-confirm-btn-no-icon="fi fi-close"
-       data-ajax-confirm-callback-function="_myCustomFunc"
+       data-ajax-confirm-callback-function="onCreateCase"
     >
       <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-check-lg"
            viewBox="0 0 16 16">
@@ -89,6 +89,33 @@ export default {
               '',
               'Помилка 404. Звернення не існує.',
               'top-end',
+              0,
+              true
+          )
+        }
+      } catch (e) {
+        $.SOW.core.toast.show('danger',
+            '',
+            'Помилка 500. Помилка сервера.',
+            'top-end',
+            0,
+            true
+        )
+      }
+    }
+
+    window.onCreateCase = async function (el, data) {
+      try {
+        const res = await getTaskResult(data.task_id)
+        if (res.success === 1) {
+          const message = 'Справу ' + res.case_number + ' успішно створено.'
+          await fetch('/filling/set-message/success/' + message + '/')
+          location.href = '/filling/'
+        } else {
+          $.SOW.core.toast.show('danger',
+              '',
+              res.message,
+              'top-center',
               0,
               true
           )

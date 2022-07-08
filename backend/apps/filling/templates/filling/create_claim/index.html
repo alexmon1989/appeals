@@ -5,13 +5,8 @@
 {% block main %}
     {% include 'filling/create_claim/_partials/header.html' %}
 
-    <!-- Primary -->
-    <div class="section rounded mb-3">
+    {% csrf_token %}
 
-        {% csrf_token %}
-
-        <applicant-filling-form></applicant-filling-form>
-    </div>
-    <!-- /Primary -->
+    <applicant-filling-form></applicant-filling-form>
 
 {% endblock %}

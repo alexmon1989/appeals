@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect, reverse
-from django.http import JsonResponse, Http404, HttpResponseBadRequest
+from django.shortcuts import render, reverse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
 from django.views.generic import ListView
 from django.views.generic.base import TemplateView
@@ -17,7 +17,7 @@ from .models import Claim
 from ..cases.services import services as case_services
 from ..users import services as users_services
 from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task,
-                    edit_claim_task, delete_claim_task)
+                    edit_claim_task, delete_claim_task, create_case_task)
 from .utils import files_to_base64
 
 
@@ -139,16 +139,12 @@ class ClaimUpdateView(LoginRequiredMixin, View):
 @login_required
 def case_create(request, claim_id):
     """Создаёт дело на основе обращения."""
-    case = case_services.case_create_from_claim(claim_id, request.user)
-    if case:
-        messages.add_message(
-            request,
-            messages.SUCCESS,
-            f'Справу {case.case_number} успішно створено.'
-        )
-        return JsonResponse({'url': reverse('claim_detail', kwargs={'pk': claim_id})})
-    else:
-        return HttpResponseBadRequest('Ви не можете передати звернення, тому що документи не було підписано.')
+    task = create_case_task.delay(
+        claim_id,
+        users_services.certificate_get_data(request.session['cert_id'])
+    )
+
+    return JsonResponse({'task_id': task.id})
 
 
 @login_required
