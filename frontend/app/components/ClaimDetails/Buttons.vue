@@ -108,7 +108,7 @@ export default {
       try {
         const res = await getTaskResult(data.task_id)
         if (res.success === 1) {
-          const message = 'Справу ' + res.case_number + ' успішно створено.'
+          const message = 'Справу успішно створено.'
           await fetch('/filling/set-message/success/' + message + '/')
           location.href = '/filling/'
         } else {

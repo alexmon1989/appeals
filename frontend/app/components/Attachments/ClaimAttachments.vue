@@ -43,6 +43,7 @@
 </template>
 
 <script>
+import { getTaskResult } from '@/app/src/until'
 import ModalEDS from './ModalEDS.vue'
 
 export default {
@@ -96,18 +97,37 @@ export default {
       let response = await fetch('/filling/claim-status/' + this.claimId + '/')
       if (response.ok) {
         let json = await response.json()
-        if (json.success === 1) {
-          const el = document.getElementById('claim-status')
-          if (json.data.status_code === 1) {
-            el.innerHTML = 'Статус: <span class="text-danger ms-1">' + json.data.status_verbal + '</span>'
-          } else if (json.data.status_code === 2) {
-            el.innerHTML = 'Статус: <span class="text-primary ms-1">' + json.data.status_verbal + '</span>'
-          } else {
-            el.innerHTML = 'Статус: <span class="text-success ms-1">' + json.data.status_verbal + '</span>'
+
+        try {
+          const taskResult = await getTaskResult(json.task_id)
+          if (taskResult.success === 1) {
+            const el = document.getElementById('claim-status')
+            if (taskResult.data.status_code === 1) {
+              el.innerHTML = 'Статус: <span class="text-danger ms-1">' + taskResult.data.status_verbal + '</span>'
+            } else if (taskResult.data.status_code === 2) {
+              el.innerHTML = 'Статус: <span class="text-primary ms-1">' + taskResult.data.status_verbal + '</span>'
+            } else {
+              el.innerHTML = 'Статус: <span class="text-success ms-1">' + taskResult.data.status_verbal + '</span>'
+            }
           }
+        } catch (e) {
+          $.SOW.core.toast.show('danger',
+              '',
+              'Помилка 500. Помилка сервера.',
+              'top-end',
+              0,
+              true
+          )
+          console.log(e)
         }
       } else {
-        console.log("Error getting claim status: " + response.status)
+        $.SOW.core.toast.show('danger',
+            '',
+            'Помилка отримання даних з серверу (код відповіді: ' + response.status + ').',
+            'top-end',
+            0,
+            true
+        )
       }
     },
 

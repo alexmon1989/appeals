@@ -14,10 +14,9 @@ from . import services as filling_services
 from ..common.mixins import LoginRequiredMixin
 from ..common.utils import qdict_to_dict
 from .models import Claim
-from ..cases.services import services as case_services
 from ..users import services as users_services
 from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task,
-                    edit_claim_task, delete_claim_task, create_case_task)
+                    edit_claim_task, delete_claim_task, create_case_task, get_claim_status)
 from .utils import files_to_base64
 
 
@@ -75,16 +74,16 @@ class ClaimDetailView(LoginRequiredMixin, TemplateView):
 @login_required
 def claim_status(request, pk):
     """Возвращает статус заявки в формате JSON."""
-    claim = filling_services.claim_get_user_claims_qs(request.user).filter(pk=pk).first()
-    if claim:
-        return JsonResponse({
-            'success': 1,
-            'data': {
-                'status_code': claim.status,
-                'status_verbal': claim.get_status_display()
-            }
-        })
-    return JsonResponse({'success': 0})
+    task = get_claim_status.delay(
+        pk,
+        users_services.certificate_get_data(request.session['cert_id'])
+    )
+
+    return JsonResponse(
+        {
+            "task_id": task.id
+        }
+    )
 
 
 @login_required

@@ -79,6 +79,24 @@ def get_claim_data_task(claim_id: int, cert_data: dict, **kwargs) -> dict:
 
 
 @app.task
+def get_claim_status(claim_id: int, cert_data: dict) -> dict:
+    """Возвращает данные статуса обращения пользователя."""
+    user = users_services.user_get_or_create_from_cert(cert_data)
+    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id).first()
+
+    if claim:
+        return {
+            'success': 1,
+            'data': {
+                'status_code': claim.status,
+                'status_verbal': claim.get_status_display()
+            }
+        }
+
+    return {'success': 0, 'message': 'not found'}
+
+
+@app.task
 def delete_claim_task(claim_id: int, cert_data: dict) -> dict:
     """Удаляет обращение пользователя."""
     user = users_services.user_get_or_create_from_cert(cert_data)
