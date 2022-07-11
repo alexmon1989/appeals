@@ -175,11 +175,12 @@
 
         <div class="d-flex justify-content-center mb-2">
           <button type="submit"
+                  @click="checkValidationErrors(meta)"
                   :disabled="sending || !dataLoadedSIS"
                   class="btn btn-primary mt-4"
           >{{ btnText }}</button>
         </div>
-      </form>
+      </Form>
     </div>
   </div>
 </template>
@@ -448,6 +449,18 @@ export default {
         this.objKinds = taskResult.obj_kinds
         this.claimKinds = taskResult.claim_kinds
         this.claimFields = taskResult.claim_fields
+      }
+    },
+
+    checkValidationErrors(meta) {
+      if (meta.touched && !meta.valid) {
+        $.SOW.core.toast.show('danger',
+            '',
+            'Форма містить помилки. Будь ласка, перевірте ще раз правильність заповнення полів.' ,
+            'top-end',
+            0,
+            true
+        )
       }
     }
   },
