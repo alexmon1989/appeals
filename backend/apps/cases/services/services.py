@@ -111,13 +111,11 @@ def document_get_by_id(doc_id: int) -> Document:
     return doc.first()
 
 
-def document_add_sign_info_to_file(doc_id: int) -> None:
-    """Создаёт .docx с инф-ей о цифровых подписях в конце (на основе оригинального файла документа)
-    и возвращает его путь."""
+def document_add_sign_info_to_file(doc_id: int, signs: list) -> None:
+    """Создаёт .docx с инф-ей о цифровых подписях в конце (на основе оригинального файла документа)"""
     document = document_get_by_id(doc_id)
-    signs = document_get_signs_info(doc_id)
 
-    if signs and Path(str(document.file)).suffix == '.docx':
+    if Path(str(document.file)).suffix == '.docx':
         # Открытие документа
         docx_file_path = Path(settings.MEDIA_ROOT) / Path(str(document.file))
         docx_with_signs_file_path = docx_file_path.parent / f"{docx_file_path.stem}_signs.docx"
@@ -129,7 +127,7 @@ def document_add_sign_info_to_file(doc_id: int) -> None:
         for i, sign in enumerate(signs):
             cells = table.rows[i].cells
             cells[0].paragraphs[0].add_run(
-                f"{sign['subject']}\n{sign['serial_number']}\n{sign['issuer']}\n{sign['timestamp']}"
+                f"{sign['subject']}\n{sign['serial_number']}\n{sign['issuer']}"
             )
             paragraph_format = cells[0].paragraphs[0].paragraph_format
             paragraph_format.space_after = 0
@@ -146,7 +144,7 @@ def document_add_sign_info_to_file(doc_id: int) -> None:
         docx.save(docx_with_signs_file_path)
 
     # Смена статуса обращения если все документы подписаны
-    filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
+    # filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
 
 
 def document_get_signs_info(doc_id: int) -> List[dict]:

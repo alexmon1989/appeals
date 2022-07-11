@@ -68,13 +68,14 @@
 
 import Spinner from '../Spinner.vue'
 import EdsRead from "../AuthForm/EdsRead.vue"
-import { getFileUint8Array, uploadSign } from "../../src/until"
+import { getFileUint8Array, uploadSign, getTaskResult, getCookie } from "../../src/until"
 
 export default {
   name: "ModalEDS",
 
   props: {
     'documentsInit': Array,
+    'claimData': Object,
   },
 
   components: {
@@ -131,25 +132,37 @@ export default {
       const euSign = this.$root.euSign || this.$root.euSignFile // Бібліотека для апаратного чи файлового ключа
 
       let error = null
+
+      // Создание файлов с табличкой подписей
+      const task = await fetch('/filling/create-files-with-signs-info/' + this.claimData.id + '/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(this.$root.keyInfo)
+      });
+      const taskData = await task.json()
+      await getTaskResult(taskData.task_id)
+
       for (let i = 0; i < this.documents.length; i++) {
         try {
-          // Получение содержимого фала
-          let data = await getFileUint8Array(this.documents[i].file_url)
+          // Получение содержимого файла
+          console.log(this.fileToSignURL(this.documents[i].file_url))
+          let data = await getFileUint8Array(this.fileToSignURL(this.documents[i].file_url))
 
           // Подписание файла
           let eds = await euSign.SignAsync(data)
-          // eds = Uint8Array.from(atob(eds), c => c.charCodeAt(0))
-          console.log(eds)
 
           // Данные подписи
           const signInfo = await this.getSignInfo(data, eds)
-          console.log(signInfo)
 
           // Отправка данных на сервер
-          const uploadedRes = await uploadSign(this.documents[i].id, eds, signInfo)
-          console.log(uploadedRes)
-
-          this.$emit('signedDoc', {'id': this.documents[i].id, 'eds': eds})
+          const taskUploaded = await uploadSign(this.documents[i].id, eds, signInfo)
+          const taskUploadedRes = await getTaskResult(taskUploaded.task_id)
+          if (taskUploadedRes.success === 1) {
+            this.$emit('signedDoc', {'id': this.documents[i].id, 'eds': eds})
+          }
         } catch (err) {
           error = err
           console.log(error)
@@ -161,6 +174,16 @@ export default {
       }
 
       this.processed = false
+    },
+
+    // Возвращает ссылку на файл, который необходимо подписать
+    fileToSignURL(notSignedURL) {
+      const fileExt = notSignedURL.split('.').pop()
+      if (fileExt === 'docx') {
+        return notSignedURL.replace('.' + fileExt, '_signs.' + fileExt)
+      } else {
+        return notSignedURL
+      }
     }
   },
 

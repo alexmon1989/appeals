@@ -77,7 +77,7 @@ export const uploadSign = async function (documentId, signData, signInfo) {
         mode: 'same-origin',
         body: data
       }
-  );
+  )
 
   const response = await fetch(request)
   return await response.json()

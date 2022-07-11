@@ -24,11 +24,11 @@
       <div class="row mb-3">
         <div class="col">
           <h2 class="h5 mb-3 text-indigo-800">Додатки</h2>
-          <claim-attachments :documents-init="documents" :claim-id="claimId"></claim-attachments>
+          <claim-attachments :documents-init="documents" :claim-data="claimData"></claim-attachments>
         </div>
       </div>
 
-      <buttons :claim-id="claimId" :status="claimData.status"></buttons>
+      <buttons :claim-id="claimData.id" :status="claimData.status"></buttons>
     </div>
   </div>
 
@@ -59,7 +59,6 @@ export default {
     return {
       stages: false,
       documents: false,
-      claimId: false,
       claimData: false,
       errors: [],
       loading: true,
@@ -77,9 +76,6 @@ export default {
         this.documents = taskResult.documents
         this.claimData = taskResult.claim_data
 
-        const segments = window.location.pathname.split("/")
-        this.claimId = segments.pop() || segments.pop()
-        this.claimId = parseInt(this.claimId)
         document.title = this.claimData.obj_number + ' | Мої звернення'
       }
     } catch (e) {

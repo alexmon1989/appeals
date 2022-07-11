@@ -80,7 +80,7 @@ class Document(TimeStampModel):
     @property
     def signed_file(self):
         """Возвращает путь к файлу с информацией о цифровых подписях."""
-        path = Path(self.file.url)
+        path = Path(self.file.name)
         return str(path).replace(path.stem, f"{path.stem}_signs")
 
     def __str__(self):
@@ -121,6 +121,9 @@ class Sign(TimeStampModel):
     file = models.FileField(
         upload_to=sign_get_file_path,
         verbose_name='Файл з цифровим підписом (.p7s)'
+    )
+    file_signed = models.FileField(
+        verbose_name='Підписаний файл'
     )
     user = models.ForeignKey(
         UserModel,

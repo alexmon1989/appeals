@@ -15,4 +15,9 @@ urlpatterns = [
     path('get-task-result/<str:task_id>/', views.get_task_result, name='get_task_result'),
     path('get-filling-form-data/', views.get_filling_form_data, name='get_filling_form_data'),
     path('set-message/<str:level>/<str:message>/', views.set_message, name='set_message'),
+    path(
+        'create-files-with-signs-info/<int:claim_id>/',
+        views.create_files_with_signs_info,
+        name='create_files_with_signs_info'
+    ),
 ]

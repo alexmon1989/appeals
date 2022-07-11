@@ -3,9 +3,11 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
 from django.views.generic.base import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
+
 
 from celery.result import AsyncResult
 
@@ -13,8 +15,11 @@ from ..common.mixins import LoginRequiredMixin
 from ..common.utils import qdict_to_dict
 from ..users import services as users_services
 from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task,
-                    edit_claim_task, delete_claim_task, create_case_task, get_claim_status, get_claim_list)
-from .utils import files_to_base64
+                    edit_claim_task, delete_claim_task, create_case_task, get_claim_status, get_claim_list_task,
+                    create_files_with_signs_info_task)
+from ..common.utils import files_to_base64
+
+import json
 
 
 class MyClaimsListView(LoginRequiredMixin, TemplateView):
@@ -23,7 +28,7 @@ class MyClaimsListView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        task = get_claim_list.delay(
+        task = get_claim_list_task.delay(
             users_services.certificate_get_data(self.request.session['cert_id'])
         )
         context['task_id'] = task.id
@@ -217,3 +222,27 @@ def set_message(request, level, message):
     )
 
     return JsonResponse({'success': 1})
+
+
+@require_POST
+@login_required
+def create_files_with_signs_info(request, claim_id):
+    """Создаёт файлы с информацией о подписи."""
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode)
+    signs = [{
+        'subject': body['subjCN'],
+        'issuer': body['issuerCN'],
+        'serial_number': body['serial'],
+    }]
+
+    task = create_files_with_signs_info_task.delay(
+        users_services.certificate_get_data(request.session['cert_id']),
+        claim_id,
+        signs,
+    )
+    return JsonResponse(
+        {
+            "task_id": task.id,
+        }
+    )

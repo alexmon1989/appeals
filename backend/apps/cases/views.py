@@ -7,17 +7,17 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
-from django.conf import settings
-
-from urllib.parse import unquote
-from pathlib import Path
 from rest_framework import viewsets
+
+from ..users import services as users_services
+from ..common.utils import files_to_base64
 
 from .services import services
 from .models import Case
 from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer
 from ..common.mixins import LoginRequiredMixin
+from .tasks import upload_sign_task
 
 
 @login_required
@@ -54,31 +54,19 @@ class CaseCreateView(LoginRequiredMixin, CreateView):
 @login_required
 def upload_sign(request, document_id: int):
     """Загружает на сервер информацию о цифровой подписи документа."""
-    # Получение документа
-    document = services.document_get_by_id(document_id)
-    if document and services.document_can_be_signed_by_user(document, request.user):
-        # Загрузка файла
-        relative_path = Path(unquote(f"{document.file}_{request.user.pk}.p7s"))
-        sign_destination = Path(settings.MEDIA_ROOT) / relative_path
-        if services.sign_upload(request.FILES['blob'], sign_destination):
-            # Создание объекта цифровой подписи в БД
-            sign_info = json.loads(request.POST['sign_info'])
-            sign_data = {
-                'document': document,
-                'file': str(relative_path),
-                'user': request.user,
-                'subject': sign_info['subject'],
-                'serial_number': sign_info['serial'],
-                'issuer': sign_info['issuer'],
-                'timestamp': sign_info['timestamp'],
-            }
-            services.sign_create(sign_data)
+    files_base64 = files_to_base64(request.FILES)
 
-            services.document_add_sign_info_to_file(document_id)
-
-        return JsonResponse({'success': 1})
-
-    return JsonResponse({'success': 0})
+    task = upload_sign_task.delay(
+        document_id,
+        files_base64['blob'][0]['content'],
+        json.loads(request.POST['sign_info']),
+        users_services.certificate_get_data(request.session['cert_id']),
+    )
+    return JsonResponse(
+        {
+            "task_id": task.id,
+        }
+    )
 
 
 class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):

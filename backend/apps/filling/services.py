@@ -15,9 +15,10 @@ from docxcompose.composer import Composer
 
 from ..classifiers.models import DocumentType
 from ..cases.models import Document, Sign, DocumentTemplate
+from ..cases.services import services as cases_services
 from .models import ClaimField, Claim
 from ..common.utils import docx_replace
-from .utils import base64_to_temp_file
+from ..common.utils import base64_to_temp_file
 
 from typing import List, Type, Union
 from pathlib import Path
@@ -344,6 +345,7 @@ def claim_get_data_by_id(claim_id: int, user: UserModel, **kwargs) -> dict:
     if claim:
         res = {
             'claim_data': {
+                'id': claim.pk,
                 'obj_number': claim.obj_number,
                 'obj_kind': claim.obj_kind.title,
                 'obj_kind_id': claim.obj_kind.id,
@@ -375,6 +377,12 @@ def claim_copy_docs_to_external_server(claim_id: int) -> None:
         to_folder_path = settings.EXTERNAL_MEDIA_ROOT / doc_folder_relative
 
         copy_tree(str(from_folder_path), str(to_folder_path))
+
+
+def claim_create_files_with_signs_info(claim_id: int, signs: list) -> None:
+    documents = Document.objects.filter(claim_id=claim_id)
+    for doc in documents:
+        cases_services.document_add_sign_info_to_file(doc.pk, signs)
 
 
 def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:

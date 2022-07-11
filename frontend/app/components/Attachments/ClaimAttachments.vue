@@ -38,7 +38,10 @@
       </button>
     </div>
 
-    <ModalEDS :documents-init="documents" @signedDoc="onSignedDocument" @signedAll="onSignedAll"></ModalEDS>
+    <ModalEDS :documents-init="documents"
+              :claim-data="claimData"
+              @signedDoc="onSignedDocument"
+              @signedAll="onSignedAll"></ModalEDS>
   </div>
 </template>
 
@@ -50,7 +53,7 @@ export default {
   name: "ClaimAttachments",
   props: {
     'documentsInit': Array,
-    'claimId': Number,
+    'claimData': Object,
   },
   components: {
     ModalEDS,
@@ -94,7 +97,7 @@ export default {
           true
       )
 
-      let response = await fetch('/filling/claim-status/' + this.claimId + '/')
+      let response = await fetch('/filling/claim-status/' + this.claimData.id + '/')
       if (response.ok) {
         let json = await response.json()
 

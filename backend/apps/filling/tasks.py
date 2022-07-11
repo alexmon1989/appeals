@@ -117,7 +117,7 @@ def create_case_task(claim_id: int, cert_data: dict) -> dict:
 
 
 @app.task
-def get_claim_list(cert_data: dict) -> list:
+def get_claim_list_task(cert_data: dict) -> list:
     """Возвращает список обращений пользователя."""
     res = []
     user = users_services.user_get_or_create_from_cert(cert_data)
@@ -138,3 +138,17 @@ def get_claim_list(cert_data: dict) -> list:
             item['case_number'] = claim.case.case_number
         res.append(item)
     return res
+
+
+@app.task
+def create_files_with_signs_info_task(cert_data: dict, claim_id: int, signs: list) -> bool:
+    """Создаёт файлы документов с информацией о цифровой подписи."""
+    user = users_services.user_get_or_create_from_cert(cert_data)
+    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status=2).first()
+
+    if claim:
+        filling_services.claim_create_files_with_signs_info(claim_id, signs)
+        filling_services.claim_copy_docs_to_external_server(claim_id)
+        return True
+
+    return False
