@@ -147,11 +147,11 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
             # Получение типа документа
             doc_type, created = DocumentType.objects.get_or_create(title=field.title)
 
-            # Удаление "старого" документа этого типа
-            Document.objects.filter(claim=claim, document_type=doc_type).delete()
-
             # Сохранение файла
             if field.field_type == ClaimField.FieldType.FILE:
+                # Удаление "старого" документа этого типа
+                Document.objects.filter(claim=claim, document_type=doc_type).delete()
+
                 # Создание документа
                 doc = Document.objects.create(
                     claim=claim,
