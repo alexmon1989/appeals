@@ -3,6 +3,12 @@
     <spinner v-if="loading"></spinner>
     <div class="min-vh-25" v-if="loading"></div>
 
+    <div class="alert alert-danger" role="alert" v-if="errors.length > 0">
+      <ul class="list-unstyled mb-0">
+        <li v-for="error in errors" v-html="error"></li>
+      </ul>
+    </div>
+
     <div v-if="claims.length > 0">
       <!--
         data-autofill="false|hover|click"
@@ -76,7 +82,7 @@
       </table>
     </div>
 
-    <div v-else-if="!loading">
+    <div v-else-if="!loading && errors.length === 0">
       <p class="mt-2">Звернення відсутні. Ви можете <a href="/filling/create-claim/">створити</a> ваше перше звернення.</p>
     </div>
   </div>
@@ -108,7 +114,7 @@ export default {
       this.$nextTick(() => { $.SOW.vendor.datatables.init('.table-datatable') })
 
     } catch (e) {
-      this.errors.push('Помилка 500. ПОмилка сервера.')
+      this.errors.push('Помилка 500. Помилка сервера.')
     } finally {
       this.loading = false
     }
