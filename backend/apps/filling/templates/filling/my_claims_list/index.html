@@ -7,11 +7,7 @@
 
     <!-- Primary -->
     <div class="section rounded mb-3">
-        {% if claims.count > 0 %}
-            {% include 'filling/my_claims_list/_partials/table.html' %}
-        {% else %}
-            <p class="mt-2">Звернення відсутні. Ви можете <a href="{% url 'create_claim' %}">створити</a> ваше перше звернення.</p>
-        {% endif %}
+        <claims-data-table task-id="{{ task_id }}"></claims-data-table>
     </div>
     <!-- /Primary -->
 

@@ -1,7 +1,6 @@
-from django.shortcuts import render, reverse
+from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
-from django.views.generic import ListView
 from django.views.generic.base import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib import messages
@@ -10,24 +9,25 @@ from django.contrib.auth.decorators import login_required
 
 from celery.result import AsyncResult
 
-from . import services as filling_services
 from ..common.mixins import LoginRequiredMixin
 from ..common.utils import qdict_to_dict
-from .models import Claim
 from ..users import services as users_services
 from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task,
-                    edit_claim_task, delete_claim_task, create_case_task, get_claim_status)
+                    edit_claim_task, delete_claim_task, create_case_task, get_claim_status, get_claim_list)
 from .utils import files_to_base64
 
 
-class MyClaimsListView(LoginRequiredMixin, ListView):
+class MyClaimsListView(LoginRequiredMixin, TemplateView):
     """Отображает страницу со списком обращений."""
-    model = Claim
     template_name = 'filling/my_claims_list/index.html'
-    context_object_name = 'claims'
 
-    def get_queryset(self):
-        return filling_services.claim_get_user_claims_qs(self.request.user)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        task = get_claim_list.delay(
+            users_services.certificate_get_data(self.request.session['cert_id'])
+        )
+        context['task_id'] = task.id
+        return context
 
 
 class CreateClaimView(LoginRequiredMixin, View):
