@@ -450,9 +450,13 @@ def document_create_main_claim_doc_file(claim: Claim, base_doc: Document) -> Doc
 
         master = doc_header
         composer = Composer(master)
-        doc_body = PyDocxDocument(base_doc.file)
+
+        f = open(base_doc.file.path, 'rb')
+        doc_body = PyDocxDocument(f)
+        # doc_body = PyDocxDocument(base_doc.file)
         composer.append(doc_body)
         composer.save(tmp_file_path)
+        f.close()
 
         # Поставить всему документу 12-й размер шрифта и Times New Roman
         input_doc = PyDocxDocument(tmp_file_path)

@@ -83,6 +83,12 @@ class Document(TimeStampModel):
         path = Path(self.file.name)
         return str(path).replace(path.stem, f"{path.stem}_signs")
 
+    @property
+    def folder_path(self):
+        """Возвращает путь к каталогу с файлами."""
+        path = Path(self.file.path)
+        return str(path.parent)
+
     def __str__(self):
         return self.document_type.title
 
