@@ -1,8 +1,13 @@
+from django.conf import settings
+
 from core.celery import app
 from . import services as filling_services
 from ..cases.services import services as cases_services
 from ..users import services as users_services
 from ..classifiers import services as classifiers_services
+
+import os
+import time
 
 
 @app.task
@@ -152,3 +157,20 @@ def create_files_with_signs_info_task(cert_data: dict, claim_id: int, signs: lis
         return True
 
     return False
+
+
+@app.task
+def clear_external_documents_folder(older_than_min: int = 60) -> None:
+    """Очищает каталог path. Удаляет файлы старше older_than_min минут, а затем удаляет пустые каталоги."""
+    for address, dirs, files in os.walk(settings.EXTERNAL_MEDIA_ROOT):
+        # Удаление старых файлов
+        for file in files:
+            full_path = os.path.join(address, file)
+            if os.stat(full_path).st_mtime < (time.time() - older_than_min*60):
+                os.remove(full_path)
+
+        # Удаление пустых каталогов
+        for dir_ in dirs:
+            full_path = os.path.join(address, dir_)
+            if not os.listdir(full_path):
+                os.rmdir(full_path)
