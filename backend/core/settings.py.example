@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'rest_framework',
     'django_vite',
+    'django_celery_beat',
 
     'apps.users',
     'apps.classifiers',
@@ -211,9 +212,11 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_EMAIL_TASK_CONFIG = {
     'ignore_result': True,
 }
+CELERY_RESULT_EXPIRES = 300
 
-ELASTIC_HOST = ''
-ELASTIC_INDEX_NAME = ''
+ELASTIC_HOST = '10.11.11.51:9200'
+#ELASTIC_HOST = 'localhost:9200'
+ELASTIC_INDEX_NAME = 'uma7'
 ELASTIC_TIMEOUT = 60
 
 # Каталог на внешнем сервере для временного хранения документов обращений

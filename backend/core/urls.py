@@ -18,7 +18,6 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic import RedirectView
-from django.conf.urls import url
 
 from rest_framework import routers
 
@@ -32,7 +31,7 @@ router.register(r'cases/(?P<id>\d+)/documents', cases_views.DocumentsViewSet, ba
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(url='filling/', permanent=True)),
-    url('^api/', include(router.urls)),
+    path('api/', include(router.urls)),
     path('cases/', include('apps.cases.urls')),
     path('filling/', include('apps.filling.urls')),
 
