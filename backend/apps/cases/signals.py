@@ -6,4 +6,4 @@ import shutil
 
 @receiver(post_delete, sender=Document)
 def delete_document_folder_hook(sender, instance, using, **kwargs):
-    shutil.rmtree(instance.folder_path,)
+    shutil.rmtree(instance.folder_path, ignore_errors=True)

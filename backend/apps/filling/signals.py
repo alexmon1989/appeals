@@ -7,4 +7,4 @@ import shutil
 @receiver(post_delete, sender=Claim)
 def delete_document_folder_hook(sender, instance, using, **kwargs):
     for doc in instance.document_set.all():
-        shutil.rmtree(doc.folder_path,)
+        shutil.rmtree(doc.folder_path, ignore_errors=True)
