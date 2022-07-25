@@ -382,7 +382,8 @@ def claim_copy_docs_to_external_server(claim_id: int) -> None:
 def claim_create_files_with_signs_info(claim_id: int, signs: list) -> None:
     documents = Document.objects.filter(claim_id=claim_id)
     for doc in documents:
-        cases_services.document_add_sign_info_to_file(doc.pk, signs)
+        if doc.sign_set.count() == 0:
+            cases_services.document_add_sign_info_to_file(doc.pk, signs)
 
 
 def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:
@@ -437,7 +438,8 @@ def document_create_main_claim_doc_file(claim: Claim, base_doc: Document) -> Doc
     doc_type = DocumentType.objects.filter(claim_kinds__id=claim.claim_kind.pk, create_with_claim=True).first()
     if doc_type:
         doc_template = DocumentTemplate.objects.filter(documents_types__code=doc_type.code).first()
-        doc_header = PyDocxDocument(doc_template.file.file)
+        f_header = open(doc_template.file.path, 'rb')
+        doc_header = PyDocxDocument(f_header)
 
         doc_data_to_replace = document_get_data_for_main_claim_doc_file(claim.pk)
         docx_replace(doc_header, doc_data_to_replace)
@@ -457,6 +459,7 @@ def document_create_main_claim_doc_file(claim: Claim, base_doc: Document) -> Doc
         composer.append(doc_body)
         composer.save(tmp_file_path)
         f.close()
+        f_header.close()
 
         # Поставить всему документу 12-й размер шрифта и Times New Roman
         input_doc = PyDocxDocument(tmp_file_path)

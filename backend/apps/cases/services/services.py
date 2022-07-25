@@ -114,7 +114,6 @@ def document_get_by_id(doc_id: int) -> Document:
 def document_add_sign_info_to_file(doc_id: int, signs: list) -> None:
     """Создаёт .docx с инф-ей о цифровых подписях в конце (на основе оригинального файла документа)"""
     document = document_get_by_id(doc_id)
-    print('Called')
 
     if Path(str(document.file)).suffix == '.docx':
         # Открытие документа

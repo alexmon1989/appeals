@@ -149,7 +149,7 @@ def get_claim_list_task(cert_data: dict) -> list:
 def create_files_with_signs_info_task(cert_data: dict, claim_id: int, signs: list) -> bool:
     """Создаёт файлы документов с информацией о цифровой подписи."""
     user = users_services.user_get_or_create_from_cert(cert_data)
-    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status=2).first()
+    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status__in=[1, 2]).first()
 
     if claim:
         filling_services.claim_create_files_with_signs_info(claim_id, signs)
