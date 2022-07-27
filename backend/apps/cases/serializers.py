@@ -32,6 +32,7 @@ class ClaimSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     obj_kind = ObjKindSerializer()
     claim_kind = ClaimKindSerializer()
+    submission_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
 
     class Meta:
         model = Claim
@@ -42,6 +43,7 @@ class ClaimSerializer(serializers.ModelSerializer):
             'obj_number',
             'obj_title',
             'third_person',
+            'submission_date',
         )
 
 

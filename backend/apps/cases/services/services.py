@@ -12,6 +12,7 @@ from ...filling import services as filling_services
 from typing import Iterable, List, Union
 from pathlib import Path
 from docx import Document as DocumentWord
+import datetime
 
 
 UserModel = get_user_model()
@@ -119,6 +120,7 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
             case_number=case_generate_next_number(),
         )
         claim.status = 3
+        claim.submission_date = datetime.datetime.now()
         claim.save()
         return case
     return None

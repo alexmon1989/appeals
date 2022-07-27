@@ -52,6 +52,7 @@
       <th data-data="claim.obj_number">№ заявки або ох. документа</th>
       <th data-data="claim.obj_kind.title">Вид ОПІВ</th>
       <th data-data="claim.obj_title">Назва ОПІВ</th>
+      <th data-data="claim.submission_date">Дата подання звернення</th>
       <th data-data="stage_verbal" data-name="stage">Стадія</th>
     </tr>
     </thead>
@@ -62,6 +63,7 @@
       <th>№ заявки або ох. документа</th>
       <th>Вид ОПІВ</th>
       <th>Назва ОПІВ</th>
+      <th>Дата подання звернення</th>
       <th>Стадія</th>
     </tr>
     </tfoot>

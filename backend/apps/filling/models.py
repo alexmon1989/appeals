@@ -88,6 +88,7 @@ class Claim(TimeStampModel):
         verbose_name="Користувач",
         null=True,
     )
+    submission_date = models.DateTimeField(verbose_name='Створено', null=True, blank=True)
     json_data = models.TextField('Дані звернення', blank=True, null=True)
 
     def __str__(self):
