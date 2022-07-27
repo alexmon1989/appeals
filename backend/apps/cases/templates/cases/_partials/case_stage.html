@@ -1,5 +1,7 @@
-{% if case.stage == 0 %}
+{% if case.stage == case.Stage.NEW %}
     <span class="text-danger fw-bold">{{ case.get_stage_display }}</span>
+{% elif case.stage == case.Stage.FINISHED %}
+    <span class="text-success fw-bold">{{ case.get_stage_display }}</span>
 {% else %}
-    {{ case.get_stage_display }}
+    <span class="text-primary fw-bold">В роботі</span>
 {% endif %}
