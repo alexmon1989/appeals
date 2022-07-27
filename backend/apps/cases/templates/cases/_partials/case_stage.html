@@ -1,0 +1,5 @@
+{% if case.stage == 0 %}
+    <span class="text-danger fw-bold">{{ case.get_stage_display }}</span>
+{% else %}
+    {{ case.get_stage_display }}
+{% endif %}

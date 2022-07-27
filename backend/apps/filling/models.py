@@ -71,6 +71,7 @@ class Claim(TimeStampModel):
     obj_kind = models.ForeignKey(ObjKind, on_delete=models.CASCADE, verbose_name='Тип об\'єкта')
     claim_kind = models.ForeignKey(ClaimKind, on_delete=models.CASCADE, verbose_name='Вид звернення')
     obj_number = models.CharField('Номер заявки або охоронного документа', max_length=255)
+    obj_title = models.CharField('Назва ОПІВ', max_length=1024)
     third_person = models.BooleanField('Апелянт - третя особа', default=False)
     status = models.PositiveIntegerField(
         'Статус',

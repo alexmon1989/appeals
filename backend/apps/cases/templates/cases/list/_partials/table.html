@@ -6,13 +6,13 @@
 
 -->
 <table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
-       id="table-documents"
-       data-lng-empty="No data available in table"
+       id="table-cases"
+       data-lng-empty="Справи відсутні"
        data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
        data-lng-filtered="(filtered from _MAX_ total entries)"
        data-lng-loading="Loading..."
        data-lng-processing="Processing..."
-       data-lng-search="Пошук..."
+       data-lng-search="Пошук по назві, номеру справи, номеру заявки/ох.документа"
        data-lng-norecords="Результати відсутні"
        data-lng-sort-ascending=": activate to sort column ascending"
        data-lng-sort-descending=": activate to sort column descending"
@@ -36,38 +36,36 @@
        data-enable-export="false"
 
        data-custom-config='{
-        "stateSave": true,
+        "stateSave": false,
         "server-side": true,
         "processing": true,
         "serverSide": true,
         "ajax": "/api/cases/?format=datatables",
-        "order": []
+        "order": [],
+        "columnDefs": [
+            {
+                "targets": [2, 4],
+                "searchable": false
+            }
+        ]
        }'>
     <thead>
     <tr>
-        <th data-data="case_number_link" data-name="case_number">№</th>
-        <th data-data="app_number">№ заявки</th>
-        <th data-data="obj_kind_title" data-name="obj_kind.title">Вид об'єкта</th>
-        <th data-data="claim_kind_title" data-name="claim_kind.title">Вид заяви</th>
-        <th data-data="obj_title" >Назва об'єкта</th>
-        <th data-data="applicant_name">Апелянт</th>
-        <th data-data="claim_date">Дата подання</th>
-        <th data-data="deadline">Дата, до якої необхідно розглянути</th>
-        <th data-data="hearing">Дата засідання</th>
+        <th data-data="case_number_link" data-name="case_number">№ справи</th>
+        <th data-data="claim.obj_number">№ заявки або ох. документа</th>
+        <th data-data="claim.obj_kind.title">Вид ОПІВ</th>
+        <th data-data="claim.obj_title">Назва ОПІВ</th>
+        <th data-data="stage_verbal" data-name="stage">Стадія</th>
     </tr>
     </thead>
 
     <tfoot>
     <tr>
         <th>№ справи</th>
-        <th>№ заявки</th>
-        <th>Вид об'єкта</th>
-        <th>Вид заяви</th>
-        <th>Назва об'єкта</th>
-        <th>Апелянт</th>
-        <th>Дата подання</th>
-        <th>Дата, до якої необхідно розглянути</th>
-        <th>Дата засідання</th>
+        <th>№ заявки або ох. документа</th>
+        <th>Вид ОПІВ</th>
+        <th>Назва ОПІВ</th>
+        <th>Стадія</th>
     </tr>
     </tfoot>
 </table>

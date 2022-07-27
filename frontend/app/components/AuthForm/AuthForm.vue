@@ -51,7 +51,7 @@ export default {
       // const csrftoken = document.getElementsByName('csrfmiddlewaretoken')[0].value
       const csrftoken = getCookie('csrftoken')
       try {
-        const response = await fetch('/users/login/', {
+        const response = await fetch('/users/login-ds/', {
           method: 'POST',
           body: JSON.stringify(this.$root.keyInfo),
           headers: {

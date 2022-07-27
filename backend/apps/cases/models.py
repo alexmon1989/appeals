@@ -15,6 +15,13 @@ UserModel = get_user_model()
 
 class Case(TimeStampModel):
     """Модель дела."""
+    class Stage(models.IntegerChoices):
+        NEW = 0, "Нове звернення"
+        CREATING_COLLEGIUM = 1, "Створення розпорядження про створення колегії"
+        CLAIM_ACCEPTENCE = 2, "Прийняття до розгляду звернення"
+        CLAIM_EXAMINATION = 3, "Розгляд звернення"
+        FINISHED = 8, "Розгляд звернення"
+
     claim = models.OneToOneField(Claim, on_delete=models.SET_NULL, verbose_name='Звернення', null=True, blank=True)
     case_number = models.CharField('Номер справи', max_length=255, blank=True, null=True)
     collegium = models.ManyToManyField(
@@ -48,6 +55,7 @@ class Case(TimeStampModel):
     )
     deadline = models.DateField('Дата, до якої необхідно розглянути звернення', null=True, blank=True)
     hearing = models.DateField('Дата призначенного засідання', null=True, blank=True)
+    stage = models.IntegerField('Стадія розгляду', choices=Stage.choices, default=0)
 
     def __str__(self):
         return self.case_number

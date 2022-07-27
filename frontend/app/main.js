@@ -4,6 +4,7 @@ import AuthForm from './components/AuthForm/AuthForm.vue'
 import ClaimAttachments from './components/Attachments/ClaimAttachments.vue'
 import ClaimDetails from './components/ClaimDetails/ClaimDetails.vue'
 import ClaimsDataTable from './components/ClaimsDataTable/ClaimsDataTable.vue'
+import CasesList from './components/CasesList/CasesList.vue'
 import { defineRule, configure } from 'vee-validate'
 import AllRules from '@vee-validate/rules'
 import { localize, setLocale } from '@vee-validate/i18n'
@@ -28,6 +29,7 @@ const app = createApp({
         ClaimAttachments,
         ClaimDetails,
         ClaimsDataTable,
+        CasesList,
     }
 })
 

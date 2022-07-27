@@ -36,10 +36,13 @@ class User(AbstractUser):
     def belongs_to_group(self, group_name: str) -> bool:
         return self.groups.filter(name=group_name).exists()
 
+    def belongs_to_groups(self, group_names: list) -> bool:
+        return self.groups.filter(name__in=group_names).exists()
+
     @property
     def is_privileged(self) -> bool:
         """Привилегированный пользователь."""
-        return self.is_superuser and self.belongs_to_group('Голова апеляційної палати')
+        return self.is_superuser or self.belongs_to_groups(['Голова апеляційної палати', 'Секретар'])
 
     @property
     def is_applicant(self) -> bool:

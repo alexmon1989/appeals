@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 
 from ..models import Case, Document, Sign
 from ..utils import set_cell_border
@@ -17,11 +17,12 @@ from docx import Document as DocumentWord
 UserModel = get_user_model()
 
 
-def case_get_list(user: UserModel = None) -> Iterable[Case]:
+def case_get_list() -> QuerySet[Case]:
     """Возвращает список апелляционных дел, к которым есть доступ у пользователя"""
     cases = Case.objects.select_related(
-        'obj_kind',
-        'claim_kind',
+        'claim',
+        'claim__obj_kind',
+        'claim__claim_kind',
         'papers_owner',
         'expert',
         'secretary',
@@ -33,11 +34,29 @@ def case_get_list(user: UserModel = None) -> Iterable[Case]:
         'document_set__sign_set',
     )
 
-    # Оставляет только ап. дела, к которым у пользователя есть доступ
-    if user and user.is_authenticated \
-            and not user.is_privileged \
-            and not user.belongs_to_group('Голова апеляційної палати'):
-        cases = cases.filter(case_get_user_has_access_filter(user))
+    return cases
+
+
+def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str = None, obj_kind: int = None,
+                        stage: str = None) -> Iterable[Case]:
+    """Фильтрует список ап. дел по определённым параметрам."""
+
+    # Оставляет только ап. дела, к которым имеет отношение пользователь
+    if user and user == 'me':
+        current_user = UserModel.objects.get(pk=current_user_id)
+        cases = cases.filter(case_get_user_has_access_filter(current_user))
+
+    # Фильтр по типу ОИС
+    if obj_kind and obj_kind != 'all':
+        cases = cases.filter(claim__obj_kind__id=obj_kind)
+
+    if stage:
+        if stage == 'new':
+            cases = cases.filter(stage=Case.Stage.NEW)
+        elif stage == 'finished':
+            cases = cases.filter(stage=Case.Stage.FINISHED)
+        elif stage == 'processing':
+            cases = cases.exclude(stage__in=[Case.Stage.FINISHED, Case.Stage.NEW])
 
     return cases
 

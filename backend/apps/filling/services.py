@@ -52,6 +52,7 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
         claim_kind_id=post_data['claim_kind'],
         third_person=post_data.get('third_person', False),
         obj_number=post_data[stage_3_field],
+        obj_title=post_data['obj_title'],
         json_data=json.dumps(claim_process_input_data(post_data)),
         user=user
     )
@@ -132,6 +133,7 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
     claim.claim_kind_id = post_data['claim_kind']
     claim.third_person = post_data.get('third_person', False)
     claim.obj_number = post_data[stage_3_field]
+    claim.obj_title = post_data['obj_title']
     claim.json_data = json.dumps(claim_process_input_data(post_data))
     claim.user = user
     claim.save()

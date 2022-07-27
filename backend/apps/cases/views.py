@@ -18,12 +18,14 @@ from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer
 from ..common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_task
+from ..classifiers import services as classifiers_services
 
 
 @login_required
 def cases_list(request):
     """Отображает страницу со списком апелляционных дел."""
-    return render(request, 'cases/list/index.html')
+    obj_kinds = classifiers_services.get_obj_kinds_list()
+    return render(request, 'cases/list/index.html', {'obj_kinds': obj_kinds})
 
 
 class CasesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -31,7 +33,14 @@ class CasesViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CaseSerializer
 
     def get_queryset(self):
-        return services.case_get_list(user=self.request.user)
+        all_cases = services.case_get_list()
+        return services.case_filter_dt_list(
+            all_cases,
+            self.request.user.id,
+            self.request.GET.get('user'),
+            self.request.GET.get('objKind'),
+            self.request.GET.get('stage'),
+        )
 
 
 class CaseDetailView(LoginRequiredMixin, DetailView):

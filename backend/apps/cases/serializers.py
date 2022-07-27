@@ -3,6 +3,7 @@ from django.template.loader import render_to_string
 from rest_framework import serializers
 from .models import Document, Sign, Case
 from ..classifiers.models import DocumentType, ClaimKind, ObjKind
+from ..filling.models import Claim
 
 
 class ClaimKindSerializer(serializers.ModelSerializer):
@@ -24,6 +25,23 @@ class ObjKindSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+        )
+
+
+class ClaimSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    obj_kind = ObjKindSerializer()
+    claim_kind = ClaimKindSerializer()
+
+    class Meta:
+        model = Claim
+        fields = (
+            'id',
+            'obj_kind',
+            'claim_kind',
+            'obj_number',
+            'obj_title',
+            'third_person',
         )
 
 
@@ -102,14 +120,9 @@ class DocumentSerializer(serializers.ModelSerializer):
 
 class CaseSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    obj_kind = ObjKindSerializer()
-    claim_kind = ClaimKindSerializer()
-    obj_kind_title = serializers.ReadOnlyField(source='obj_kind.title')
-    claim_kind_title = serializers.ReadOnlyField(source='claim_kind.title')
-    claim_date = serializers.DateField(format='%d.%m.%Y')
-    deadline = serializers.DateField(format='%d.%m.%Y')
-    hearing = serializers.DateField(format='%d.%m.%Y')
     case_number_link = serializers.SerializerMethodField()
+    claim = ClaimSerializer()
+    stage_verbal = serializers.SerializerMethodField()
 
     class Meta:
         model = Case
@@ -117,21 +130,22 @@ class CaseSerializer(serializers.ModelSerializer):
             'id',
             'case_number',
             'case_number_link',
-            'app_number',
-            'obj_kind',
-            'claim_kind',
-            'obj_kind_title',
-            'claim_kind_title',
-            'obj_title',
-            'applicant_name',
-            'claim_date',
-            'deadline',
-            'hearing',
+            'claim',
+            'stage',
+            'stage_verbal',
         )
 
     def get_case_number_link(self, case: Case):
         return render_to_string(
             'cases/_partials/case_number_link.html',
+            {
+                'case': case
+            }
+        )
+
+    def get_stage_verbal(self, case: Case):
+        return render_to_string(
+            'cases/_partials/case_stage.html',
             {
                 'case': case
             }
