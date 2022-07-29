@@ -54,9 +54,9 @@ def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str =
 
     if stage and stage != 'all':
         if stage == 'new':
-            cases = cases.filter(stage_item__code='0_1')
+            cases = cases.filter(stage_step__code='0_1')
         else:
-            cases = cases.exclude(stage_item__code='0_1')
+            cases = cases.exclude(stage_step__code='0_1')
 
     return cases
 

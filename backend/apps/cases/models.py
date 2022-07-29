@@ -86,7 +86,7 @@ class CaseStageStep(TimeStampModel):
     class Meta:
         verbose_name = 'Етап стадії справи'
         verbose_name_plural = 'Етапи стадій справ'
-        db_table = 'cases_stage_item'
+        db_table = 'cases_stage_step'
 
 
 class Document(TimeStampModel):

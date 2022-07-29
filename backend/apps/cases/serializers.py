@@ -133,7 +133,6 @@ class CaseSerializer(serializers.ModelSerializer):
             'case_number',
             'case_number_link',
             'claim',
-            'stage_item',
             'stage_verbal',
         )
 
