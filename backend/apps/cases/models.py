@@ -95,6 +95,7 @@ class Document(TimeStampModel):
     case = models.ForeignKey(Case, on_delete=models.SET_NULL, null=True, verbose_name='Справа')
     document_type = models.ForeignKey(DocumentType, on_delete=models.SET_NULL, null=True, verbose_name='Тип документа')
     registration_number = models.CharField('Реєстраційний номер', max_length=255, null=True, blank=True)
+    barcode = models.CharField('Штрихкод', max_length=255, null=True, blank=True)
     registration_date = models.DateField('Дата реєстрації', null=True, blank=True)
     output_date = models.DateField('Дата відправлення', null=True, blank=True)
     input_date = models.DateField('Дата отримання', null=True, blank=True)

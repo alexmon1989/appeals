@@ -1,5 +1,3 @@
-import datetime
-
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.db.models import Count, Q, QuerySet
@@ -13,6 +11,7 @@ from typing import Iterable, List, Union
 from pathlib import Path
 from docx import Document as DocumentWord
 import datetime
+import random
 
 
 UserModel = get_user_model()
@@ -123,6 +122,12 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
         claim.status = 3
         claim.submission_date = datetime.datetime.now()
         claim.save()
+
+        # Присваивание документам номеров и штрихкодов
+        for doc in claim.document_set.all():
+            document_set_reg_number(doc.pk)
+            document_set_barcode(doc.pk)
+
         return case
     return None
 
@@ -192,6 +197,25 @@ def document_add_sign_info_to_file(doc_id: int, signs: list) -> None:
 
     # Смена статуса обращения если все документы подписаны
     # filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
+
+
+def document_set_reg_number(doc_id: int) -> str:
+    """Присваивает документу регистрационный номер, который возвращает глобальный нумератор."""
+    if settings.DEBUG:
+        numbers = ''.join([str(random.randint(0, 9)) for _ in range(5)])
+        document = Document.objects.get(pk=doc_id)
+        document.registration_number = f"Вх-{numbers}/2022"
+        document.save()
+    return ''
+
+
+def document_set_barcode(doc_id: int) -> str:
+    """Присваивает документу штрихкод, который возвращает глобальный нумератор."""
+    if settings.DEBUG:
+        document = Document.objects.get(pk=doc_id)
+        document.barcode = ''.join([str(random.randint(0, 9)) for _ in range(32)])
+        document.save()
+    return ''
 
 
 def document_get_signs_info(doc_id: int) -> List[dict]:
