@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Case, CollegiumMembership, Document, Sign, DocumentTemplate
+from .models import Case, CollegiumMembership, Document, Sign, DocumentTemplate, CaseStage, CaseStageStep
 from .services import services
 
 
@@ -43,3 +43,23 @@ class DocumentTemplateAdmin(admin.ModelAdmin):
     list_display = (
         'title',
     )
+
+
+@admin.register(CaseStage)
+class CaseStageAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'number',
+    )
+
+
+@admin.register(CaseStageStep)
+class CaseStageItemAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'stage',
+        'code',
+    )
+
+    def get_queryset(self, request):
+        return CaseStageStep.objects.select_related('stage')

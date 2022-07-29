@@ -15,13 +15,6 @@ UserModel = get_user_model()
 
 class Case(TimeStampModel):
     """Модель дела."""
-    class Stage(models.IntegerChoices):
-        NEW = 0, "Нове звернення"
-        CREATING_COLLEGIUM = 1, "Створення розпорядження про створення колегії"
-        CLAIM_ACCEPTENCE = 2, "Прийняття до розгляду звернення"
-        CLAIM_EXAMINATION = 3, "Розгляд звернення"
-        FINISHED = 8, "Розгляд звернення"
-
     claim = models.OneToOneField(Claim, on_delete=models.SET_NULL, verbose_name='Звернення', null=True, blank=True)
     case_number = models.CharField('Номер справи', max_length=255, blank=True, null=True)
     collegium = models.ManyToManyField(
@@ -55,7 +48,8 @@ class Case(TimeStampModel):
     )
     deadline = models.DateField('Дата, до якої необхідно розглянути звернення', null=True, blank=True)
     hearing = models.DateField('Дата призначенного засідання', null=True, blank=True)
-    stage = models.IntegerField('Стадія розгляду', choices=Stage.choices, default=0)
+    stage_step = models.ForeignKey('CaseStageStep', on_delete=models.SET_NULL, verbose_name='Етап стадії розгляду',
+                                   null=True, blank=True)
 
     def __str__(self):
         return self.case_number
@@ -64,6 +58,35 @@ class Case(TimeStampModel):
         verbose_name = 'Справа'
         verbose_name_plural = 'Справи'
         db_table = 'cases_cases_list'
+
+
+class CaseStage(TimeStampModel):
+    """Модель стадии дела."""
+    title = models.CharField('Назва стадії', max_length=255)
+    number = models.PositiveSmallIntegerField('Номер стадії', null=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Стадія справи'
+        verbose_name_plural = 'Стадії справи'
+        db_table = 'cases_stage'
+
+
+class CaseStageStep(TimeStampModel):
+    """Модель этапа стадии дела."""
+    title = models.CharField('Назва етапу', max_length=1024)
+    stage = models.ForeignKey(CaseStage, on_delete=models.CASCADE, verbose_name='Стадія')
+    code = models.CharField('Код етапу', max_length=16)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Етап стадії справи'
+        verbose_name_plural = 'Етапи стадій справ'
+        db_table = 'cases_stage_item'
 
 
 class Document(TimeStampModel):

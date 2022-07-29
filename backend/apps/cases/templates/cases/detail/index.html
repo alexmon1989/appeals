@@ -7,24 +7,12 @@
 {% block main %}
     {% include 'cases/detail/_partials/header.html' %}
 
+    {% include 'cases/detail/_partials/stage.html' %}
+
     {% include 'cases/detail/_partials/details.html' %}
 
-    {% include 'cases/detail/_partials/documents.html' %}
 
     {% include 'cases/detail/_partials/payments.html' %}
 
     {% include 'cases/digital_sign/modal.html' %}
-{% endblock %}
-
-{% block extra_scripts %}
-    <script type="text/JavaScript" src="{% static 'digital_sign/euutils.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/euscpt.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/euscpm.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/euscp.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/ds_file.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/qr/qrcodedecode.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/qr/reedsolomon.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/fs/Blob.min.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/fs/FileSaver.js' %}"></script>
-    <script type="text/JavaScript" src="{% static 'digital_sign/modal.js' %}"></script>
 {% endblock %}

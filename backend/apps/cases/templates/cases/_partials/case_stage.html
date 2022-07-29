@@ -1,7 +1,5 @@
-{% if case.stage == case.Stage.NEW %}
-    <span class="text-danger fw-bold text-nowrap">{{ case.get_stage_display }}</span>
-{% elif case.stage == case.Stage.FINISHED %}
-    <span class="text-success fw-bold text-nowrap">{{ case.get_stage_display }}</span>
+{% if case.stage_item.code == '0_1' %}
+    <span class="text-danger fw-bold text-nowrap">Нова справа</span>
 {% else %}
     <span class="text-primary fw-bold text-nowrap">В роботі</span>
 {% endif %}

@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.db.models import Count, Q, QuerySet
 
-from ..models import Case, Document, Sign
+from ..models import Case, Document, Sign, CaseStage, CaseStageStep
 from ..utils import set_cell_border
 from ...filling.models import Claim
 from ...filling import services as filling_services
@@ -27,6 +27,8 @@ def case_get_list() -> QuerySet[Case]:
         'papers_owner',
         'expert',
         'secretary',
+        'stage_step',
+        'stage_step__stage',
     ).prefetch_related(
         'collegiummembership_set__person',
         'document_set',
@@ -51,13 +53,11 @@ def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str =
     if obj_kind and obj_kind != 'all':
         cases = cases.filter(claim__obj_kind__id=obj_kind)
 
-    if stage:
+    if stage and stage != 'all':
         if stage == 'new':
-            cases = cases.filter(stage=Case.Stage.NEW)
-        elif stage == 'finished':
-            cases = cases.filter(stage=Case.Stage.FINISHED)
-        elif stage == 'processing':
-            cases = cases.exclude(stage__in=[Case.Stage.FINISHED, Case.Stage.NEW])
+            cases = cases.filter(stage_item__code='0_1')
+        else:
+            cases = cases.exclude(stage_item__code='0_1')
 
     return cases
 
@@ -118,11 +118,37 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
         case = Case.objects.create(
             claim=claim,
             case_number=case_generate_next_number(),
+            stage_step=CaseStageStep.objects.get(code='0_1')
         )
         claim.status = 3
         claim.submission_date = datetime.datetime.now()
         claim.save()
         return case
+    return None
+
+
+def case_get_stages(case_id: int) -> Union[List[dict], None]:
+    """Возвращает стадии ап. дела."""
+    case = case_get_list().filter(pk=case_id).first()
+    if case:
+        stages = CaseStage.objects.order_by('number')
+        res = []
+        current_stage_number = case.stage_step.stage.number
+        for stage in stages:
+
+            if current_stage_number > stage.number:
+                status = 'done'
+            elif current_stage_number == stage.number:
+                status = 'current'
+            else:
+                status = 'not-active'
+
+            res.append({
+                'title': stage.title,
+                'number': stage.number,
+                'status': status
+            })
+        return res
     return None
 
 

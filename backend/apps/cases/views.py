@@ -49,7 +49,12 @@ class CaseDetailView(LoginRequiredMixin, DetailView):
     template_name = 'cases/detail/index.html'
 
     def get_queryset(self):
-        return services.case_get_list(user=self.request.user)
+        return services.case_get_list()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['stages'] = services.case_get_stages(self.object.pk)
+        return context
 
 
 class CaseCreateView(LoginRequiredMixin, CreateView):
