@@ -4,23 +4,22 @@
         <h4>Основна інформація</h4>
     </div>
 
-
     <div class="row">
         <div class="col">
             <div class="text-muted text-uppercase">Номер справи</div>
             <div class="fw-medium mb-3">{{ case.case_number }}</div>
 
-            <div class="text-muted text-uppercase">Номер заявки</div>
-            <div class="fw-medium mb-3">{{ case.app_number }}</div>
+            <div class="text-muted text-uppercase">Номер заявки або охоронного документа</div>
+            <div class="fw-medium mb-3">{{ case.claim.obj_number }}</div>
 
             <div class="text-muted text-uppercase">Вид об'єкта</div>
-            <div class="fw-medium mb-3">{{ case.obj_kind.title }}</div>
+            <div class="fw-medium mb-3">{{ case.claim.obj_kind.title }}</div>
 
             <div class="text-muted text-uppercase">Вид заяви/заперечення</div>
-            <div class="fw-medium mb-3">{{ case.claim_kind.title }}</div>
+            <div class="fw-medium mb-3">{{ case.claim.claim_kind.title }}</div>
 
             <div class="text-muted text-uppercase">Назва об'єкта</div>
-            <div class="fw-medium mb-3">{{ case.obj_title }}</div>
+            <div class="fw-medium mb-3">{{ case.claim.obj_title }}</div>
 
             <div class="text-muted text-uppercase">Найменування апелянта</div>
             <div class="fw-medium mb-3">{{ case.applicant_name }}</div>
