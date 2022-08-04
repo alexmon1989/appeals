@@ -1,4 +1,11 @@
 <template>
+  <div class="row my-4">
+    <div class="d-flex">
+      <div class="text-muted text-uppercase me-3">Дата подання звернення:</div>
+      <div class="fw-medium">{{ claimData.submission_date }}</div>
+    </div>
+  </div>
+
   <div class="row mb-3">
     <div class="col">
       <h2 class="h5 mb-3 text-indigo-800">Дані об'єкта</h2>

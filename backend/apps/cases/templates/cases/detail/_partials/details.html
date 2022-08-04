@@ -18,7 +18,7 @@
             <claim-data :claim-data="{{ claim.claim_data }}" :stages="{{ claim.stages }}"></claim-data>
         </div>
         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-            <p>В розробці</p>
+            {% include 'cases/_partials/case_details.html' %}
         </div>
     </div>
 
