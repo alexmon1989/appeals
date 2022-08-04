@@ -1,0 +1,18 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Список справ{% endblock %}
+
+{% block main %}
+    {% include 'archive/list/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+
+        {% include 'archive/list/_partials/filters.html' %}
+
+        {% include 'archive/list/_partials/table.html' %}
+
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

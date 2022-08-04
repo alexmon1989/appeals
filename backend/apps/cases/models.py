@@ -50,6 +50,7 @@ class Case(TimeStampModel):
     hearing = models.DateField('Дата призначенного засідання', null=True, blank=True)
     stage_step = models.ForeignKey('CaseStageStep', on_delete=models.SET_NULL, verbose_name='Етап стадії розгляду',
                                    null=True, blank=True)
+    archived = models.BooleanField('Передано в архів', default=False)
 
     def __str__(self):
         return self.case_number
@@ -79,6 +80,7 @@ class CaseStageStep(TimeStampModel):
     title = models.CharField('Назва етапу', max_length=1024)
     stage = models.ForeignKey(CaseStage, on_delete=models.CASCADE, verbose_name='Стадія')
     code = models.CharField('Код етапу', max_length=16)
+    case_stopped = models.BooleanField('Діловодство припинено', default=False)
 
     def __str__(self):
         return self.title
@@ -96,9 +98,9 @@ class Document(TimeStampModel):
     document_type = models.ForeignKey(DocumentType, on_delete=models.SET_NULL, null=True, verbose_name='Тип документа')
     registration_number = models.CharField('Реєстраційний номер', max_length=255, null=True, blank=True)
     barcode = models.CharField('Штрихкод', max_length=255, null=True, blank=True)
-    registration_date = models.DateField('Дата реєстрації', null=True, blank=True)
-    output_date = models.DateField('Дата відправлення', null=True, blank=True)
-    input_date = models.DateField('Дата отримання', null=True, blank=True)
+    registration_date = models.DateTimeField('Дата реєстрації', null=True, blank=True)
+    output_date = models.DateTimeField('Дата відправлення', null=True, blank=True)
+    input_date = models.DateTimeField('Дата отримання', null=True, blank=True)
     file = models.FileField(
         verbose_name='Оригінальний файл документа',
         upload_to=document_get_original_file_path
@@ -175,7 +177,7 @@ class Sign(TimeStampModel):
     timestamp = models.CharField('Мітка часу', max_length=255)
 
     def __str__(self):
-        return f"{self.document.case.case_number} - {self.document.document_name} - {self.subject}"
+        return f"{self.document.case.case_number} - {self.document.document_type} - {self.subject}"
 
     def save(self, *args, **kwargs):
         """Переопределение метода сохранения для обеспечения структуры каталогов."""

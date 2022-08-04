@@ -1,0 +1,17 @@
+{% extends 'base_cabinet.html' %}
+
+{% load static %}
+
+{% block title %}Список сповіщень{% endblock %}
+
+{% block main %}
+    {% include 'notifications/list/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+
+        {% include 'notifications/list/_partials/table.html' %}
+
+    </div>
+    <!-- /Primary -->
+{% endblock %}

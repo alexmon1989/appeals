@@ -1,0 +1,18 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Пошук справ{% endblock %}
+
+{% block main %}
+    {% include 'search/index/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+
+        {% include 'search/index/_partials/filters.html' %}
+
+        {% include 'search/index/_partials/table.html' %}
+
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

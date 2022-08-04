@@ -60,7 +60,7 @@
 
 <script>
 export default {
-  name: "ClaimStages",
+  name: "ClaimData",
   props: ["claimData", "stages",],
   methods: {
     processValue(item) {

@@ -4,80 +4,23 @@
         <h4>Основна інформація</h4>
     </div>
 
-    <div class="row">
-        <div class="col">
-            <div class="text-muted text-uppercase">Номер справи</div>
-            <div class="fw-medium mb-3">{{ case.case_number }}</div>
+    <ul class="nav nav-tabs nav-lg mb-3" id="myTab">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="home-tab" data-bs-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Дані звернення</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Дані справи</a>
+        </li>
+    </ul>
 
-            <div class="text-muted text-uppercase">Номер заявки або охоронного документа</div>
-            <div class="fw-medium mb-3">{{ case.claim.obj_number }}</div>
-
-            <div class="text-muted text-uppercase">Вид об'єкта</div>
-            <div class="fw-medium mb-3">{{ case.claim.obj_kind.title }}</div>
-
-            <div class="text-muted text-uppercase">Вид заяви/заперечення</div>
-            <div class="fw-medium mb-3">{{ case.claim.claim_kind.title }}</div>
-
-            <div class="text-muted text-uppercase">Назва об'єкта</div>
-            <div class="fw-medium mb-3">{{ case.claim.obj_title }}</div>
-
-            <div class="text-muted text-uppercase">Найменування апелянта</div>
-            <div class="fw-medium mb-3">{{ case.applicant_name }}</div>
-
-            <div class="text-muted text-uppercase">Найменування представника апелянта</div>
-            <div class="fw-medium mb-3">{{ case.applicant_represent }}</div>
-
-            <div class="text-muted text-uppercase">Адреса для листування</div>
-            <div class="fw-medium">{{ case.mailing_address }}</div>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <claim-data :claim-data="{{ claim.claim_data }}" :stages="{{ claim.stages }}"></claim-data>
         </div>
-
-        <div class="col">
-            <div class="text-muted text-uppercase">Члени колегії</div>
-            <div class="fw-medium mb-3">
-                <ul class="list-unstyled">
-                {% for person in case.collegiummembership_set.all %}
-                    <li>
-                        {{ person.person.get_full_name }}{% if person.is_head %} <span class="text-indigo-600">(голова колегії)</span>{% endif %}
-                        {% if person.person.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ person.person.phone_number }}</span>{% endif %}
-                    </li>
-                {% endfor %}
-                </ul>
-            </div>
-
-            <div class="text-muted text-uppercase">Секретар</div>
-            <div class="fw-medium mb-3">
-                {{ case.secretary.get_full_name }}
-                {% if case.secretary.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ case.secretary.phone_number }}</span>{% endif %}
-            </div>
-
-            <div class="text-muted text-uppercase">Третя особа</div>
-            <div class="fw-medium mb-3">
-                {{ case.expert.get_full_name|default:"Не призначено" }}
-                {% if case.expert.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ case.expert.phone_number }}</span>{% endif %}
-            </div>
-
-            <div class="text-muted text-uppercase">Особа, у якої знаходиться паперова справа</div>
-            <div class="fw-medium mb-3">
-                {{ case.papers_owner.get_full_name }}
-                {% if case.papers_owner.phone_number %}<br class="d-block mb-n1"><span class="smaller text-gray-600">тел.: {{ case.papers_owner.phone_number }}</span>{% endif %}
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="text-muted text-uppercase">Дата подання заперечення</div>
-            <div class="fw-medium mb-3">
-                {{ case.claim_date|default_if_none:"Не призначено" }}
-            </div>
-
-            <div class="text-muted text-uppercase">Дата, до якої необхідно розглянути заперечення</div>
-            <div class="fw-medium mb-3">
-                {{ case.deadline|default_if_none:"Не призначено" }}
-            </div>
-
-            <div class="text-muted text-uppercase">Дата призначеного засідання</div>
-            <div class="fw-medium mb-3">
-                {{ case.hearing|default_if_none:"Не призначено" }}
-            </div>
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <p>В розробці</p>
         </div>
     </div>
+
+
 </div>

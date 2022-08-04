@@ -34,6 +34,10 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('cases/', include('apps.cases.urls')),
     path('filling/', include('apps.filling.urls')),
+    path('archive/', include('apps.archive.urls')),
+    path('notifications/', include('apps.notifications.urls')),
+    path('search/', include('apps.search.urls')),
+    path('statistics/', include('apps.stats.urls')),
 
     path('users/', include('apps.users.urls')),
     path('users/', include('django.contrib.auth.urls')),

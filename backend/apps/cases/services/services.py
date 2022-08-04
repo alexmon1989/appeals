@@ -32,7 +32,6 @@ def case_get_list() -> QuerySet[Case]:
         'collegiummembership_set__person',
         'document_set',
         'document_set__document_type',
-        'document_set__document_name',
         'document_set__sign_set',
     )
 
@@ -85,9 +84,8 @@ def case_get_user_has_access_filter(user: UserModel = None) -> Q:
 def case_get_documents_list(case_id: int) -> Iterable[Document]:
     """Возвращает документы дела."""
     queryset = Document.objects.filter(
-        case_id=case_id
+        Q(case_id=case_id) | Q(claim_id=Case.objects.get(pk=case_id).claim_id)
     ).select_related(
-        'document_name',
         'document_type'
     ).prefetch_related(
         'sign_set'
@@ -138,13 +136,15 @@ def case_get_stages(case_id: int) -> Union[List[dict], None]:
     if case:
         stages = CaseStage.objects.order_by('number')
         res = []
-        current_stage_number = case.stage_step.stage.number
+        current_stage_step = case.stage_step
         for stage in stages:
-
-            if current_stage_number > stage.number:
+            if current_stage_step.stage.number > stage.number:
                 status = 'done'
-            elif current_stage_number == stage.number:
-                status = 'current'
+            elif current_stage_step.stage.number == stage.number:
+                if current_stage_step.case_stopped:
+                    status = 'done'
+                else:
+                    status = 'current'
             else:
                 status = 'not-active'
 

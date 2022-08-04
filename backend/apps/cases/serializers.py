@@ -75,11 +75,10 @@ class SignTypeSerializer(serializers.ModelSerializer):
 class DocumentSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     document_type = DocumentTypeSerializer()
-    document_name_title = serializers.ReadOnlyField(source='document_name.title')
     document_type_title = serializers.ReadOnlyField(source='document_type.title')
-    registration_date = serializers.DateField(format='%d.%m.%Y')
-    output_date = serializers.DateField(format='%d.%m.%Y')
-    input_date = serializers.DateField(format='%d.%m.%Y')
+    registration_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
+    output_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
+    input_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
     signs_count = serializers.ReadOnlyField()
     signs_info = serializers.SerializerMethodField()
     actions = serializers.SerializerMethodField()
@@ -106,7 +105,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'document_type_title',
-            'document_name_title',
             'registration_number',
             'registration_date',
             'output_date',
@@ -116,7 +114,6 @@ class DocumentSerializer(serializers.ModelSerializer):
             'actions',
 
             'document_type',
-            'document_name',
         )
 
 

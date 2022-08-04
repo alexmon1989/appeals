@@ -13,6 +13,7 @@ from ..users import services as users_services
 from ..common.utils import files_to_base64
 
 from .services import services
+from ..filling import services as filling_services
 from .models import Case
 from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer
@@ -54,6 +55,7 @@ class CaseDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['stages'] = services.case_get_stages(self.object.pk)
+        context['claim'] = filling_services.claim_get_data_by_id(self.object.claim.pk)
         return context
 
 
@@ -110,3 +112,23 @@ def ds_token(request):
 
 def ds_iframe(request):
     return render(request, template_name='cases/digital_sign/iframe.html')
+
+
+def decisions(request, date):
+    return JsonResponse([
+        {
+            'obj_type': 6,
+            'decision_date': '2022-08-01',
+            'decision_file': '/media/publications/0001_2022/decision.pdf',
+            'order_file': '/media/publications/0001_2022/order.pdf',
+            'obj_title': 'cmapto, смарто',
+            'tm_image': '/media/publications/0001_2022/image.jpg',
+        },
+        {
+            'obj_type': 4,
+            'decision_date': '2022-08-01',
+            'decision_file': '/media/publications/0004_2022/decision.pdf',
+            'order_file': '/media/publications/0004_2022/order.pdf',
+            'obj_title': 'ЕТИКЕТКА',
+        },
+    ], safe=False)

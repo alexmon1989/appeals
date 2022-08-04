@@ -1,0 +1,18 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Статистика{% endblock %}
+
+{% block main %}
+    {% include 'stats/index/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+
+        {% include 'stats/index/_partials/filters.html' %}
+
+        {% include 'stats/index/_partials/table.html' %}
+
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

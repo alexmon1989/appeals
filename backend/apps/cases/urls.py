@@ -12,4 +12,5 @@ urlpatterns = [
     path('ds-file/', views.ds_file, name='cases_ds_file'),
     path('ds-token/', views.ds_token, name='cases_ds_token'),
     path('ds-iframe/', views.ds_iframe, name='cases_ds_iframe'),
+    path('decisions/<str:date>', views.decisions, name='cases_decisions'),
 ]

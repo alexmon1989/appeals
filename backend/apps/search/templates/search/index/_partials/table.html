@@ -1,0 +1,122 @@
+<h5 class="mb-4 mt-5">Результати пошуку</h5>
+
+<div class="mb-4">
+    <button class="btn btn-primary btn-sm">
+        <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-file-excel" viewBox="0 0 16 16">
+          <path d="M5.18 4.616a.5.5 0 0 1 .704.064L8 7.219l2.116-2.54a.5.5 0 1 1 .768.641L8.651 8l2.233 2.68a.5.5 0 0 1-.768.64L8 8.781l-2.116 2.54a.5.5 0 0 1-.768-.641L7.349 8 5.116 5.32a.5.5 0 0 1 .064-.704z"></path>
+          <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"></path>
+        </svg>
+        Експорт у Excel
+    </button>
+</div>
+
+<!--
+
+	data-autofill="false|hover|click"
+	data-enable-paging="true"			 false = show all, no pagination
+	data-items-per-page="10|15|30|50|100"
+
+-->
+<table class="table-datatable table table-bordered table-hover table-striped"
+	data-lng-empty="No data available in table"
+	data-lng-page-info="Показано _START_ з _END_ of _TOTAL_ записів"
+	data-lng-filtered="(filtered from _MAX_ total entries)"
+	data-lng-loading="Loading..."
+	data-lng-processing="Processing..."
+	data-lng-search="Пошук..."
+	data-lng-norecords="No matching records found"
+	data-lng-sort-ascending=": activate to sort column ascending"
+	data-lng-sort-descending=": activate to sort column descending"
+
+	data-main-search="false"
+	data-column-search="false"
+	data-row-reorder="false"
+	data-col-reorder="true"
+	data-responsive="true"
+	data-header-fixed="true"
+	data-select-onclick="true"
+	data-enable-paging="true"
+	data-enable-col-sorting="true"
+	data-autofill="false"
+	data-group="false"
+	data-items-per-page="10"
+
+	data-enable-column-visibility="true"
+	data-lng-column-visibility="Видимість стовбчиків"
+
+	data-enable-export="false"
+	data-lng-export="<i class='fi fi-squared-dots fs-5 lh-1'></i>"
+	data-lng-csv="CSV"
+	data-lng-pdf="PDF"
+	data-lng-xls="XLS"
+	data-lng-copy="Copy"
+	data-lng-print="Print"
+	data-lng-all="All"
+	data-export-pdf-disable-mobile="true"
+	data-export='["csv", "pdf", "xls"]'
+	data-options='["copy", "print"]'
+
+	data-custom-config='{}'>
+	<thead>
+    <tr>
+        <th>№ справи</th>
+        <th>№ заявки або ох. документа</th>
+        <th>Вид ОПІВ</th>
+        <th>Назва ОПІВ</th>
+        <th>Дата подання звернення</th>
+        <th>Дата рішення</th>
+    </tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td class="fw-bold"><a href="#">0001/2022</a></td>
+			<td>318331</td>
+			<td>Торговельна марка</td>
+			<td>cmapto, смарто</td>
+			<td>29.05.2022 14:18:42</td>
+			<td>29.07.2022 14:18:42</td>
+		</tr>
+		<tr>
+			<td class="fw-bold"><a href="#">0002/2022</a></td>
+			<td>10001</td>
+			<td>Винахід</td>
+			<td>cmapto, смарто</td>
+			<td>29.05.2022 14:18:42</td>
+			<td>29.07.2022 14:18:42</td>
+		</tr>
+		<tr>
+			<td class="fw-bold"><a href="#">0003/2022</a></td>
+			<td>318332</td>
+			<td>Торговельна марка</td>
+			<td>ersag</td>
+			<td>29.05.2022 14:18:42</td>
+			<td>29.07.2022 14:18:42</td>
+		</tr>
+		<tr>
+			<td class="fw-bold"><a href="#">0004/2022</a></td>
+			<td>5566</td>
+			<td>Промиловий зразок</td>
+			<td>ЕТИКЕТКА</td>
+			<td>29.05.2022 14:18:42</td>
+			<td>29.07.2022 14:18:42</td>
+		</tr>
+		<tr>
+			<td class="fw-bold"><a href="#">0005/2022</a></td>
+			<td>m201900001</td>
+			<td>Торговельна марка</td>
+			<td>granatus</td>
+			<td>29.05.2022 14:18:42</td>
+			<td>29.07.2022 14:18:42</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<th>№ справи</th>
+            <th>№ заявки або ох. документа</th>
+            <th>Вид ОПІВ</th>
+            <th>Назва ОПІВ</th>
+            <th>Дата подання звернення</th>
+            <th>Дата рішення</th>
+		</tr>
+	</tfoot>
+</table>

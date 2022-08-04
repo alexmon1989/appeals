@@ -281,7 +281,7 @@ def claim_get_stages_details(claim: Claim) -> dict:
     return stages
 
 
-def claim_get_documents_qs(claim_id: int, user_id: int) -> QuerySet[Document]:
+def claim_get_documents_qs(claim_id: int) -> QuerySet[Document]:
     """Возвращает список документов обращения."""
     documents = Document.objects.filter(
         claim_id=claim_id,
@@ -289,7 +289,7 @@ def claim_get_documents_qs(claim_id: int, user_id: int) -> QuerySet[Document]:
     ).select_related(
         'document_type'
     ).prefetch_related(
-        Prefetch('sign_set', queryset=Sign.objects.filter(user_id=user_id))
+        Prefetch('sign_set', queryset=Sign.objects.all())
     ).order_by(
         '-auto_generated',
         'document_type'
@@ -298,9 +298,9 @@ def claim_get_documents_qs(claim_id: int, user_id: int) -> QuerySet[Document]:
     return documents
 
 
-def claim_get_documents(claim_id: int, user_id: int) -> list:
+def claim_get_documents(claim_id: int) -> list:
     """Возвращает список документов обращения в формате json."""
-    documents = claim_get_documents_qs(claim_id, user_id)
+    documents = claim_get_documents_qs(claim_id)
     res = []
     for document in documents:
         res.append({
@@ -341,9 +341,12 @@ def claim_set_status_if_all_docs_signed(claim_id: Type[int]) -> None:
         claim.save()
 
 
-def claim_get_data_by_id(claim_id: int, user: UserModel, **kwargs) -> dict:
+def claim_get_data_by_id(claim_id: int, user: UserModel = None, **kwargs) -> dict:
     """Возвращает данные обращения пользователя."""
-    claim = claim_get_user_claims_qs(user).filter(pk=claim_id, **kwargs).first()
+    if user:
+        claim = claim_get_user_claims_qs(user).filter(pk=claim_id, **kwargs).first()
+    else:
+        claim = Claim.objects.filter(pk=claim_id, **kwargs).first()
     if claim:
         res = {
             'claim_data': {
@@ -357,7 +360,7 @@ def claim_get_data_by_id(claim_id: int, user: UserModel, **kwargs) -> dict:
                 'status': claim.status,
             },
             'stages': claim_get_stages_details(claim),
-            'documents': claim_get_documents(claim, user.pk)
+            'documents': claim_get_documents(claim)
         }
 
         if claim.status == 3:
