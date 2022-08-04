@@ -12,6 +12,7 @@ from rest_framework import viewsets
 
 from ..users import services as users_services
 from ..common.utils import files_to_base64
+from ..common.decorators import group_required
 
 from .services import services
 from ..filling import services as filling_services
@@ -67,6 +68,8 @@ class CaseCreateView(LoginRequiredMixin, CreateView):
     fields = ['case_number']
 
 
+@login_required
+@group_required('Секретар')
 def take_to_work(request, pk: int):
     """Принимает дело в работу и переадресовывает на страницу деталей дела."""
     if services.case_take_to_work(pk, request.user.pk):

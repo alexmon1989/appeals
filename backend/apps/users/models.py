@@ -42,12 +42,19 @@ class User(AbstractUser):
     @property
     def is_privileged(self) -> bool:
         """Привилегированный пользователь."""
-        return self.is_superuser or self.belongs_to_groups(['Голова апеляційної палати', 'Секретар'])
+        return self.is_superuser or self.belongs_to_groups(
+            ['Голова апеляційної палати', 'Заступник голови апеляційної палати', 'Секретар']
+        )
 
     @property
     def is_applicant(self) -> bool:
-        """Привилегированный пользователь."""
+        """Заявитель."""
         return self.belongs_to_group('Заявник')
+
+    @property
+    def is_secretary(self) -> bool:
+        """Секретарь."""
+        return self.belongs_to_group('Секретар')
 
 
 class CertificateOwner(TimeStampModel):
