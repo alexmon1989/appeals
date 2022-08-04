@@ -79,7 +79,7 @@ class CaseStageStep(TimeStampModel):
     """Модель этапа стадии дела."""
     title = models.CharField('Назва етапу', max_length=1024)
     stage = models.ForeignKey(CaseStage, on_delete=models.CASCADE, verbose_name='Стадія')
-    code = models.CharField('Код етапу', max_length=16)
+    code = models.PositiveIntegerField('Код етапу')
     case_stopped = models.BooleanField('Діловодство припинено', default=False)
 
     def __str__(self):
@@ -89,6 +89,27 @@ class CaseStageStep(TimeStampModel):
         verbose_name = 'Етап стадії справи'
         verbose_name_plural = 'Етапи стадій справ'
         db_table = 'cases_stage_step'
+
+
+class CaseHistory(TimeStampModel):
+    """Модель истории дела."""
+    action = models.CharField('Дія', max_length=1024)
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, verbose_name='Справа')
+    user = models.ForeignKey(
+        UserModel,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Користувач",
+    )
+
+    def __str__(self):
+        return self.action
+
+    class Meta:
+        verbose_name = 'Дія по справі'
+        verbose_name_plural = 'Дії по справі'
+        db_table = 'cases_history'
 
 
 class Document(TimeStampModel):

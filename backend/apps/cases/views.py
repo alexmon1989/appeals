@@ -1,7 +1,8 @@
 import json
 
-from django.http import JsonResponse
-from django.shortcuts import render
+from django.http import JsonResponse, Http404
+from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
@@ -64,6 +65,14 @@ class CaseCreateView(LoginRequiredMixin, CreateView):
     model = Case
     template_name = 'cases/create/index.html'
     fields = ['case_number']
+
+
+def take_to_work(request, pk: int):
+    """Принимает дело в работу и переадресовывает на страницу деталей дела."""
+    if services.case_take_to_work(pk, request.user.pk):
+        messages.success(request, 'Справу прийнято в роботу.')
+        return redirect('cases-detail', pk=pk)
+    raise Http404()
 
 
 @require_POST

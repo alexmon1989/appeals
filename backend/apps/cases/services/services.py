@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.db.models import Count, Q, QuerySet
 
-from ..models import Case, Document, Sign, CaseStage, CaseStageStep
+from ..models import Case, Document, Sign, CaseStage, CaseStageStep, CaseHistory
 from ..utils import set_cell_border
 from ...filling.models import Claim
 from ...filling import services as filling_services
@@ -53,9 +53,9 @@ def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str =
 
     if stage and stage != 'all':
         if stage == 'new':
-            cases = cases.filter(stage_step__code='0_1')
+            cases = cases.filter(stage_step__code=1000)
         else:
-            cases = cases.exclude(stage_step__code='0_1')
+            cases = cases.filter(stage_step__code__gt=1000)
 
     return cases
 
@@ -155,6 +155,27 @@ def case_get_stages(case_id: int) -> Union[List[dict], None]:
             })
         return res
     return None
+
+
+def case_add_history_action(case_id: int, action: str, user_id: int) -> None:
+    """Добавляет действие в историю действий дела."""
+    CaseHistory.objects.create(
+        case_id=case_id,
+        action=action,
+        user_id=user_id
+    )
+
+
+def case_take_to_work(case_id: int, user_id: int) -> bool:
+    """Принимает дело в работу (назначает секретаря и меняет статус на 1_1)."""
+    case = Case.objects.filter(pk=case_id, stage_step__code=1000).first()
+    if case:
+        case.secretary_id = user_id
+        case.stage_step = CaseStageStep.objects.get(code=2000)  # Прийнято в роботу. Очікує на заповнення досьє.
+        case.save()
+        case_add_history_action(case_id, 'Прийнято в роботу.', user_id)
+        return True
+    return False
 
 
 def document_get_by_id(doc_id: int) -> Document:
