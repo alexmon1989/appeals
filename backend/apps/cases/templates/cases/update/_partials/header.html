@@ -1,11 +1,12 @@
 <header>
     <div class="row g-1 align-items-center">
         <div class="col">
-            <h1 class="h4">Створення справи</h1>
+            <h1 class="h4">Зміна даних справи №{{ case.case_number }}</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small">
                     <li class="breadcrumb-item"><a href="{% url 'cases-list' %}">Апеляційні справи</a></li>
-                    <li class="breadcrumb-item text-muted active" aria-current="page">Створення справи</li>
+                    <li class="breadcrumb-item"><a href="{% url 'cases-list' %}">Список справ</a></li>
+                    <li class="breadcrumb-item text-muted active" aria-current="page">Зміна даних справи №{{ case.case_number }}</li>
                 </ol>
             </nav>
         </div>

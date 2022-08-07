@@ -1,8 +1,13 @@
 <template>
   <div class="row my-4">
-    <div class="d-flex">
+    <div class="d-flex mb-3">
       <div class="text-muted text-uppercase me-3">Дата подання звернення:</div>
       <div class="fw-medium">{{ claimData.submission_date }}</div>
+    </div>
+
+    <div class="d-flex">
+      <div class="text-muted text-uppercase me-3">Тип звернення:</div>
+      <div class="fw-medium">{{ claimData.claim_kind }}</div>
     </div>
   </div>
 

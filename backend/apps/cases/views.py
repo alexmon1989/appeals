@@ -2,12 +2,15 @@ import json
 
 from django.http import JsonResponse, Http404
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import UpdateView
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
+
 from rest_framework import viewsets
 
 from ..users import services as users_services
@@ -21,6 +24,7 @@ from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer
 from ..common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_task
+from .forms import CaseUpdateForm
 from ..classifiers import services as classifiers_services
 
 
@@ -61,11 +65,30 @@ class CaseDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class CaseCreateView(LoginRequiredMixin, CreateView):
-    """Отображает страницу создания апелляционного дела."""
+@method_decorator(group_required('Секретар'), name='dispatch')
+class CaseUpdateView(LoginRequiredMixin, UpdateView):
+    """Отображает страницу обновления данных дела."""
     model = Case
-    template_name = 'cases/create/index.html'
-    fields = ['case_number']
+    form_class = CaseUpdateForm
+    template_name = 'cases/update/index.html'
+
+    def get_queryset(self):
+        return services.case_get_list().filter(secretary=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        messages.success(self.request, 'Дані успішно збережено.')
+        if self.request.POST.get('goto_2001'):
+            messages.success(
+                self.request,
+                'Стадію справи змінено на "Досьє заповнено. Очікує на розподіл колегії." (код 2001).'
+            )
+            return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
+        return reverse_lazy('cases_update', kwargs={'pk': self.kwargs['pk']})
 
 
 @login_required

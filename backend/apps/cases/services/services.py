@@ -115,7 +115,7 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
         case = Case.objects.create(
             claim=claim,
             case_number=case_generate_next_number(),
-            stage_step=CaseStageStep.objects.get(code='0_1')
+            stage_step=CaseStageStep.objects.get(code=1000)
         )
         claim.status = 3
         claim.submission_date = datetime.datetime.now()
@@ -167,7 +167,7 @@ def case_add_history_action(case_id: int, action: str, user_id: int) -> None:
 
 
 def case_take_to_work(case_id: int, user_id: int) -> bool:
-    """Принимает дело в работу (назначает секретаря и меняет статус на 1_1)."""
+    """Принимает дело в работу (назначает секретаря и меняет статус на 2000)."""
     case = Case.objects.filter(pk=case_id, stage_step__code=1000).first()
     if case:
         case.secretary_id = user_id

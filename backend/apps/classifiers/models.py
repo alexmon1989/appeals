@@ -18,6 +18,10 @@ class ObjKind(TimeStampModel):
 
 class ClaimKind(TimeStampModel):
     """Модель вида заявления/возражения."""
+    class ObjStateChoices(models.IntegerChoices):
+        APPLICATION = 1  # заявка
+        PROTECTIVE_DOC = 2  # охранный документ
+
     title = models.CharField("Назва", max_length=255)
     template_title = models.CharField("Назва для шаблону MS Word", max_length=255, null=True, blank=True)
     obj_kind = models.ForeignKey(
@@ -27,6 +31,11 @@ class ClaimKind(TimeStampModel):
         null=True,
     )
     third_person = models.BooleanField("3-тя особа", default=False)
+    obj_state = models.PositiveIntegerField(
+        'Статус об\'єкта',
+        choices=ObjStateChoices.choices,
+        default=ObjStateChoices.APPLICATION
+    )
 
     def __str__(self):
         return f"{self.obj_kind.title}: {self.title}"
@@ -66,3 +75,22 @@ class DocumentType(TimeStampModel):
         verbose_name = "Тип документа"
         verbose_name_plural = "Типи документів"
         db_table = 'cl_document_kinds'
+
+
+class RefusalReason(TimeStampModel):
+    """Модель основания для отказа в предоставлении правовой охраны."""
+    title = models.CharField("Назва", max_length=255)
+    obj_kind = models.ForeignKey(
+        ObjKind,
+        on_delete=models.SET_NULL,
+        verbose_name="Вид об'єкта промислової власності",
+        null=True,
+    )
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Підстава для відмови у наданні правової охорони"
+        verbose_name_plural = "Підстави для відмови у наданні правової охорони"
+        db_table = 'cl_refusal_reasons'

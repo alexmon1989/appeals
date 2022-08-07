@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 from ..common.models import TimeStampModel
-from ..classifiers.models import ObjKind, ClaimKind, DocumentType
+from ..classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason
 from .utils import sign_get_file_path, document_get_original_file_path
 
 from ..filling.models import Claim
@@ -51,6 +51,11 @@ class Case(TimeStampModel):
     stage_step = models.ForeignKey('CaseStageStep', on_delete=models.SET_NULL, verbose_name='Етап стадії розгляду',
                                    null=True, blank=True)
     archived = models.BooleanField('Передано в архів', default=False)
+    refusal_reasons = models.ManyToManyField(
+        RefusalReason,
+        verbose_name='Підстави для відмови у наданні правової охорони',
+        blank=True,
+    )
 
     def __str__(self):
         return self.case_number
