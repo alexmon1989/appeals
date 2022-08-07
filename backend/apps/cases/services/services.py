@@ -171,11 +171,23 @@ def case_take_to_work(case_id: int, user_id: int) -> bool:
     case = Case.objects.filter(pk=case_id, stage_step__code=1000).first()
     if case:
         case.secretary_id = user_id
-        case.stage_step = CaseStageStep.objects.get(code=2000)  # Прийнято в роботу. Очікує на заповнення досьє.
         case.save()
-        case_add_history_action(case_id, 'Прийнято в роботу.', user_id)
+        case_change_stage_step(case_id, 2000, user_id)
         return True
     return False
+
+
+def case_change_stage_step(case_id: int, stage_step_code: int, user_id: int) -> None:
+    """Присваивает делу новую стадию и делает отметку в журнале дела."""
+    case = Case.objects.get(pk=case_id)
+    stage_step = CaseStageStep.objects.get(code=stage_step_code)
+    case.stage_step = stage_step
+    case.save()
+    case_add_history_action(
+        case_id,
+        f'Зміна стадії справи на "{stage_step.title}" (код {stage_step.code})',
+        user_id
+    )
 
 
 def document_get_by_id(doc_id: int) -> Document:

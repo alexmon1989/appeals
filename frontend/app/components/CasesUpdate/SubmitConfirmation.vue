@@ -1,6 +1,5 @@
 <template>
-  <!-- Small -->
-  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModalSm">
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModalSm" @click="setMessage">
     <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-save" viewBox="0 0 16 16">
       <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"></path>
     </svg>
@@ -18,9 +17,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
-        <div class="modal-body">
-          Ви впевнені, що бажаєте зберегти дані?
-        </div>
+        <div class="modal-body" v-html="message"></div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-sm btn-primary" @click="save">
@@ -41,9 +38,22 @@
 <script>
 export default {
   name: "SubmitConfiramation",
+  data() {
+    return {
+      'message': ''
+    }
+  },
   methods: {
     save() {
       document.getElementById('case-update-form').submit()
+    },
+    setMessage() {
+      let message = 'Ви впевнені, що бажаєте зберегти дані?'
+      const goto_2001_checked = document.getElementById('id_goto_2001').checked
+      if (goto_2001_checked) {
+        message += '<br><br><span class="fw-bold text-danger">Увага! Стадію справи буде змінено на "Досьє заповнено. Очікує на розподіл колегії" (код стадії - 2001)"</span>'
+      }
+      this.message = message
     }
   }
 }

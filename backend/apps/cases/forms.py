@@ -1,14 +1,15 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.utils.safestring import mark_safe
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit, Div
+from crispy_forms.layout import Layout, Div
 
 from dateutil.relativedelta import relativedelta
 
-from .models import Case, CaseStageStep
+from .models import Case
 from ..classifiers.models import RefusalReason
-from .services.services import case_add_history_action
+from .services.services import case_add_history_action, case_change_stage_step
 
 
 UserModel = get_user_model()
@@ -22,7 +23,7 @@ class ExpertField(forms.ModelChoiceField):
 class CaseUpdateForm(forms.ModelForm):
     goto_2001 = forms.BooleanField(
         required=False,
-        label='Досьє справи заповнено. Перейти до стадії "Досьє заповнено. Очікує на розподіл колегії" (код стадії - 2001).'
+        label=mark_safe('Перейти до стадії <b>"Досьє заповнено. Очікує на розподіл колегії" (код стадії - 2001)</b>.')
     )
     expert = ExpertField(queryset=UserModel.objects.filter(groups__name='Секретар'), label='Експерт', required=False)
     submission_date = forms.DateField(
@@ -89,13 +90,5 @@ class CaseUpdateForm(forms.ModelForm):
         case_add_history_action(self.instance.id, 'Зміна даних справи', self.user.pk)
 
         # Переход к стадии 2001 - "Досьє заповнено. Очікує на розподіл колегії."
-        if self.cleaned_data.get('goto_2001'):
-            self.instance.stage_step = CaseStageStep.objects.get(code=2001)
-            self.instance.save()
-            case_add_history_action(
-                self.instance.id,
-                'Зміна стадії справи на "Досьє заповнено. Очікує на розподіл колегії." (код 2001)',
-                self.user.pk
-            )
-
-
+        if self.cleaned_data.get('goto_2001') and self.instance.stage_step.code == 2000:
+            case_change_stage_step(self.instance.pk, 2001, self.user.pk)
