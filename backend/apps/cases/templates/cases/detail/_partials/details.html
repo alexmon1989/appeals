@@ -6,19 +6,25 @@
 
     <ul class="nav nav-tabs nav-lg mb-3" id="myTab">
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="home-tab" data-bs-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Дані звернення</a>
+            <a class="nav-link active" id="claim-data-tab" data-bs-toggle="tab" href="#claim-data" role="tab" aria-controls="home" aria-selected="true">Дані звернення</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Дані справи</a>
+            <a class="nav-link" id="case-data-tab" data-bs-toggle="tab" href="#case-data" role="tab" aria-controls="profile" aria-selected="false">Дані справи</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="history-data-tab" data-bs-toggle="tab" href="#history-data" role="tab" aria-controls="profile" aria-selected="false">Історія дій</a>
         </li>
     </ul>
 
     <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+        <div class="tab-pane fade show active" id="claim-data" role="tabpanel" aria-labelledby="claim-data-tab">
             <claim-data :claim-data="{{ claim.claim_data }}" :stages="{{ claim.stages }}"></claim-data>
         </div>
-        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        <div class="tab-pane fade" id="case-data" role="tabpanel" aria-labelledby="case-data-tab">
             {% include 'cases/_partials/case_details.html' %}
+        </div>
+        <div class="tab-pane fade" id="history-data" role="tabpanel" aria-labelledby="history-data-tab">
+            {% include 'cases/detail/_partials/history.html' %}
         </div>
     </div>
 

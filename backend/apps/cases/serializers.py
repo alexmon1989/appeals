@@ -1,7 +1,7 @@
 from django.template.loader import render_to_string
 
 from rest_framework import serializers
-from .models import Document, Sign, Case
+from .models import Document, Sign, Case, CaseHistory
 from ..classifiers.models import DocumentType, ClaimKind, ObjKind
 from ..filling.models import Claim
 
@@ -148,3 +148,16 @@ class CaseSerializer(serializers.ModelSerializer):
                 'case': case
             }
         )
+
+
+class CaseHistorySerializer(serializers.ModelSerializer):
+    user_fullname = serializers.ReadOnlyField(source='user.get_full_name')
+    created_at = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
+
+    class Meta:
+        model = CaseHistory
+        fields = [
+            'action',
+            'user_fullname',
+            'created_at',
+        ]

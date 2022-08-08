@@ -191,6 +191,11 @@ def case_change_stage_step(case_id: int, stage_step_code: int, user_id: int) -> 
     )
 
 
+def case_get_history(case_id: int):
+    """Возвращает историю действий по ап. делу."""
+    return CaseHistory.objects.filter(case_id=case_id).order_by('-created_at')
+
+
 def document_get_by_id(doc_id: int) -> Document:
     """Возвращает документ по его идентификатору."""
     doc = Document.objects.filter(pk=doc_id).prefetch_related('sign_set', 'document_type')

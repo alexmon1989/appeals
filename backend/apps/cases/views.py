@@ -21,7 +21,7 @@ from .services import services
 from ..filling import services as filling_services
 from .models import Case
 from .permissions import HasAccessToCase
-from .serializers import DocumentSerializer, CaseSerializer
+from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializer
 from ..common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_task
 from .forms import CaseUpdateForm
@@ -127,6 +127,15 @@ class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return services.case_get_documents_list(self.kwargs['id'])
+
+
+class CaseHistoryViewSet(viewsets.ReadOnlyModelViewSet):
+    """Возвращает JSON с документами дела."""
+    serializer_class = CaseHistorySerializer
+    permission_classes = (HasAccessToCase,)
+
+    def get_queryset(self):
+        return services.case_get_history(self.kwargs['id'])
 
 
 def document_signs_info(request, document_id: int):

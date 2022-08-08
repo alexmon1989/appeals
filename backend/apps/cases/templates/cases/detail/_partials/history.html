@@ -1,0 +1,54 @@
+<table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
+       id="table-history"
+       data-lng-empty="No data available in table"
+       data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
+       data-lng-filtered="(filtered from _MAX_ total entries)"
+       data-lng-loading="Loading..."
+       data-lng-processing="Processing..."
+       data-lng-search="Пошук..."
+       data-lng-norecords="Результати відсутні"
+       data-lng-sort-ascending=": activate to sort column ascending"
+       data-lng-sort-descending=": activate to sort column descending"
+
+       data-main-search="false"
+       data-column-search="false"
+       data-row-reorder="false"
+       data-col-reorder="true"
+       data-responsive="true"
+       data-header-fixed="true"
+       data-select-onclick="false"
+       data-enable-paging="true"
+       data-enable-col-sorting="true"
+       data-autofill="false"
+       data-group="false"
+       data-items-per-page="15"
+
+       data-enable-column-visibility="true"
+       data-lng-column-visibility="Видимість стовбчиків"
+
+       data-enable-export="false"
+
+       data-custom-config='{
+        "stateSave": false,
+        "server-side": true,
+        "processing": true,
+        "serverSide": true,
+        "ajax": "/api/cases/{{ case.pk }}/history/?format=datatables",
+        "order": []
+       }'>
+    <thead>
+    <tr>
+        <th data-data="action" data-orderable="false">Дія</th>
+        <th data-data="user_fullname" data-orderable="false">Користувач</th>
+        <th data-data="created_at" class="text-nowrap">Дата</th>
+    </tr>
+    </thead>
+
+    <tfoot>
+    <tr>
+        <th>Дія</th>
+        <th>Користувач</th>
+        <th>Дата</th>
+    </tr>
+    </tfoot>
+</table>

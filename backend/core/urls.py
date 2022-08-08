@@ -27,6 +27,7 @@ from apps.cases import views as cases_views
 router = routers.DefaultRouter()
 router.register(r'cases', cases_views.CasesViewSet, basename='Case')
 router.register(r'cases/(?P<id>\d+)/documents', cases_views.DocumentsViewSet, basename='Document')
+router.register(r'cases/(?P<id>\d+)/history', cases_views.CaseHistoryViewSet, basename='CaseHistory')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
