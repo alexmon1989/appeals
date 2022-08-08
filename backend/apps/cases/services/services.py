@@ -33,6 +33,7 @@ def case_get_list() -> QuerySet[Case]:
         'document_set',
         'document_set__document_type',
         'document_set__sign_set',
+        'refusal_reasons'
     )
 
     return cases

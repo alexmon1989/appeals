@@ -41,20 +41,19 @@ class CaseUpdateForm(forms.ModelForm):
 
     class Meta:
         model = Case
-        fields = ['refusal_reasons', 'expert']
+        fields = ['refusal_reasons', 'expert', 'deadline']
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
         super().__init__(*args, **kwargs)
 
-        claim_kind = self.instance.claim.claim_kind.title.lower()
-        if 'заперечення' in claim_kind:
+        if self.instance.claim.claim_kind.claim_sense == 'DE':
             self.fields['refusal_reasons'] = forms.ModelMultipleChoiceField(
                 widget=forms.CheckboxSelectMultiple,
                 queryset=RefusalReason.objects.filter(obj_kind=self.instance.claim.obj_kind),
                 label='Підстава, з якої оскаржується рішення за запереченням'
             )
-        elif 'апеляційна заява' in claim_kind:
+        elif self.instance.claim.claim_kind.claim_sense == 'AP':
             self.fields['refusal_reasons'] = forms.ModelMultipleChoiceField(
                 widget=forms.CheckboxSelectMultiple,
                 queryset=RefusalReason.objects.filter(obj_kind=self.instance.claim.obj_kind),
@@ -65,7 +64,8 @@ class CaseUpdateForm(forms.ModelForm):
 
         self.fields['submission_date'].initial = self.instance.claim.submission_date.strftime('%Y-%m-%d')
         self.fields['submission_date'].help_text = 'Недоступне для редагування, оскільки канал надходження звернення - "веб-форма"'
-        self.fields['deadline'].initial = (self.instance.claim.submission_date + relativedelta(months=2)).strftime('%Y-%m-%d')
+        if not self.initial['deadline']:
+            self.initial['deadline'] = (self.instance.claim.submission_date + relativedelta(months=2)).strftime('%Y-%m-%d')
         self.fields['deadline'].help_text = 'Значення формується автоматично'
 
         self.helper = FormHelper()

@@ -1,3 +1,65 @@
-{% if case.stage_step.code == '0_1' %}
-    <p class="lead fw-bold my-4">Дані справи відсутні, оскільки справу не прийнято в роботу.</p>
-{% endif %}
+<div class="row mt-4">
+    <div class="col">
+        {% if case.claim.claim_kind.claim_sense %}
+            {% if case.claim.claim_kind.claim_sense == 'DE' %}
+                <div class="text-muted text-uppercase">Підстава, з якої оскаржується рішення за запереченням</div>
+            {% elif case.claim.claim_kind.claim_sense == 'AP' %}
+                <div class="text-muted text-uppercase">Підстава, з якої визнається недійсним охоронний документ за апеляційною заявою</div>
+            {% endif %}
+            <div class="fw-medium mb-3">
+                {% if case.refusal_reasons.count > 0 %}
+                    <ul>
+                        {% for reason in case.refusal_reasons.all %}
+                            <li>{{ reason.title }}{% if not forloop.last %};{% else %}.{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <i class="text-black-50">Не заповнено</i>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="text-muted text-uppercase">ПІБ призначених членів колегії</div>
+        <div class="fw-medium mb-3"><i class="text-black-50">Колегію не сформовано</i></div>
+
+        <div class="text-muted text-uppercase">ПІБ секретаря</div>
+        <div class="fw-medium mb-3">
+            {% if case.secretary %}
+                {{ case.secretary.get_full_name }}
+            {% else %}
+                <i>Справу не прийнято в роботу</i>
+            {% endif %}
+        </div>
+
+        <div class="text-muted text-uppercase">ПІБ експерта</div>
+        <div class="fw-medium mb-3">
+            {% if case.secretary %}
+                {{ case.expert.get_full_name }}
+            {% else %}
+                <i class="text-black-50">Не призначено</i>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col">
+        <div class="text-muted text-uppercase">Дата, до якої необхідно розглянути звернення</div>
+        <div class="fw-medium mb-3">
+            {% if case.deadline %}
+                {{ case.deadline|date:"SHORT_DATE_FORMAT" }}
+            {% else %}
+                <i class="text-black-50">Не визначено</i>
+            {% endif %}
+        </div>
+
+        <div class="text-muted text-uppercase">Дата призначеного засідання (засідань)</div>
+        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+
+        <div class="text-muted text-uppercase">Дата прийняття колегією рішення</div>
+        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+
+        <div class="text-muted text-uppercase">Дата затвердження рішення наказом</div>
+        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+
+        <div class="text-muted text-uppercase">Дата публікації рішення на сайті</div>
+        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+    </div>
+</div>

@@ -19,8 +19,12 @@ class ObjKind(TimeStampModel):
 class ClaimKind(TimeStampModel):
     """Модель вида заявления/возражения."""
     class ObjStateChoices(models.IntegerChoices):
-        APPLICATION = 1  # заявка
-        PROTECTIVE_DOC = 2  # охранный документ
+        APPLICATION = 1, 'Заявка' # заявка
+        PROTECTIVE_DOC = 2, 'Охоронний документ'  # охранный документ
+
+    class ClaimSenseChoices(models.TextChoices):
+        DENIAL = 'DE', 'Заперечення'
+        APPEAL = 'AP', 'Апеляційна заява'
 
     title = models.CharField("Назва", max_length=255)
     template_title = models.CharField("Назва для шаблону MS Word", max_length=255, null=True, blank=True)
@@ -35,6 +39,13 @@ class ClaimKind(TimeStampModel):
         'Статус об\'єкта',
         choices=ObjStateChoices.choices,
         default=ObjStateChoices.APPLICATION
+    )
+    claim_sense = models.CharField(
+        'Суть типу звернення',
+        choices=ClaimSenseChoices.choices,
+        null=True,
+        blank=True,
+        max_length=2
     )
 
     def __str__(self):
