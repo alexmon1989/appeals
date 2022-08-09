@@ -105,3 +105,16 @@ class RefusalReason(TimeStampModel):
         verbose_name = "Підстава для відмови у наданні правової охорони"
         verbose_name_plural = "Підстави для відмови у наданні правової охорони"
         db_table = 'cl_refusal_reasons'
+
+
+class Speciality(TimeStampModel):
+    """Модель специальности члена АП."""
+    title = models.CharField("Назва", max_length=255)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Спеціальність члена АП"
+        verbose_name_plural = "Спеціальністі члені АП"
+        db_table = 'cl_specialities'

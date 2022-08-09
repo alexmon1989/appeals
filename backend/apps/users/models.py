@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.functional import cached_property
 from .managers import UserManager
 from ..common.models import TimeStampModel
+from ..classifiers.models import ObjKind
 
 
 class User(AbstractUser):
@@ -13,6 +14,7 @@ class User(AbstractUser):
     first_name = models.CharField("Ім'я", max_length=255, blank=True, null=True)
     middle_name = models.CharField("По-батькові", max_length=255, blank=True, null=True)
     phone_number = models.CharField("Номер телефону", max_length=255, blank=True, null=True)
+    specialities = models.ManyToManyField(ObjKind, blank=True, verbose_name='Спеціальності')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

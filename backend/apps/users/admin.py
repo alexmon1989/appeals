@@ -13,9 +13,9 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('email', 'is_staff', 'is_active',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        (_('Personal info'), {'fields': ( 'last_name', 'first_name', 'middle_name', 'phone_number')}),
+        (_('Personal info'), {'fields': ('last_name', 'first_name', 'middle_name', 'phone_number')}),
         (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'specialities', 'user_permissions'),
         }),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
@@ -23,10 +23,15 @@ class CustomUserAdmin(UserAdmin):
         (None, {
             'classes': ('wide',),
             'fields': ('email', 'password1', 'password2', 'is_staff', 'is_active')}
-        ),
+         ),
     )
     search_fields = ('email',)
     ordering = ('email',)
+    filter_horizontal = (
+        "groups",
+        "specialities",
+        "user_permissions",
+    )
 
 
 admin.site.register(User, CustomUserAdmin)
