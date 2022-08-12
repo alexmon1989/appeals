@@ -14,6 +14,10 @@ class User(AbstractUser):
     first_name = models.CharField("Ім'я", max_length=255, blank=True, null=True)
     middle_name = models.CharField("По-батькові", max_length=255, blank=True, null=True)
     phone_number = models.CharField("Номер телефону", max_length=255, blank=True, null=True)
+    position = models.CharField("Посада", max_length=512, blank=True, null=True,
+                                help_text='Вкажіть повну посаду із відділом, наприклад, '
+                                          '"Начальник відділу забезпечення діяльності колегіальних '
+                                          'органів Укрпатенту"')
     specialities = models.ManyToManyField(ObjKind, blank=True, verbose_name='Спеціальності')
 
     USERNAME_FIELD = 'email'

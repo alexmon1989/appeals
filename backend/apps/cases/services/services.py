@@ -17,7 +17,7 @@ import random
 UserModel = get_user_model()
 
 
-def case_get_list() -> QuerySet[Case]:
+def case_get_list(order_by: str = '-created_at') -> QuerySet[Case]:
     """Возвращает список апелляционных дел, к которым есть доступ у пользователя"""
     cases = Case.objects.select_related(
         'claim',
@@ -34,7 +34,7 @@ def case_get_list() -> QuerySet[Case]:
         'document_set__document_type',
         'document_set__sign_set',
         'refusal_reasons'
-    )
+    ).order_by(order_by)
 
     return cases
 
