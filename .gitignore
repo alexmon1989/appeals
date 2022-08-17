@@ -157,3 +157,4 @@ cython_debug/
 /media_external/
 /database/
 /node_modules/
+/celery_daemon.conf
