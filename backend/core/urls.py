@@ -31,7 +31,7 @@ router.register(r'cases/(?P<id>\d+)/history', cases_views.CaseHistoryViewSet, ba
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', RedirectView.as_view(url='filling/', permanent=True)),
+    path('', RedirectView.as_view(url='filling/' if settings.AUTH_METHOD == 'ds' else '/cases', permanent=True)),
     path('api/', include(router.urls)),
     path('cases/', include('apps.cases.urls')),
     path('filling/', include('apps.filling.urls')),
