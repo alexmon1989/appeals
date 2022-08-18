@@ -5,6 +5,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import resolve_url, render
 from django.conf import settings
 from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
 import random
 import string
 import json
@@ -29,6 +30,7 @@ class CustomLoginView(SuccessMessageMixin, LoginView):
         return resolve_url(settings.LOGIN_REDIRECT_URL)
 
 
+@ensure_csrf_cookie
 def login_view_ds_file(request):
     """Страница логина пользователей с помощью файловой ЭЦП."""
     if request.method == 'POST':
