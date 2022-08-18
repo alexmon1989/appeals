@@ -72,6 +72,7 @@ class DocumentType(TimeStampModel):
     direction = models.CharField("Напрямок", max_length=16, choices=Direction.choices, null=True, blank=True)
     origin = models.CharField("Походження", max_length=16, choices=Origin.choices, null=True, blank=True)
     code = models.CharField("Код (ідентифікатор) документа", null=True, blank=True, max_length=255)
+    muc = models.PositiveIntegerField("MUC (технологічний код з GLOC)", null=True, blank=True)
     create_with_claim = models.BooleanField('Створювати автоматично разом із зверненням', default=False)
     base_doc = models.BooleanField(
         'Базовий документ для формування документу звернення',
