@@ -1,5 +1,4 @@
 <template>
-  <div>
     <spinner v-if="loading"></spinner>
 
     <div class="alert alert-danger" role="alert" v-if="errors.length > 0">
@@ -30,7 +29,6 @@
 
       <buttons :claim-id="claimData.id" :status="claimData.status"></buttons>
     </div>
-  </div>
 
 </template>
 
