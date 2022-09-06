@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Case, CollegiumMembership, Document, Sign, DocumentTemplate, CaseStage, CaseStageStep
-from .services import services
+from .models import Case, CollegiumMembership, Document, Sign, CaseStage, CaseStageStep
+from .services import case_services
 
 
 class CollegiumMembershipInline(admin.TabularInline):
@@ -30,19 +30,12 @@ class CaseAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        return services.case_get_list()
+        return case_services.case_get_list()
 
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
     inlines = (SignInline,)
-
-
-@admin.register(DocumentTemplate)
-class DocumentTemplateAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-    )
 
 
 @admin.register(CaseStage)

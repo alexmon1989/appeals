@@ -1,6 +1,11 @@
-<div class="d-flex align-items-center">
-    <div class="px-1">{{ document.signs_count }}</div>
+{% load cases_extras %}
 
+{% user_can_sign_document document=document user=request.user as user_can_sign_document_result %}
+<div class="d-flex align-items-center">
+    <div class="px-1">
+        {% if document.signs_count %}{{ document.signs_count }}{% endif %}
+        {% if user_can_sign_document_result %}<span class="text-danger text-nowrap fw-bold">Очікує підписання</span>{% endif %}
+    </div>
     {% if document.signs_count %}
         <div class="px-1">
             <a href="#"

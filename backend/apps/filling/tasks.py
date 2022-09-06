@@ -2,7 +2,7 @@ from django.conf import settings
 
 from core.celery import app
 from . import services as filling_services
-from ..cases.services import services as cases_services
+from ..cases.services import case_services
 from ..users import services as users_services
 from ..classifiers import services as classifiers_services
 
@@ -115,7 +115,7 @@ def delete_claim_task(claim_id: int, cert_data: dict) -> dict:
 @app.task
 def create_case_task(claim_id: int, cert_data: dict) -> dict:
     user = users_services.user_get_or_create_from_cert(cert_data)
-    case = cases_services.case_create_from_claim(claim_id, user)
+    case = case_services.case_create_from_claim(claim_id, user)
     if case:
         return {'success': 1, 'case_number': case.case_number}
     return {'success': 0, 'message': 'Ви не можете передати звернення, тому що документи не було підписано.'}

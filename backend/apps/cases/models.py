@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 
 from ..common.models import TimeStampModel
 from ..classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason
@@ -8,6 +9,8 @@ from .utils import sign_get_file_path, document_get_original_file_path
 from ..filling.models import Claim
 
 from pathlib import Path
+import urllib.parse
+import os
 
 
 UserModel = get_user_model()
@@ -138,6 +141,13 @@ class Document(TimeStampModel):
     )
 
     @property
+    def signed_file_url(self):
+        """Возвращает путь к файлу с информацией о цифровых подписях."""
+        path = Path(self.file.name)
+        stem = urllib.parse.quote_plus(path.stem)
+        return self.file.url.replace(stem, f"{stem}_signs")
+
+    @property
     def signed_file(self):
         """Возвращает путь к файлу с информацией о цифровых подписях."""
         path = Path(self.file.name)
@@ -148,6 +158,14 @@ class Document(TimeStampModel):
         """Возвращает путь к каталогу с файлами."""
         path = Path(self.file.path)
         return str(path.parent)
+
+    def assign_file(self, file_path: Path):
+        """Присваивает файл документу."""
+        with open(file_path, "rb") as fh:
+            with ContentFile(fh.read()) as file_content:
+                self.file.save(file_path.name, file_content)
+                self.save()
+        os.remove(file_path)
 
     def __str__(self):
         return self.document_type.title
@@ -220,18 +238,3 @@ class Sign(TimeStampModel):
         verbose_name = 'Цифровий підпис'
         verbose_name_plural = 'Цифрові підписи'
         db_table = 'documents_signs'
-
-
-class DocumentTemplate(TimeStampModel):
-    """Модель шаблона документа."""
-    title = models.CharField('Назва шаблону', max_length=512)
-    file = models.FileField('Файл', upload_to='doc-templates/')
-    documents_types = models.ManyToManyField(DocumentType, verbose_name='Типи документів', blank=True)
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = 'Шаблон документу'
-        verbose_name_plural = 'Шаблони документів'
-        db_table = 'documents_templates'

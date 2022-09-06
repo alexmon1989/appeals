@@ -87,7 +87,8 @@ class DocumentSerializer(serializers.ModelSerializer):
         return render_to_string(
             'cases/_partials/document_signs_info.html',
             {
-                'document': document
+                'document': document,
+                'request': self.context['request']
             }
         )
 

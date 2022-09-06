@@ -1,11 +1,18 @@
 from django.utils.datastructures import MultiValueDict
+
+from barcode import Code128
+from barcode.writer import ImageWriter
+from PIL import Image
+from docx.shared import Cm
+
 from pathlib import Path
 import uuid
 import tempfile
 import base64
 
 
-def docx_replace(doc, data):
+def docx_replace(doc, data: dict):
+    """Заменяет переменные в файле .docx"""
     paragraphs = list(doc.paragraphs)
     for t in doc.tables:
         for row in t.rows:
@@ -91,6 +98,22 @@ def docx_replace(doc, data):
                 # print(p.text)
 
 
+def substitute_image_docx(doc, image_var: str, image_path: Path, height: int = None) -> None:
+    """Заменяет текст на изображение в файле .docx"""
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    if image_var in paragraph.text:
+                        paragraph.text = paragraph.text.replace(image_var, "")
+                        # --- then append a run containing the image ---
+                        run = paragraph.add_run()
+                        if height:
+                            run.add_picture(str(image_path), height=Cm(6))
+                        else:
+                            run.add_picture(str(image_path))
+
+
 def qdict_to_dict(qdict):
     """Convert a Django QueryDict to a Python dict.
 
@@ -136,3 +159,44 @@ def base64_to_file(base64_str: str, path: Path) -> None:
 
     with open(path, 'wb') as f:
         f.write(file_bytes)
+
+
+def get_random_file_name(ext: str) -> str:
+    """Возвращает случайное имя файла с определённым расширением."""
+    return f'{uuid.uuid4()}.{ext}'
+
+
+def get_temp_file_path(file_name: str) -> Path:
+    """Возвращает путь к файлу во временном каталоге ОС."""
+    tmp_dir = tempfile.gettempdir()
+    tmp_file_path = Path(tmp_dir) / file_name
+    return tmp_file_path
+
+
+def first_lower(s):
+    """Делает первую букву строки заглавной."""
+    if not s:
+        return s
+    return s[0].lower() + s[1:]
+
+
+def generate_barcode_img(barcode: str, rotate_to: int = 90) -> Path:
+    """Генерирует изображение штрих-кода и сохраняет его во временный каталог."""
+    file_path = get_temp_file_path(get_random_file_name('.jpg'))
+    with open(file_path, "wb") as f:
+        Code128(
+            barcode,
+            writer=ImageWriter()
+        ).write(
+            f,
+            options={"font_size": 5, "text_distance": 1.7, "module_height": 8}
+        )
+
+    # Поворот изображения
+    if rotate_to:
+        im = Image.open(file_path)
+        im = im.rotate(rotate_to, expand=True)
+        im.show()
+        im.save(file_path)
+
+    return file_path

@@ -19,7 +19,7 @@ class ObjKind(TimeStampModel):
 class ClaimKind(TimeStampModel):
     """Модель вида заявления/возражения."""
     class ObjStateChoices(models.IntegerChoices):
-        APPLICATION = 1, 'Заявка' # заявка
+        APPLICATION = 1, 'Заявка'  # заявка
         PROTECTIVE_DOC = 2, 'Охоронний документ'  # охранный документ
 
     class ClaimSenseChoices(models.TextChoices):
@@ -79,6 +79,7 @@ class DocumentType(TimeStampModel):
         default=False,
     )
     claim_kinds = models.ManyToManyField(ClaimKind, verbose_name='Види звернень', blank=True)
+    template = models.FileField('Шаблон документу', upload_to='doc-templates/', null=True, blank=True)
 
     def __str__(self):
         return self.title

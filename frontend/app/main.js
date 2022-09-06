@@ -6,8 +6,10 @@ import ClaimDetails from './components/ClaimDetails/ClaimDetails.vue'
 import ClaimsDataTable from './components/ClaimsDataTable/ClaimsDataTable.vue'
 import CasesList from './components/CasesList/CasesList.vue'
 import CaseStages from './components/CasesDetail/CaseStages.vue'
+import SignDocuments from './components/CasesDetail/SignDocuments.vue'
 import ClaimData from './components/CasesDetail/ClaimData.vue'
 import CaseUpdateSubmitConfirmation from './components/CasesUpdate/SubmitConfirmation.vue'
+import SubmitConfirmation from './components/SubmitConfirmation.vue'
 import { defineRule, configure } from 'vee-validate'
 import AllRules from '@vee-validate/rules'
 import { localize, setLocale } from '@vee-validate/i18n'
@@ -35,7 +37,9 @@ const app = createApp({
         CasesList,
         CaseStages,
         ClaimData,
+        SubmitConfirmation,
         CaseUpdateSubmitConfirmation,
+        SignDocuments,
     }
 })
 

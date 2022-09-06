@@ -4,6 +4,8 @@ from django.urls import reverse
 from ..common.models import TimeStampModel
 from ..classifiers.models import ClaimKind, ObjKind
 
+import json
+
 
 UserModel = get_user_model()
 
@@ -96,6 +98,33 @@ class Claim(TimeStampModel):
 
     def get_absolute_url(self):
         return reverse('claim_detail', kwargs={'pk': self.pk})
+
+    def get_appellant_title(self):
+        """Возвращает данные апеллянта """
+        data = json.loads(self.json_data)
+        if self.third_person:
+            appellant_name = data['third_person_applicant_title']
+        else:
+            appellant_name = data['applicant_title']
+        return appellant_name.replace("\r\n", ", ")
+
+    def get_applicant_title(self):
+        """Возвращает данные апеллянта """
+        data = json.loads(self.json_data)
+        try:
+            applicant_title = data['applicant_title']
+            return applicant_title.replace("\r\n", ", ")
+        except KeyError:
+            return ''
+
+    def get_owner_title(self):
+        """Возвращает данные апеллянта """
+        data = json.loads(self.json_data)
+        try:
+            applicant_title = data['owner_title']
+            return applicant_title.replace("\r\n", ", ")
+        except KeyError:
+            return ''
 
     class Meta:
         verbose_name = "Звернення"

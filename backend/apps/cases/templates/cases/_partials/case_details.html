@@ -20,7 +20,17 @@
         {% endif %}
 
         <div class="text-muted text-uppercase">ПІБ призначених членів колегії</div>
-        <div class="fw-medium mb-3"><i class="text-black-50">Колегію не сформовано</i></div>
+        <div class="fw-medium mb-3">
+            {% if case.collegium.count > 0 %}
+                <ul>
+                    {% for member in case.collegiummembership_set.all %}
+                        <li>{{ member.person.get_full_name }}{% if member.is_head %}&nbsp;<strong>(голова колегії)</strong>{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <i class="text-black-50">Колегію не сформовано</i>
+            {% endif %}
+        </div>
 
         <div class="text-muted text-uppercase">ПІБ секретаря</div>
         <div class="fw-medium mb-3">
@@ -33,7 +43,7 @@
 
         <div class="text-muted text-uppercase">ПІБ експерта</div>
         <div class="fw-medium mb-3">
-            {% if case.secretary %}
+            {% if case.expert %}
                 {{ case.expert.get_full_name }}
             {% else %}
                 <i class="text-black-50">Не призначено</i>

@@ -29,11 +29,10 @@ class User(AbstractUser):
 
     @cached_property
     def get_full_name(self):
-        if self.belongs_to_group('Заявник'):
-            return self.certificateowner_set.first().pszSubjFullName
+        if self.last_name:
+            return ('%s %s %s' % (self.last_name, self.first_name, self.middle_name)).strip()
         else:
-            full_name = '%s %s %s' % (self.last_name, self.first_name, self.middle_name)
-        return full_name.strip()
+            return self.certificateowner_set.first().pszSubjFullName.strip()
 
     def get_groups(self):
         groups = self.groups.values_list('name', flat=True)
@@ -56,6 +55,11 @@ class User(AbstractUser):
     def is_applicant(self) -> bool:
         """Заявитель."""
         return self.belongs_to_group('Заявник')
+
+    @property
+    def is_internal(self) -> bool:
+        """Внутренний пользователь."""
+        return not self.belongs_to_group('Заявник')
 
     @property
     def is_secretary(self) -> bool:

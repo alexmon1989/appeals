@@ -3,7 +3,6 @@ from django.utils.datastructures import MultiValueDict
 from django.http.request import QueryDict
 from django.db.models import Prefetch, Count, Q
 from django.db.models.query import QuerySet
-from django.core.files.base import ContentFile
 from django.conf import settings
 
 from elasticsearch import Elasticsearch
@@ -14,20 +13,16 @@ from docx.shared import Pt
 from docxcompose.composer import Composer
 
 from ..classifiers.models import DocumentType
-from ..cases.models import Document, Sign, DocumentTemplate
-from ..cases.services import services as cases_services
+from ..cases.models import Document, Sign
+from ..cases.services import document_services
 from .models import ClaimField, Claim
-from ..common.utils import docx_replace
-from ..common.utils import base64_to_temp_file
+from ..common.utils import docx_replace, base64_to_temp_file, get_random_file_name, get_temp_file_path
 
 from typing import List, Type, Union
 from pathlib import Path
 from distutils.dir_util import copy_tree
 import json
 import datetime
-import tempfile
-import uuid
-import os
 
 
 UserModel = get_user_model()
@@ -83,7 +78,7 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
                 tmp_file_path = base64_to_temp_file(file_data['content'])
 
                 # Сохранение файла в постоянный каталог и в БД
-                document_save_file(doc, file_data['name'], tmp_file_path, True)
+                doc.assign_file(tmp_file_path)
 
                 if doc_type.base_doc:
                     # Создание файла обращения (с шапкой)
@@ -104,7 +99,7 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
                     tmp_file_path = base64_to_temp_file(file_data['content'])
 
                     # Сохранение файла в постоянный каталог и в БД
-                    document_save_file(doc, file_data['name'], tmp_file_path, True)
+                    doc.assign_file(tmp_file_path)
 
     return claim
 
@@ -168,7 +163,7 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
                 tmp_file_path = base64_to_temp_file(file_data['content'])
 
                 # Сохранение файла в постоянный каталог и в БД
-                document_save_file(doc, file_data['name'], tmp_file_path, True)
+                doc.assign_file(tmp_file_path)
             else:
                 files = files_data[f"{field.input_id}[]"]
 
@@ -185,7 +180,7 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
                     tmp_file_path = base64_to_temp_file(file_data['content'])
 
                     # Сохранение файла в постоянный каталог и в БД
-                    document_save_file(doc, file_data['name'], tmp_file_path, True)
+                    doc.assign_file(tmp_file_path)
 
     # Формирование основного документа обращения (заявления)
     base_doc = Document.objects.filter(claim=claim, document_type__base_doc=True).first()
@@ -389,7 +384,7 @@ def claim_create_files_with_signs_info(claim_id: int, signs: list) -> None:
     documents = Document.objects.filter(claim_id=claim_id)
     for doc in documents:
         if doc.sign_set.count() == 0:
-            cases_services.document_add_sign_info_to_file(doc.pk, signs)
+            document_services.document_add_sign_info_to_file(doc.pk, signs)
 
 
 def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:
@@ -443,16 +438,14 @@ def document_create_main_claim_doc_file(claim: Claim, base_doc: Document) -> Doc
     """Создаёт документ файл обращения."""
     doc_type = DocumentType.objects.filter(claim_kinds__id=claim.claim_kind.pk, create_with_claim=True).first()
     if doc_type:
-        doc_template = DocumentTemplate.objects.filter(documents_types__code=doc_type.code).first()
-        f_header = open(doc_template.file.path, 'rb')
+        f_header = open(doc_type.template.path, 'rb')
         doc_header = PyDocxDocument(f_header)
 
         doc_data_to_replace = document_get_data_for_main_claim_doc_file(claim.pk)
         docx_replace(doc_header, doc_data_to_replace)
 
-        tmp_dir = tempfile.gettempdir()
-        tmp_file_name = f'{uuid.uuid4()}.docx'
-        tmp_file_path = Path(tmp_dir) / tmp_file_name
+        tmp_file_name = get_random_file_name('docx')
+        tmp_file_path = get_temp_file_path(tmp_file_name)
 
         doc_header.save(tmp_file_path)
 
@@ -483,13 +476,7 @@ def document_create_main_claim_doc_file(claim: Claim, base_doc: Document) -> Doc
             claim_document=True,
             auto_generated=1
         )
-
-        with open(tmp_file_path, "rb") as fh:
-            with ContentFile(fh.read()) as file_content:
-                doc.file.save(tmp_file_name, file_content)
-                doc.save()
-
-        os.remove(tmp_file_path)
+        doc.assign_file(tmp_file_path)
 
         return doc
 
@@ -559,8 +546,8 @@ def application_user_belongs_to_app(data: dict, user_names: list) -> bool:
     allowed_persons = list(filter(lambda item: item is not None, allowed_persons))
 
     # Замена латинских I, i на кириллицу
-    user_names = [x.replace('I', 'І').replace('i', 'і') for x in user_names]
-    allowed_persons = [x.replace('I', 'І').replace('i', 'і') for x in allowed_persons]
+    user_names = [x.replace('I', 'І').replace('i', 'і').replace("`", "'").replace("’", "'") for x in user_names]
+    allowed_persons = [x.replace('I', 'І').replace('i', 'і').replace("`", "'").replace("’", "'") for x in allowed_persons]
 
     # Проверка на вхождение
     return any([person for person in allowed_persons for user_name in user_names if user_name.upper() in person.upper()])
@@ -600,16 +587,3 @@ def application_get_data_from_es(obj_num_type: str, obj_number: str, obj_kind_id
     if not s:
         return {}
     return s[0].to_dict()
-
-
-def document_save_file(doc: Document, file_name: str, tmp_file_path: Path, remove_file: bool = False) -> None:
-    """Сохраняет файл документа с диска."""
-    # Сохранение файла в постоянный каталог
-    with open(tmp_file_path, "rb") as fh:
-        with ContentFile(fh.read()) as file_content:
-            doc.file.save(file_name, file_content)
-            doc.save()
-
-    # Удаление временного файла
-    if remove_file:
-        os.remove(tmp_file_path)

@@ -17,14 +17,14 @@ from ..users import services as users_services
 from ..common.utils import files_to_base64
 from ..common.decorators import group_required
 
-from .services import services
+from .services import case_services, document_services
 from ..filling import services as filling_services
 from .models import Case
 from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializer
 from ..common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_task
-from .forms import CaseUpdateForm
+from .forms import CaseUpdateForm, CaseCreateCollegiumForm
 from ..classifiers import services as classifiers_services
 
 
@@ -40,8 +40,8 @@ class CasesViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CaseSerializer
 
     def get_queryset(self):
-        all_cases = services.case_get_list()
-        return services.case_filter_dt_list(
+        all_cases = case_services.case_get_list()
+        return case_services.case_filter_dt_list(
             all_cases,
             self.request.user.id,
             self.request.GET.get('user'),
@@ -56,12 +56,14 @@ class CaseDetailView(LoginRequiredMixin, DetailView):
     template_name = 'cases/detail/index.html'
 
     def get_queryset(self):
-        return services.case_get_list()
+        return case_services.case_get_list()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['stages'] = services.case_get_stages(self.object.pk)
+        context['stages'] = case_services.case_get_stages(self.object.pk)
         context['claim'] = filling_services.claim_get_data_by_id(self.object.claim.pk)
+        # Документы, которые должен подписать пользователь
+        context['documents_to_sign'] = []
         return context
 
 
@@ -73,7 +75,7 @@ class CaseUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'cases/update/index.html'
 
     def get_queryset(self):
-        return services.case_get_list().filter(secretary=self.request.user)
+        return case_services.case_get_list().filter(secretary=self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -95,7 +97,7 @@ class CaseUpdateView(LoginRequiredMixin, UpdateView):
 @group_required('Секретар')
 def take_to_work(request, pk: int):
     """Принимает дело в работу и переадресовывает на страницу деталей дела."""
-    if services.case_take_to_work(pk, request.user.pk):
+    if case_services.case_take_to_work(pk, request.user.pk):
         messages.success(request, 'Справу прийнято в роботу.')
         return redirect('cases-detail', pk=pk)
     raise Http404()
@@ -126,7 +128,7 @@ class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (HasAccessToCase,)
 
     def get_queryset(self):
-        return services.case_get_documents_list(self.kwargs['id'])
+        return case_services.case_get_documents_qs(self.kwargs['id'])
 
 
 class CaseHistoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -135,13 +137,61 @@ class CaseHistoryViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (HasAccessToCase,)
 
     def get_queryset(self):
-        return services.case_get_history(self.kwargs['id'])
+        return case_services.case_get_history(self.kwargs['id'])
 
 
 def document_signs_info(request, document_id: int):
     """Отображает информацию о цифровых подписях документа."""
-    document = services.document_get_by_id(document_id)
+    document = document_services.document_get_by_id(document_id)
     return render(request, 'cases/detail/document_signs_info.html', {'document': document})
+
+
+@method_decorator(group_required('Секретар'), name='dispatch')
+class CaseCreateCollegium(LoginRequiredMixin, UpdateView):
+    """Отображает страницу создания коллегии."""
+    model = Case
+    form_class = CaseCreateCollegiumForm
+    template_name = 'cases/create_collegium/index.html'
+
+    def get_queryset(self):
+        return case_services.case_get_list().filter(secretary=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        messages.success(
+            self.request,
+            'Колегію успішно сформовано. '
+            'Стадію справи змінено на "Здійснено розподіл колегії. Очікує на підписання розпорядження." (код 2002).'
+        )
+        return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+@require_POST
+@login_required
+def create_files_with_signs_info(request, claim_id):
+    """Создаёт файлы с информацией о подписи."""
+    body_unicode = request.body.decode('utf-8')
+    body = json.loads(body_unicode)
+    signs = [{
+        'subject': body['subjCN'],
+        'issuer': body['issuerCN'],
+        'serial_number': body['serial'],
+    }]
+
+    task = create_files_with_signs_info_task.delay(
+        users_services.certificate_get_data(request.session['cert_id']),
+        claim_id,
+        signs,
+    )
+    return JsonResponse(
+        {
+            "task_id": task.id,
+        }
+    )
 
 
 @xframe_options_exempt

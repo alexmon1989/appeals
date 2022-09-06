@@ -36,3 +36,7 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
   --bs-bg-opacity: 1;
   background-color: #574fec !important;
 }
+
+#case-create-collegium-form > #div_id_members > div:nth-child(2) > div:nth-child(1) {
+    column-count: 3;
+}
