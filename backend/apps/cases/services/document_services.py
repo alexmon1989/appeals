@@ -57,19 +57,17 @@ def document_add_sign_info_to_file(doc_id: int, signs: list) -> None:
 
 def document_set_reg_number(doc_id: int) -> None:
     """Присваивает документу регистрационный номер, который возвращает глобальный нумератор."""
-    if settings.DEBUG:
-        numbers = ''.join([str(random.randint(0, 9)) for _ in range(5)])
-        document = Document.objects.get(pk=doc_id)
-        document.registration_number = f"Вх-{numbers}/2022"
-        document.save()
+    numbers = ''.join([str(random.randint(0, 9)) for _ in range(5)])
+    document = Document.objects.get(pk=doc_id)
+    document.registration_number = f"Вх-{numbers}/2022"
+    document.save()
 
 
 def document_set_barcode(doc_id: int) -> None:
     """Присваивает документу штрихкод, который возвращает глобальный нумератор."""
-    if settings.DEBUG:
-        document = Document.objects.get(pk=doc_id)
-        document.barcode = ''.join([str(random.randint(0, 9)) for _ in range(32)])
-        document.save()
+    document = Document.objects.get(pk=doc_id)
+    document.barcode = ''.join([str(random.randint(0, 9)) for _ in range(32)])
+    document.save()
 
 
 def document_get_signs_info(doc_id: int) -> List[dict]:
