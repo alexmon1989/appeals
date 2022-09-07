@@ -146,6 +146,10 @@ def upload_sign_internal(request, document_id: int):
         }
         sign_services.sign_update(sign_data)
 
+        # todo: вынести отдельно
+        if document.document_type.code == '0005':  # Розпорядження про створення колегії
+            case_services.case_change_stage_step(document.case.id, 2003, request.user.pk)
+
         return JsonResponse(
             {
                 "success": 1,
