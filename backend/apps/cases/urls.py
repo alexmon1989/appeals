@@ -7,10 +7,16 @@ urlpatterns = [
     path('', views.cases_list, name='cases-list'),
     path('detail/<int:pk>/', views.CaseDetailView.as_view(), name='cases-detail'),
     path('update/<int:pk>/', views.CaseUpdateView.as_view(), name='cases_update'),
-    path('upload-sign/<int:document_id>/', views.upload_sign, name='upload-sign'),
+    path('upload-sign-external/<int:document_id>/', views.upload_sign_external, name='upload-sign-external'),
+    path('upload-sign-internal/<int:document_id>/', views.upload_sign_internal, name='upload-sign-internal'),
     path('document-signs-info/<int:document_id>/', views.document_signs_info, name='document-signs-info'),
     path('take_to_work/<int:pk>/', views.take_to_work, name='cases_take_to_work'),
     path('create-collegium/<int:pk>/', views.CaseCreateCollegium.as_view(), name='case_create_collegium'),
+    path(
+        'create-files-with-signs-info/<int:case_id>/',
+        views.create_files_with_signs_info,
+        name='cases_create_files_with_signs_info'
+    ),
 
     path('ds-file/', views.ds_file, name='cases_ds_file'),
     path('ds-token/', views.ds_token, name='cases_ds_token'),

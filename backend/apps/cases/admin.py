@@ -30,7 +30,7 @@ class CaseAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
-        return case_services.case_get_list()
+        return case_services.case_get_all_qs()
 
 
 @admin.register(Document)

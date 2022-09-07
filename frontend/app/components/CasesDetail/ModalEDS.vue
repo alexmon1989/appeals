@@ -29,14 +29,14 @@
                 <th scope="row" v-html="index + 1"></th>
                 <td>{{ document.document_type }}</td>
                 <td class="fw-bold text-center">
-                  <span class="text-success" v-if=" document.sign__count">так</span><span class="text-danger" v-else>ні</span>
+                  <span class="text-success" v-if="document.signed">так</span><span class="text-danger" v-else>ні</span>
                 </td>
               </tr>
               </tbody>
             </table>
 
             <div class="d-flex justify-content-center">
-              <button class="btn btn-primary" @click="signFiles" :disabled="processed || !needsSign">
+              <button class="btn btn-primary" @click="signFiles" :disabled="processed || signed">
                 <svg width="16px" height="16px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-pen-fill" viewBox="0 0 16 16">
                   <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001z"></path>
                 </svg>
@@ -75,7 +75,7 @@ export default {
 
   props: {
     'documentsInit': Array,
-    'claimData': Object,
+    'caseId': Number,
   },
 
   components: {
@@ -87,13 +87,14 @@ export default {
     return {
       documents: [],
       processed: false,
-      isKeyReaded: false
+      isKeyReaded: false,
+      signed: false
     }
   },
 
   watch: {
     documentsInit() {
-      this.documents = this.documentsInit.filter(item => item.sign__count === 0)
+      this.documents = this.documentsInit
     }
   },
 
@@ -134,42 +135,48 @@ export default {
       let error = null
 
       // Создание файлов с табличкой подписей
-      const task = await fetch('/filling/create-files-with-signs-info/' + this.claimData.id + '/', {
+      const response = await fetch('/cases/create-files-with-signs-info/' + this.caseId + '/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json;charset=utf-8',
           'X-CSRFToken': getCookie('csrftoken')
         },
         body: JSON.stringify(this.$root.keyInfo)
-      });
-      const taskData = await task.json()
-      await getTaskResult(taskData.task_id)
+      })
+      let json = await response.json();
+      if (response.ok) {
+        for (let i = 0; i < this.documents.length; i++) {
+          try {
+            // Получение содержимого файла
+            let data = await getFileUint8Array(this.fileToSignURL(this.documents[i].file_url))
 
-      for (let i = 0; i < this.documents.length; i++) {
-        try {
-          // Получение содержимого файла
-          let data = await getFileUint8Array(this.fileToSignURL(this.documents[i].file_url))
+            // Подписание файла
+            let eds = await euSign.SignAsync(data)
 
-          // Подписание файла
-          let eds = await euSign.SignAsync(data)
+            // Данные подписи
+            const signInfo = await this.getSignInfo(data, eds)
 
-          // Данные подписи
-          const signInfo = await this.getSignInfo(data, eds)
+            this.documents[i].signed = true
 
-          // Отправка данных на сервер
-          const taskUploaded = await uploadSign(this.documents[i].id, eds, signInfo)
-          const taskUploadedRes = await getTaskResult(taskUploaded.task_id)
-          if (taskUploadedRes.success === 1) {
-            this.$emit('signedDoc', {'id': this.documents[i].id, 'eds': eds})
+            // Отправка данных на сервер
+            const uploadSignResponse = await uploadSign(this.documents[i].id, eds, signInfo, 'internal')
+            if (uploadSignResponse.success === 1) {
+              this.$emit('signedDoc', {'id': this.documents[i].id, 'eds': eds})
+            } else {
+              $.SOW.core.toast.show('danger','', json.message,'top-end',0,true)
+            }
+          } catch (err) {
+            error = err
+            $.SOW.core.toast.show('danger','', error,'top-end',0,true)
+            console.log(error)
           }
-        } catch (err) {
-          error = err
-          console.log(error)
         }
-      }
-
-      if (!error) {
-        this.$emit('signedAll')
+        if (!error) {
+          this.signed = true
+          this.$emit('signedAll')
+        }
+      } else {
+        $.SOW.core.toast.show('danger','', json.message,'top-end',0,true)
       }
 
       this.processed = false
@@ -183,13 +190,6 @@ export default {
       } else {
         return notSignedURL
       }
-    }
-  },
-
-  computed: {
-    needsSign() {
-      const noSign = (document) => document.sign__count === 0
-      return this.documents.some(noSign)
     }
   },
 }

@@ -61,7 +61,7 @@ export const getFileUint8Array = async function (url) {
   });
 }
 
-export const uploadSign = async function (documentId, signData, signInfo) {
+export const uploadSign = async function (documentId, signData, signInfo, origin = 'external') {
   const csrftoken = getCookie('csrftoken')
   let blob = new Blob([signData], {type: "application/octet-stream"})
 
@@ -70,7 +70,7 @@ export const uploadSign = async function (documentId, signData, signInfo) {
   data.append('sign_info', JSON.stringify(signInfo))
 
   const request = new Request(
-      '/cases/upload-sign/' + documentId + '/',
+      '/cases/upload-sign-'  + origin + '/' + documentId + '/',
       {
         method: 'POST',
         headers: {'X-CSRFToken': csrftoken},

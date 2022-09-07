@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Q, QuerySet
+from django.db.models import Count, Q, QuerySet, Prefetch
 
 from ..models import Case, Document, CaseStage, CaseStageStep, CaseHistory, CollegiumMembership, Sign
 from ...filling import services as filling_services
@@ -12,7 +12,7 @@ import datetime
 UserModel = get_user_model()
 
 
-def case_get_list(order_by: str = '-created_at') -> QuerySet[Case]:
+def case_get_all_qs(order_by: str = '-created_at') -> QuerySet[Case]:
     """Возвращает список апелляционных дел, к которым есть доступ у пользователя"""
     cases = Case.objects.select_related(
         'claim',
@@ -72,7 +72,7 @@ def case_get_documents_qs(case_id: int) -> Iterable[Document]:
         'claim',
         'claim__user',
     ).prefetch_related(
-        'sign_set',
+        Prefetch('sign_set', queryset=Sign.objects.all())
     ).annotate(
         signs_count=Count('sign', filter=~Q(sign__timestamp=''))
     ).order_by('-created_at')
@@ -116,7 +116,7 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
 
 def case_get_stages(case_id: int) -> Union[List[dict], None]:
     """Возвращает стадии ап. дела."""
-    case = case_get_list().filter(pk=case_id).first()
+    case = case_get_all_qs().filter(pk=case_id).first()
     if case:
         stages = CaseStage.objects.order_by('number')
         res = []

@@ -3,7 +3,6 @@ from django.conf import settings
 
 from ..models import Document, Sign
 from ..utils import set_cell_border
-from ...filling.models import Claim
 
 from typing import List
 from pathlib import Path
@@ -91,8 +90,9 @@ def document_get_signs_info(doc_id: int) -> List[dict]:
     return res
 
 
-def document_can_be_signed_by_user(document: Document, user: UserModel) -> bool:
+def document_can_be_signed_by_user(document_id: int, user: UserModel) -> bool:
     """Проверяет, может ли пользователь подписывать документ."""
+    document = document_get_by_id(document_id)
     if document.case:
         for sign in document.sign_set.all():
             if sign.user_id == user.pk:
@@ -105,3 +105,25 @@ def document_can_be_signed_by_user(document: Document, user: UserModel) -> bool:
 
     # Заявка (могут подписывать только заявители, которые подавали)
     return document.claim and document.claim.user_id == user.pk
+
+
+def document_get_case_documents_to_sign(case_id: int, user: UserModel) -> list:
+    """Возвращает список документов дела, которые ожидают подписания пользователем."""
+    documents = Document.objects.filter(
+        sign__user=user,
+        sign__timestamp='',
+        case_id=case_id
+    ).order_by('-created_at')
+
+    res = []
+
+    for document in documents:
+        res.append({
+            'id': document.pk,
+            'document_type': document.document_type.title,
+            'auto_generated': int(document.auto_generated),
+            'file_url': document.file.url,
+            'file_name': Path(document.file.name).name,
+        })
+
+    return res

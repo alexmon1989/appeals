@@ -17,13 +17,13 @@ from ..users import services as users_services
 from ..common.utils import files_to_base64
 from ..common.decorators import group_required
 
-from .services import case_services, document_services
+from .services import case_services, document_services, sign_services
 from ..filling import services as filling_services
 from .models import Case
 from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializer
 from ..common.mixins import LoginRequiredMixin
-from .tasks import upload_sign_task
+from .tasks import upload_sign_external_task
 from .forms import CaseUpdateForm, CaseCreateCollegiumForm
 from ..classifiers import services as classifiers_services
 
@@ -40,7 +40,7 @@ class CasesViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CaseSerializer
 
     def get_queryset(self):
-        all_cases = case_services.case_get_list()
+        all_cases = case_services.case_get_all_qs()
         return case_services.case_filter_dt_list(
             all_cases,
             self.request.user.id,
@@ -56,14 +56,16 @@ class CaseDetailView(LoginRequiredMixin, DetailView):
     template_name = 'cases/detail/index.html'
 
     def get_queryset(self):
-        return case_services.case_get_list()
+        return case_services.case_get_all_qs()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['stages'] = case_services.case_get_stages(self.object.pk)
         context['claim'] = filling_services.claim_get_data_by_id(self.object.claim.pk)
         # Документы, которые должен подписать пользователь
-        context['documents_to_sign'] = []
+        context['documents_to_sign'] = document_services.document_get_case_documents_to_sign(
+            self.object.pk, self.request.user
+        )
         return context
 
 
@@ -75,7 +77,7 @@ class CaseUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'cases/update/index.html'
 
     def get_queryset(self):
-        return case_services.case_get_list().filter(secretary=self.request.user)
+        return case_services.case_get_all_qs().filter(secretary=self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -105,11 +107,11 @@ def take_to_work(request, pk: int):
 
 @require_POST
 @login_required
-def upload_sign(request, document_id: int):
+def upload_sign_external(request, document_id: int):
     """Загружает на сервер информацию о цифровой подписи документа."""
     files_base64 = files_to_base64(request.FILES)
 
-    task = upload_sign_task.delay(
+    task = upload_sign_external_task.delay(
         document_id,
         files_base64['blob'][0]['content'],
         json.loads(request.POST['sign_info']),
@@ -120,6 +122,43 @@ def upload_sign(request, document_id: int):
             "task_id": task.id,
         }
     )
+
+
+def upload_sign_internal(request, document_id: int):
+    """Загружает цифровую подпись на диск и создаёт запись в БД."""
+    document = document_services.document_get_by_id(document_id)
+    # Может ли пользователь подписывать файл
+    if document_services.document_can_be_signed_by_user(document.pk, request.user):
+        # Сохранение цифровой подписи на диск
+        relative_path = sign_services.sign_create_p7s(request.FILES['blob'], document, request.user)
+
+        # Создание записи в БД
+        sign_info = json.loads(request.POST['sign_info'])
+        sign_data = {
+            'document': document,
+            'file': str(relative_path),
+            'file_signed': document.signed_file,
+            'user': request.user,
+            'subject': sign_info['subject'],
+            'serial_number': sign_info['serial'],
+            'issuer': sign_info['issuer'],
+            'timestamp': sign_info['timestamp'],
+        }
+        sign_services.sign_update(sign_data)
+
+        return JsonResponse(
+            {
+                "success": 1,
+            }
+        )
+    else:
+        return JsonResponse(
+            {
+                "error": 1,
+                "message": "Ви не можете підписувати цей файл."
+            },
+            status=400
+        )
 
 
 class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -154,7 +193,7 @@ class CaseCreateCollegium(LoginRequiredMixin, UpdateView):
     template_name = 'cases/create_collegium/index.html'
 
     def get_queryset(self):
-        return case_services.case_get_list().filter(secretary=self.request.user)
+        return case_services.case_get_all_qs().filter(secretary=self.request.user)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -172,8 +211,9 @@ class CaseCreateCollegium(LoginRequiredMixin, UpdateView):
 
 @require_POST
 @login_required
-def create_files_with_signs_info(request, claim_id):
-    """Создаёт файлы с информацией о подписи."""
+def create_files_with_signs_info(request, case_id):
+    """Создаёт файлы документов (которые должен подписать пользователь) с информацией о подписи внизу файла."""
+    # Данные подписи из запроса
     body_unicode = request.body.decode('utf-8')
     body = json.loads(body_unicode)
     signs = [{
@@ -182,14 +222,28 @@ def create_files_with_signs_info(request, claim_id):
         'serial_number': body['serial'],
     }]
 
-    task = create_files_with_signs_info_task.delay(
-        users_services.certificate_get_data(request.session['cert_id']),
-        claim_id,
-        signs,
+    # Документы на подпись
+    documents = document_services.document_get_case_documents_to_sign(
+        case_id, request.user
     )
+
+    # Создание файлов с информацией о подписях
+    for document in documents:
+        # Может ли пользователь подписывать файл
+        if document_services.document_can_be_signed_by_user(document['id'], request.user):
+            document_services.document_add_sign_info_to_file(document['id'], signs)
+        else:
+            return JsonResponse(
+                {
+                    "error": 1,
+                    "message": "Ви не можете підписати файл."
+                },
+                status=400
+            )
+
     return JsonResponse(
         {
-            "task_id": task.id,
+            "success": 1
         }
     )
 

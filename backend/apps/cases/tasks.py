@@ -12,11 +12,11 @@ from ..filling import services as filling_services
 
 
 @app.task
-def upload_sign_task(document_id: int, sign_file_base_64: str, sign_info: dict, cert_data: dict) -> dict:
+def upload_sign_external_task(document_id: int, sign_file_base_64: str, sign_info: dict, cert_data: dict) -> dict:
     """Создаёт на диске файл с цифровой подписью и записывает информацию о подписи в БД."""
     user = users_services.user_get_or_create_from_cert(cert_data)
     document = document_services.document_get_by_id(document_id)
-    if document and document_services.document_can_be_signed_by_user(document, user):
+    if document and document_services.document_can_be_signed_by_user(document.pk, user):
         relative_path = Path(unquote(f"{document.file}_{user.pk}.p7s"))
         sign_destination = Path(settings.MEDIA_ROOT) / relative_path
         base64_to_file(sign_file_base_64, sign_destination)

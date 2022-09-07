@@ -1,4 +1,5 @@
 <template>
+  <div v-if="needsSign">
     <div class="d-flex justify-content-end my-4">
       <div class="d-flex justify-content-end">
         <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModalLg">
@@ -10,9 +11,13 @@
           <span class="ms-1">Підписати КЕП</span>
         </button>
       </div>
-
-      <ModalEDS :documents-init="[]"></ModalEDS>
     </div>
+  </div>
+
+  <ModalEDS :documents-init="documents"
+            :case-id="caseId"
+            @signedDoc="onSignedDocument"
+            @signedAll="onSignedAll"></ModalEDS>
 </template>
 
 <script>
@@ -23,14 +28,47 @@ export default {
   components: {
     ModalEDS
   },
+  props: ["documentsInit", "caseId"],
   data() {
     return {
-      documents: []
+      documents: [],
+      needsSign: false
     }
   },
   mounted() {
+    if (this.documentsInit.length > 0) {
+      this.needsSign = true
+    }
     this.documents = this.documentsInit
   },
+  methods: {
+    onSignedDocument(value) {
+      const document = this.documents.find(item => item.id === value.id)
+
+      $.SOW.core.toast.show('success-soft',
+          '',
+          'Документ <b>' + document.document_type + '</b> успішно підписано.' ,
+          'top-end',
+          0,
+          true
+      )
+    },
+
+    onSignedAll() {
+      $.SOW.core.toast.show('success-soft',
+          '',
+          'Усі документи успішно підписано. Ви можете закрити вікно підписання та продовжити роботу.' ,
+          'top-end',
+          0,
+          true
+      )
+      const dTable = window.DTable["table-documents"]
+      dTable.ajax.reload(function () {
+        $.SOW.core.ajax_modal.init('.js-ajax-modal')
+      })
+      this.needsSign = false
+    },
+  }
 }
 </script>
 
