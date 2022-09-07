@@ -159,11 +159,11 @@ class Document(TimeStampModel):
         path = Path(self.file.path)
         return str(path.parent)
 
-    def assign_file(self, file_path: Path):
+    def assign_file(self, file_path: Path, file_name: str = None):
         """Присваивает файл документу."""
         with open(file_path, "rb") as fh:
             with ContentFile(fh.read()) as file_content:
-                self.file.save(file_path.name, file_content)
+                self.file.save(file_name or file_path.name, file_content)
                 self.save()
         os.remove(file_path)
 

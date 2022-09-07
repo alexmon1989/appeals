@@ -78,7 +78,7 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
                 tmp_file_path = base64_to_temp_file(file_data['content'])
 
                 # Сохранение файла в постоянный каталог и в БД
-                doc.assign_file(tmp_file_path)
+                doc.assign_file(tmp_file_path, file_data['name'])
 
                 if doc_type.base_doc:
                     # Создание файла обращения (с шапкой)
@@ -99,7 +99,7 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
                     tmp_file_path = base64_to_temp_file(file_data['content'])
 
                     # Сохранение файла в постоянный каталог и в БД
-                    doc.assign_file(tmp_file_path)
+                    doc.assign_file(tmp_file_path, file_data['name'])
 
     return claim
 
@@ -163,7 +163,7 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
                 tmp_file_path = base64_to_temp_file(file_data['content'])
 
                 # Сохранение файла в постоянный каталог и в БД
-                doc.assign_file(tmp_file_path)
+                doc.assign_file(tmp_file_path, file_data['name'])
             else:
                 files = files_data[f"{field.input_id}[]"]
 
@@ -180,7 +180,7 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
                     tmp_file_path = base64_to_temp_file(file_data['content'])
 
                     # Сохранение файла в постоянный каталог и в БД
-                    doc.assign_file(tmp_file_path)
+                    doc.assign_file(tmp_file_path, file_data['name'])
 
     # Формирование основного документа обращения (заявления)
     base_doc = Document.objects.filter(claim=claim, document_type__base_doc=True).first()
