@@ -1,6 +1,6 @@
 from django import forms
 from .models import ClaimField
-from ..classifiers.models import ClaimKind
+from apps.classifiers.models import ClaimKind
 
 
 class ClaimKindField(forms.ModelChoiceField):

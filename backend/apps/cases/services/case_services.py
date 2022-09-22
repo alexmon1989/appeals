@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q, QuerySet, Prefetch
 
-from ..models import Case, Document, CaseStage, CaseStageStep, CaseHistory, CollegiumMembership, Sign
-from ...filling import services as filling_services
+from apps.cases.models import Case, Document, CaseStage, CaseStageStep, CaseHistory, CollegiumMembership, Sign
+from apps.filling import services as filling_services
 from .create_document_service import CollegiumDocumentCreatorService
 from .document_services import document_set_reg_number, document_set_barcode
 
@@ -172,6 +172,37 @@ def case_change_stage_step(case_id: int, stage_step_code: int, user_id: int) -> 
         f'Зміна стадії справи на "{stage_step.title}" (код {stage_step.code})',
         user_id
     )
+
+
+def case_get_all_persons_for_notifying(case_id: int) -> List[UserModel]:
+    """Возвращает список всех пользователей, причастных к ап. делу,
+    которые должны быть оповещены сервисом оповещений."""
+    res = []
+    case = Case.objects.select_related(
+        'papers_owner',
+        'expert',
+        'secretary',
+    ).prefetch_related(
+        'collegiummembership_set__person',
+    ).get(pk=case_id)
+
+    # Непосредственные участники ап. дела
+    if case.papers_owner:
+        res.append(case.papers_owner)
+    if case.expert:
+        res.append(case.expert)
+    if case.secretary:
+        res.append(case.secretary)
+    for item in case.collegiummembership_set.all():
+        res.append(item.person)
+
+    # Глава АП и заместители
+    for user in UserModel.objects.filter(
+            groups__name__in=['Голова апеляційної палати', 'Заступник голови апеляційної палати']
+    ):
+        res.append(user)
+
+    return list({user.pk: user for user in res}.values())
 
 
 def case_get_history(case_id: int):

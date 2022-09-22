@@ -2,11 +2,11 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
-from ..common.models import TimeStampModel
-from ..classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason
+from apps.common.models import TimeStampModel
+from apps.classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason
 from .utils import sign_get_file_path, document_get_original_file_path
 
-from ..filling.models import Claim
+from apps.filling.models import Claim
 
 from pathlib import Path
 import urllib.parse
@@ -139,6 +139,16 @@ class Document(TimeStampModel):
         'Подано або сформовано під час подання звернненя',
         default=False
     )
+
+    @property
+    def is_signed_by_head(self) -> bool:
+        """Подписан ли документ главой АП или его заместителем."""
+        for sign in self.sign_set.all():
+            if sign.timestamp:  # Документ подписан, а не ждёт подписания
+                for group in sign.user.groups.all():
+                    if group.name in ('Голова Апеляційної палати', 'Заступник голови Апеляційної палати'):
+                        return True
+        return False
 
     @property
     def signed_file_url(self):

@@ -2,8 +2,8 @@ from django.template.loader import render_to_string
 
 from rest_framework import serializers
 from .models import Document, Sign, Case, CaseHistory
-from ..classifiers.models import DocumentType, ClaimKind, ObjKind
-from ..filling.models import Claim
+from apps.classifiers.models import DocumentType, ClaimKind, ObjKind
+from apps.filling.models import Claim
 
 
 class ClaimKindSerializer(serializers.ModelSerializer):

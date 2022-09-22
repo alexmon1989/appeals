@@ -1,5 +1,5 @@
 from django.db import models
-from ..common.models import TimeStampModel
+from apps.common.models import TimeStampModel
 
 
 class ObjKind(TimeStampModel):

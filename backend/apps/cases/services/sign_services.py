@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from ..models import Sign, Document
+from apps.cases.models import Sign, Document
 from pathlib import Path
 from urllib.parse import unquote
 

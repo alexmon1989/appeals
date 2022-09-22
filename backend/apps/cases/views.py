@@ -13,19 +13,20 @@ from django.utils.decorators import method_decorator
 
 from rest_framework import viewsets
 
-from ..users import services as users_services
-from ..common.utils import files_to_base64
-from ..common.decorators import group_required
+from apps.users import services as users_services
+from apps.common.utils import files_to_base64
+from apps.common.decorators import group_required
 
-from .services import case_services, document_services, sign_services
-from ..filling import services as filling_services
+from .services import case_services, document_services, sign_services, case_stage_step_change_action_service
+from apps.notifications.services import AlertNotifier, UsersDbNotifier
+from apps.filling import services as filling_services
 from .models import Case
 from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializer
-from ..common.mixins import LoginRequiredMixin
+from apps.common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_external_task
 from .forms import CaseUpdateForm, CaseCreateCollegiumForm
-from ..classifiers import services as classifiers_services
+from apps.classifiers import services as classifiers_services
 
 
 @login_required
@@ -146,9 +147,21 @@ def upload_sign_internal(request, document_id: int):
         }
         sign_services.sign_update(sign_data)
 
-        # todo: вынести отдельно
-        if document.document_type.code == '0005':  # Розпорядження про створення колегії
-            case_services.case_change_stage_step(document.case.id, 2003, request.user.pk)
+        # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
+        current_user_notifiers = (
+            AlertNotifier(request),
+            # UsersDbNotifier([request.user])
+        )
+        multiple_user_notifiers = (
+            UsersDbNotifier(),
+        )
+        case_stage_step_change_action_service.CaseSetActualStageStepService(
+            case_stage_step_change_action_service.CaseStageStepQualifier(),
+            document.case,
+            request.user,
+            current_user_notifiers,
+            multiple_user_notifiers
+        ).execute()
 
         return JsonResponse(
             {

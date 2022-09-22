@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
 
-from ..models import Document
-from ...classifiers.models import DocumentType
+from apps.cases.models import Document
+from apps.classifiers.models import DocumentType
 
 from .document_services import document_set_barcode, document_set_reg_number
-from ...common.utils import (docx_replace, first_lower, get_random_file_name, get_temp_file_path, generate_barcode_img,
+from apps.common.utils import (docx_replace, first_lower, get_random_file_name, get_temp_file_path, generate_barcode_img,
                              substitute_image_docx)
 
 from docx import Document as PyDocxDocument

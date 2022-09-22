@@ -1,8 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from ..common.models import TimeStampModel
-from ..classifiers.models import ClaimKind, ObjKind
+from apps.common.models import TimeStampModel
+from apps.classifiers.models import ClaimKind, ObjKind
 
 import json
 

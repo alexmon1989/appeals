@@ -5,10 +5,10 @@ from core.celery import app
 from pathlib import Path
 from urllib.parse import unquote
 
-from ..users import services as users_services
+from apps.users import services as users_services
 from .services import sign_services, document_services
-from ..common.utils import base64_to_file
-from ..filling import services as filling_services
+from apps.common.utils import base64_to_file
+from apps.filling import services as filling_services
 
 
 @app.task

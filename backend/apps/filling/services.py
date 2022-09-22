@@ -12,11 +12,11 @@ from docx import Document as PyDocxDocument
 from docx.shared import Pt
 from docxcompose.composer import Composer
 
-from ..classifiers.models import DocumentType
-from ..cases.models import Document, Sign
-from ..cases.services import document_services
+from apps.classifiers.models import DocumentType
+from apps.cases.models import Document, Sign
+from apps.cases.services import document_services
 from .models import ClaimField, Claim
-from ..common.utils import docx_replace, base64_to_temp_file, get_random_file_name, get_temp_file_path
+from apps.common.utils import docx_replace, base64_to_temp_file, get_random_file_name, get_temp_file_path
 
 from typing import List, Type, Union
 from pathlib import Path

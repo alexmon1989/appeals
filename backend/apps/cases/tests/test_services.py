@@ -1,6 +1,6 @@
 from django.test import TestCase, override_settings
-from ..services import services
-from ..models import Document
+from apps.cases.services import services
+from apps.cases.models import Document
 
 
 class ServicesTest(TestCase):

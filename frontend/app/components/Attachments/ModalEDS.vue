@@ -148,7 +148,6 @@ export default {
       for (let i = 0; i < this.documents.length; i++) {
         try {
           // Получение содержимого файла
-          console.log(this.fileToSignURL(this.documents[i].file_url))
           let data = await getFileUint8Array(this.fileToSignURL(this.documents[i].file_url))
 
           // Подписание файла

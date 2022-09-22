@@ -9,7 +9,7 @@ from crispy_forms.layout import Layout, Div
 from dateutil.relativedelta import relativedelta
 
 from .models import Case
-from ..classifiers.models import RefusalReason
+from apps.classifiers.models import RefusalReason
 from .services import case_services
 
 import random

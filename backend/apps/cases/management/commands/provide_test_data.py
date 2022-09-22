@@ -2,8 +2,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from ...models import Case, CollegiumMembership
-from ....classifiers.models import ClaimKind, ObjKind
+from apps.cases.models import Case, CollegiumMembership
+from apps.classifiers.models import ClaimKind, ObjKind
 
 from random import randint, sample
 from datetime import datetime, timedelta

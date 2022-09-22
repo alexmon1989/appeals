@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic.list import ListView
-from ..cases.models import Case
+from apps.cases.models import Case
 
 
 class CaseListView(ListView):

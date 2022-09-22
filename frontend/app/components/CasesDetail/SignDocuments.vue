@@ -57,16 +57,19 @@ export default {
     onSignedAll() {
       $.SOW.core.toast.show('success-soft',
           '',
-          'Усі документи успішно підписано. Ви можете закрити вікно підписання та продовжити роботу.' ,
+          'Усі документи успішно підписано.' ,
           'top-end',
           0,
           true
       )
-      const dTable = window.DTable["table-documents"]
-      dTable.ajax.reload(function () {
-        $.SOW.core.ajax_modal.init('.js-ajax-modal')
-      })
+      // const dTable = window.DTable["table-documents"]
+      // dTable.ajax.reload(function () {
+      //   $.SOW.core.ajax_modal.init('.js-ajax-modal')
+      // })
       this.needsSign = false
+      setTimeout(function(){
+         window.location.reload();
+      }, 2000);
     },
   }
 }

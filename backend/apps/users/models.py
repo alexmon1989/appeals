@@ -3,8 +3,8 @@ from django.contrib.auth.models import AbstractUser, Group
 from django.utils.translation import gettext_lazy as _
 from django.utils.functional import cached_property
 from .managers import UserManager
-from ..common.models import TimeStampModel
-from ..classifiers.models import ObjKind
+from apps.common.models import TimeStampModel
+from apps.classifiers.models import ObjKind
 
 
 class User(AbstractUser):

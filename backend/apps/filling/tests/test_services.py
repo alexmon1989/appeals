@@ -3,11 +3,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
-from .. import services
+from apps.filling import services
 
-from ...cases.models import DocumentTemplate
-from ...classifiers.models import DocumentType
-from ..models import Claim
+from apps.cases.models import DocumentTemplate
+from apps.classifiers.models import DocumentType
+from apps.filling.models import Claim
 
 import base64
 import shutil

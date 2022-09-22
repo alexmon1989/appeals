@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
 
-from ..models import Document, Sign
-from ..utils import set_cell_border
+from apps.cases.models import Document, Sign
+from apps.cases.utils import set_cell_border
 
 from typing import List
 from pathlib import Path

@@ -2,9 +2,9 @@ from django.conf import settings
 
 from core.celery import app
 from . import services as filling_services
-from ..cases.services import case_services
-from ..users import services as users_services
-from ..classifiers import services as classifiers_services
+from apps.cases.services import case_services
+from apps.users import services as users_services
+from apps.classifiers import services as classifiers_services
 
 import os
 import time
