@@ -52,10 +52,10 @@ class UsersDbNotifier(MultipleUsersNotifier):
     def __init__(self, addressees=None):
         self.set_addressees(addressees)
 
-    def set_addressees(self, addressees=None):
+    def set_addressees(self, addressees: Iterable[UserModel] = None):
         self.addressees = addressees or []
 
-    def notify(self, message: str, level):
+    def notify(self, message: str, level: str):
         if level in self._allowed_levels:
             for addressee in self.addressees:
                 Notification.objects.create(
@@ -63,3 +63,8 @@ class UsersDbNotifier(MultipleUsersNotifier):
                     message=message,
                     level=level
                 )
+
+
+def notification_get_user_notifications_qs(user_id: int):
+    """Возвращает queryset со всеми оповещениями пользователя."""
+    return Notification.objects.filter(addressee_id=user_id).order_by('-created_at')
