@@ -3,6 +3,7 @@ from typing import Iterable
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.db.models import QuerySet
 
 from .models import Notification as Notification
 
@@ -65,6 +66,16 @@ class UsersDbNotifier(MultipleUsersNotifier):
                 )
 
 
-def notification_get_user_notifications_qs(user_id: int):
+def notification_get_user_notifications_qs(user_id: int) -> QuerySet[Notification]:
     """Возвращает queryset со всеми оповещениями пользователя."""
     return Notification.objects.filter(addressee_id=user_id).order_by('-created_at')
+
+
+def notification_get_user_new_notifications_count(user_id: int) -> int:
+    """Возвращает количество новых оповещений пользователя."""
+    return notification_get_user_notifications_qs(user_id).exclude(read=True).count()
+
+
+def notification_mark_notifications_as_read(user_id: int) -> None:
+    """Возвращает количество новых оповещений пользователя."""
+    notification_get_user_notifications_qs(user_id).update(read=True)

@@ -1,10 +1,13 @@
 from django.shortcuts import render
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import NotificationSerializer
-from .services import notification_get_user_notifications_qs
+from .services import (notification_get_user_notifications_qs,
+                       notification_get_user_new_notifications_count,
+                       notification_mark_notifications_as_read)
 
 
 def list_index(request):
@@ -31,3 +34,23 @@ class NotificationList(generics.ListAPIView):
                 serializer = NotificationSerializer(queryset, many=True)
                 return Response(serializer.data)
         return super().list(request, *args, **kwargs)
+
+
+class NewNotificationsCountView(APIView):
+    """Возвращает количество новых оповещений пользователя."""
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['get']
+
+    def get(self, request, format=None):
+        count = notification_get_user_new_notifications_count(self.request.user.pk)
+        return Response({'count': count})
+
+
+class MarkNotificationsAsRead(APIView):
+    """Помечает оповещения пользователя как прочитанные."""
+    permission_classes = [IsAuthenticated]
+    http_method_names = ['post']
+
+    def post(self, request, format=None):
+        notification_mark_notifications_as_read(self.request.user.pk)
+        return Response({'success': 1})

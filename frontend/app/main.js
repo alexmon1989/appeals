@@ -10,6 +10,7 @@ import SignDocuments from './components/CasesDetail/SignDocuments.vue'
 import ClaimData from './components/CasesDetail/ClaimData.vue'
 import CaseUpdateSubmitConfirmation from './components/CasesUpdate/SubmitConfirmation.vue'
 import SubmitConfirmation from './components/SubmitConfirmation.vue'
+import NotificationsWidget from './components/Notifications/Widget.vue'
 import { defineRule, configure } from 'vee-validate'
 import AllRules from '@vee-validate/rules'
 import { localize, setLocale } from '@vee-validate/i18n'
@@ -40,6 +41,7 @@ const app = createApp({
         SubmitConfirmation,
         CaseUpdateSubmitConfirmation,
         SignDocuments,
+        NotificationsWidget,
     }
 })
 
