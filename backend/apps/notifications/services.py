@@ -47,7 +47,7 @@ class MultipleUsersNotifier(Notifier, ABC):
 
 
 class UsersDbNotifier(MultipleUsersNotifier):
-    """Класс, задачей которого является оповещение пользователей о событии посредством django.messages."""
+    """Класс, задачей которого является оповещение пользователей о событии посредством БД."""
     addressees: Iterable[UserModel]
 
     def __init__(self, addressees=None):

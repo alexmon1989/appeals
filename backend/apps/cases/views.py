@@ -82,16 +82,11 @@ class CaseUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
+        kwargs['request'] = self.request
         return kwargs
 
     def get_success_url(self):
-        messages.success(self.request, 'Дані успішно збережено.')
         if self.request.POST.get('goto_2001'):
-            messages.success(
-                self.request,
-                'Стадію справи змінено на "Досьє заповнено. Очікує на розподіл колегії." (код 2001).'
-            )
             return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
         return reverse_lazy('cases_update', kwargs={'pk': self.kwargs['pk']})
 
@@ -100,8 +95,22 @@ class CaseUpdateView(LoginRequiredMixin, UpdateView):
 @group_required('Секретар')
 def take_to_work(request, pk: int):
     """Принимает дело в работу и переадресовывает на страницу деталей дела."""
-    if case_services.case_take_to_work(pk, request.user.pk):
-        messages.success(request, 'Справу прийнято в роботу.')
+    # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
+    case = case_services.case_get_one(pk)
+    current_user_notifiers = (
+        AlertNotifier(request),
+    )
+    multiple_user_notifiers = (
+        UsersDbNotifier(),
+    )
+    stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+        case_stage_step_change_action_service.CaseStageStepQualifier(),
+        case,
+        request.user,
+        current_user_notifiers,
+        multiple_user_notifiers
+    )
+    if stage_set_service.execute():
         return redirect('cases-detail', pk=pk)
     raise Http404()
 
@@ -214,15 +223,10 @@ class CaseCreateCollegium(LoginRequiredMixin, UpdateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
+        kwargs['request'] = self.request
         return kwargs
 
     def get_success_url(self):
-        messages.success(
-            self.request,
-            'Колегію успішно сформовано. '
-            'Стадію справи змінено на "Здійснено розподіл колегії. Очікує на підписання розпорядження." (код 2002).'
-        )
         return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
 
 

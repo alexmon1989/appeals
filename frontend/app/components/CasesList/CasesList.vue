@@ -48,11 +48,11 @@
        }'>
     <thead>
     <tr>
-      <th data-data="case_number_link" data-name="case_number">№ справи</th>
-      <th data-data="claim.obj_number">№ заявки або ох. документа</th>
-      <th data-data="claim.obj_kind.title">Вид ОПІВ</th>
-      <th data-data="claim.obj_title">Назва ОПІВ</th>
-      <th data-data="claim.submission_date">Дата подання звернення</th>
+      <th data-data="case_number_link" data-name="case_number" class="text-nowrap">№ справи</th>
+      <th data-data="claim.obj_number" class="text-nowrap">№ заявки або ох. документа</th>
+      <th data-data="claim.obj_kind.title" class="text-nowrap">Вид ОПІВ</th>
+      <th data-data="claim.obj_title" class="text-nowrap">Назва ОПІВ</th>
+      <th data-data="claim.submission_date" class="text-nowrap">Дата подання звернення</th>
       <th data-data="stage_verbal" data-name="stage">Стадія</th>
     </tr>
     </thead>

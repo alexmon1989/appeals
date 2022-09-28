@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.safestring import mark_safe
 from django.core.exceptions import ValidationError
+from django.contrib import messages
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div
@@ -10,7 +11,8 @@ from dateutil.relativedelta import relativedelta
 
 from .models import Case
 from apps.classifiers.models import RefusalReason
-from .services import case_services
+from .services import case_services, case_stage_step_change_action_service
+from apps.notifications.services import AlertNotifier, UsersDbNotifier
 
 import random
 
@@ -55,8 +57,8 @@ class CaseUpdateForm(forms.ModelForm):
         model = Case
         fields = ['refusal_reasons', 'expert', 'deadline']
 
-    def __init__(self, user, *args, **kwargs):
-        self.user = user
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
         super().__init__(*args, **kwargs)
 
         if self.instance.claim.claim_kind.claim_sense == 'DE':
@@ -99,11 +101,25 @@ class CaseUpdateForm(forms.ModelForm):
 
     def save(self, commit=True):
         super().save()
-        case_services.case_add_history_action(self.instance.id, 'Зміна даних справи', self.user.pk)
+        case_services.case_add_history_action(self.instance.id, 'Зміна даних справи', self.request.user.pk)
+        messages.success(self.request, 'Дані успішно збережено.')
 
         # Переход к стадии 2001 - "Досьє заповнено. Очікує на розподіл колегії."
         if self.cleaned_data.get('goto_2001') and self.instance.stage_step.code == 2000:
-            case_services.case_change_stage_step(self.instance.pk, 2001, self.user.pk)
+            current_user_notifiers = (
+                AlertNotifier(self.request),
+            )
+            multiple_user_notifiers = (
+                UsersDbNotifier(),
+            )
+            stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+                case_stage_step_change_action_service.CaseStageStepQualifier(),
+                self.instance,
+                self.request.user,
+                current_user_notifiers,
+                multiple_user_notifiers
+            )
+            stage_set_service.execute()
 
 
 class CaseCreateCollegiumForm(forms.ModelForm):
@@ -121,8 +137,8 @@ class CaseCreateCollegiumForm(forms.ModelForm):
         model = Case
         fields = []
 
-    def __init__(self, user, *args, **kwargs):
-        self.user = user
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
         super().__init__(*args, **kwargs)
 
         # Глава коллегии (варианты выбора в зависимости от специальности (типа объекта ИС обращения)).
@@ -166,10 +182,7 @@ class CaseCreateCollegiumForm(forms.ModelForm):
         self.helper.label_class = "fw-bold"
         self.helper.field_class = "mb-4"
 
-        fields = []
-        fields.append('head')
-        fields.append('members')
-        fields.append('signer')
+        fields = ['head', 'members', 'signer']
 
         self.helper.layout = Layout(*fields)
 
@@ -187,6 +200,24 @@ class CaseCreateCollegiumForm(forms.ModelForm):
           'head_id': self.cleaned_data['head'].pk,
           'members_ids': [x.pk for x in self.cleaned_data['members']],
           'signer_id': self.cleaned_data['signer'].pk,
-          'user_id': self.user.pk,
+          'user_id': self.request.user.pk,
         }
+        # Создание коллегии
         case_services.case_create_collegium(**data)
+        self.instance.refresh_from_db()
+
+        # Изменение стадии дела, создание оповещений
+        current_user_notifiers = (
+            AlertNotifier(self.request),
+        )
+        multiple_user_notifiers = (
+            UsersDbNotifier(),
+        )
+        stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+            case_stage_step_change_action_service.CaseStageStepQualifier(),
+            self.instance,
+            self.request.user,
+            current_user_notifiers,
+            multiple_user_notifiers
+        )
+        stage_set_service.execute()

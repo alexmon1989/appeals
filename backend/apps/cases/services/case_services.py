@@ -34,6 +34,11 @@ def case_get_all_qs(order_by: str = '-created_at') -> QuerySet[Case]:
     return cases
 
 
+def case_get_one(case_id: int) -> Case:
+    """Возвращает список апелляционных дел, к которым есть доступ у пользователя"""
+    return case_get_all_qs().filter(pk=case_id).first()
+
+
 def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str = None, obj_kind: int = None,
                         stage: str = None) -> Iterable[Case]:
     """Фильтрует список ап. дел по определённым параметрам."""
@@ -150,17 +155,6 @@ def case_add_history_action(case_id: int, action: str, user_id: int) -> None:
     )
 
 
-def case_take_to_work(case_id: int, user_id: int) -> bool:
-    """Принимает дело в работу (назначает секретаря и меняет статус на 2000)."""
-    case = Case.objects.filter(pk=case_id, stage_step__code=1000).first()
-    if case:
-        case.secretary_id = user_id
-        case.save()
-        case_change_stage_step(case_id, 2000, user_id)
-        return True
-    return False
-
-
 def case_change_stage_step(case_id: int, stage_step_code: int, user_id: int) -> None:
     """Присваивает делу новую стадию и делает отметку в журнале дела."""
     case = Case.objects.get(pk=case_id)
@@ -249,4 +243,4 @@ def case_create_collegium(case_id: int, head_id: int, members_ids: List[int], si
     )
 
     # Смена статуса дела
-    case_change_stage_step(case_id, 2002, user_id)
+    # case_change_stage_step(case_id, 2002, user_id)
