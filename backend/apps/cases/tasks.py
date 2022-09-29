@@ -32,6 +32,13 @@ def upload_sign_external_task(document_id: int, sign_file_base_64: str, sign_inf
         }
         sign_services.sign_create(sign_data)
 
+        # Запись в историю документа
+        document_services.document_add_history(
+            document.pk,
+            f"Документ підписано КЕП (підписувач: {sign_info['subject']}, {sign_info['serial']})",
+            user.pk
+        )
+
         # Обновление статуса заявки
         filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
 

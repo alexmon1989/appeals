@@ -3,7 +3,6 @@ import json
 from django.http import JsonResponse, Http404
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
@@ -155,6 +154,11 @@ def upload_sign_internal(request, document_id: int):
             'timestamp': sign_info['timestamp'],
         }
         sign_services.sign_update(sign_data)
+        document_services.document_add_history(
+            document.pk,
+            f"Документ підписано КЕП (підписувач: {sign_info['subject']}, {sign_info['serial']})",
+            request.user.pk
+        )
 
         # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
         current_user_notifiers = (
@@ -209,6 +213,12 @@ def document_signs_info(request, document_id: int):
     """Отображает информацию о цифровых подписях документа."""
     document = document_services.document_get_by_id(document_id)
     return render(request, 'cases/detail/document_signs_info.html', {'document': document})
+
+
+def document_history(request, document_id: int):
+    """Отображает информацию о цифровых подписях документа."""
+    document = document_services.document_get_by_id(document_id)
+    return render(request, 'cases/detail/document_history.html', {'document': document})
 
 
 @method_decorator(group_required('Секретар'), name='dispatch')

@@ -4,7 +4,7 @@ from django.db.models import Count, Q, QuerySet, Prefetch
 from apps.cases.models import Case, Document, CaseStage, CaseStageStep, CaseHistory, CollegiumMembership, Sign
 from apps.filling import services as filling_services
 from .create_document_service import CollegiumDocumentCreatorService
-from .document_services import document_set_reg_number, document_set_barcode
+from .document_services import document_set_reg_number, document_set_barcode, document_add_history
 
 from typing import Iterable, List, Union
 import datetime
@@ -228,6 +228,11 @@ def case_create_collegium(case_id: int, head_id: int, members_ids: List[int], si
     # Создание документа распоряжения
     service = CollegiumDocumentCreatorService()
     document = service.execute(case_id=case_id, signer_id=signer_id)
+    document_add_history(
+        document.pk,
+        'Документ додано у систему (створено автоматично)',
+        user_id
+    )
 
     # Подписант
     Sign.objects.create(

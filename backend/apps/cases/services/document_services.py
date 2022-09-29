@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.conf import settings
 
-from apps.cases.models import Document, Sign
+from apps.cases.models import Document, Sign, DocumentHistory
 from apps.cases.utils import set_cell_border
 
 from typing import List
@@ -15,7 +15,13 @@ UserModel = get_user_model()
 
 def document_get_by_id(doc_id: int) -> Document:
     """Возвращает документ по его идентификатору."""
-    doc = Document.objects.filter(pk=doc_id).prefetch_related('sign_set', 'document_type')
+    doc = Document.objects.filter(pk=doc_id).prefetch_related(
+        'sign_set',
+        'documenthistory_set',
+        'documenthistory_set__user'
+    ).select_related(
+        'document_type'
+    )
     return doc.first()
 
 
@@ -125,3 +131,12 @@ def document_get_case_documents_to_sign(case_id: int, user: UserModel) -> list:
         })
 
     return res
+
+
+def document_add_history(doc_id: int, action: str, user_id: int) -> None:
+    """Создаёт запись в историю дела."""
+    DocumentHistory.objects.create(
+        document_id=doc_id,
+        action=action,
+        user_id=user_id
+    )

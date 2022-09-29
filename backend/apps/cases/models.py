@@ -197,6 +197,27 @@ class Document(TimeStampModel):
         db_table = 'documents'
 
 
+class DocumentHistory(TimeStampModel):
+    """Модель истории документа."""
+    action = models.CharField('Дія', max_length=1024)
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, verbose_name='Документ')
+    user = models.ForeignKey(
+        UserModel,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Користувач",
+    )
+
+    def __str__(self):
+        return self.action
+
+    class Meta:
+        verbose_name = 'Дія по документу'
+        verbose_name_plural = 'Дії по документу'
+        db_table = 'documents_history'
+
+
 class CollegiumMembership(models.Model):
     """Связующая таблица апелляционного дела и членов коллегии"""
     person = models.ForeignKey(UserModel, on_delete=models.CASCADE, verbose_name='Особа')

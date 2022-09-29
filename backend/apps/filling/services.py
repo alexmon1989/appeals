@@ -71,6 +71,7 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
                     input_date=datetime.datetime.now(),
                     claim_document=True,
                 )
+                document_services.document_add_history(doc.pk, 'Документ додано у систему', user.pk)
 
                 file_data = files_data[field.input_id][0]
 
@@ -82,7 +83,12 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
 
                 if doc_type.base_doc:
                     # Создание файла обращения (с шапкой)
-                    document_create_main_claim_doc_file(claim, doc)
+                    main_claim_doc = document_create_main_claim_doc_file(claim, doc)
+                    document_services.document_add_history(
+                        main_claim_doc.pk,
+                        'Документ додано у систему (створено автоматично)',
+                        user.pk
+                    )
             else:
                 files = files_data[f"{field.input_id}[]"]
 
@@ -94,6 +100,7 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
                         input_date=datetime.datetime.now(),
                         claim_document=True
                     )
+                    document_services.document_add_history(doc.pk, 'Документ додано у систему', user.pk)
 
                     # Сохранение файла во временный каталог
                     tmp_file_path = base64_to_temp_file(file_data['content'])
@@ -156,6 +163,7 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
                     input_date=datetime.datetime.now(),
                     claim_document=True,
                 )
+                document_services.document_add_history(doc.pk, 'Документ додано у систему', user.pk)
 
                 file_data = files_data[field.input_id][0]
 
@@ -175,6 +183,7 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
                         input_date=datetime.datetime.now(),
                         claim_document=True
                     )
+                    document_services.document_add_history(doc.pk, 'Документ додано у систему', user.pk)
 
                     # Сохранение файла во временный каталог
                     tmp_file_path = base64_to_temp_file(file_data['content'])
@@ -185,7 +194,12 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
     # Формирование основного документа обращения (заявления)
     base_doc = Document.objects.filter(claim=claim, document_type__base_doc=True).first()
     if base_doc:
-        document_create_main_claim_doc_file(claim, base_doc)
+        main_claim_doc = document_create_main_claim_doc_file(claim, base_doc)
+        document_services.document_add_history(
+            main_claim_doc.pk,
+            'Документ додано у систему (створено автоматично)',
+            user.pk
+        )
         claim.status = 1
         claim.save()
 

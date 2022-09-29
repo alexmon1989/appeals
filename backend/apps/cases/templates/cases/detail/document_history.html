@@ -1,0 +1,31 @@
+<div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <div class="modal-content">
+        <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title m-0">Історія документу</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-0 m-3 m-2-xs">
+            <table class="table table-sm table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Дія</th>
+                    <th scope="col">Користувач</th>
+                    <th scope="col">Час</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in document.documenthistory_set.all %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ item.action }}</td>
+                    <td>{{ item.user.get_full_name }}</td>
+                    <td class="text-nowrap">{{ item.created_at }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -10,6 +10,7 @@ urlpatterns = [
     path('upload-sign-external/<int:document_id>/', views.upload_sign_external, name='upload-sign-external'),
     path('upload-sign-internal/<int:document_id>/', views.upload_sign_internal, name='upload-sign-internal'),
     path('document-signs-info/<int:document_id>/', views.document_signs_info, name='document-signs-info'),
+    path('document-history/<int:document_id>/', views.document_history, name='document-history'),
     path('take_to_work/<int:pk>/', views.take_to_work, name='cases_take_to_work'),
     path('create-collegium/<int:pk>/', views.CaseCreateCollegium.as_view(), name='case_create_collegium'),
     path(
