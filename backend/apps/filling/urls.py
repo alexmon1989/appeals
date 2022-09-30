@@ -20,4 +20,5 @@ urlpatterns = [
         views.create_files_with_signs_info,
         name='create_files_with_signs_info'
     ),
+    path('test_upload', views.test_upload)
 ]

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test upload</title>
+</head>
+<body>
+<form action="" method="post" enctype="multipart/form-data">
+    <input type="file" name="f1"><br><br>
+    <input type="file" name="f2"><br><br>
+    <input type="file" name="f3"><br><br>
+    <input type="file" name="f4"><br><br>
+    <input type="file" name="f5"><br><br>
+    <input type="file" name="f6"><br><br>
+    <input type="file" name="f7"><br><br>
+    <input type="submit"><br><br>
+</form>
+
+<div>
+    {% if files %}
+        Завантажені файли:<br><br>
+
+    {% for key, value in files.items %}
+        {{ forloop.counter }}. <b>Назва файлу:</b> {{ value.name }}, <b>розмір:</b> {{ value.size }} байт<br>
+    {% endfor %}
+
+    {% endif %}
+</div>
+</body>
+</html>

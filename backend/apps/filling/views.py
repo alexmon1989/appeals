@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views import View
 from django.views.generic.base import TemplateView
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils.decorators import method_decorator
@@ -246,3 +246,8 @@ def create_files_with_signs_info(request, claim_id):
             "task_id": task.id,
         }
     )
+
+
+@csrf_exempt
+def test_upload(request):
+    return render(request, 'filling/test_upload.html', {'files': request.FILES})
