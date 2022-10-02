@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils.functional import cached_property
+
 from apps.common.models import TimeStampModel
 from apps.classifiers.models import ClaimKind, ObjKind
 
@@ -96,33 +98,77 @@ class Claim(TimeStampModel):
     def __str__(self):
         return self.obj_number
 
+    @cached_property
+    def data(self):
+        """Возвращает распарсенный json с данными обращения."""
+        return json.loads(self.json_data)
+
     def get_absolute_url(self):
         return reverse('claim_detail', kwargs={'pk': self.pk})
 
     def get_appellant_title(self):
-        """Возвращает данные апеллянта """
-        data = json.loads(self.json_data)
+        """Возвращает имя апеллянта """
         if self.third_person:
-            appellant_name = data['third_person_applicant_title']
+            appellant_name = self.data['third_person_applicant_title']
         else:
-            appellant_name = data['applicant_title']
+            appellant_name = self.data['applicant_title']
         return appellant_name.replace("\r\n", ", ")
 
+    def get_appellant_address(self):
+        """Возвращает адрес апеллянта """
+        if self.third_person:
+            appellant_address = self.data['third_person_applicant_address']
+        else:
+            appellant_address = self.data['applicant_address']
+        return appellant_address.replace("\r\n", ", ")
+
     def get_applicant_title(self):
-        """Возвращает данные апеллянта """
-        data = json.loads(self.json_data)
+        """Возвращает имя заявителя заявки на объект пром. собств."""
         try:
-            applicant_title = data['applicant_title']
+            applicant_title = self.data['applicant_title']
             return applicant_title.replace("\r\n", ", ")
         except KeyError:
             return ''
 
-    def get_owner_title(self):
-        """Возвращает данные апеллянта """
-        data = json.loads(self.json_data)
+    def get_applicant_address(self):
+        """Возвращает адрес заявителя заявки на объект пром. собств."""
         try:
-            applicant_title = data['owner_title']
+            applicant_address = self.data['applicant_address']
+            return applicant_address.replace("\r\n", ", ")
+        except KeyError:
+            return ''
+
+    def get_owner_title(self):
+        """Возвращает данные владельца охранного документа """
+        try:
+            applicant_title = self.data['owner_title']
             return applicant_title.replace("\r\n", ", ")
+        except KeyError:
+            return ''
+
+    def get_represent_title(self, third_person: bool = False):
+        """Возвращает имя представителя."""
+        try:
+            if third_person:
+                # Апеллянт - 3-е лицо
+                represent_title = self.data['third_person_represent_title']
+            else:
+                # Апеллянт - заявитель
+                represent_title = self.data['represent_title']
+            return represent_title.replace("\r\n", ", ")
+        except KeyError:
+            return ''
+
+    def get_represent_address(self, third_person: bool = False):
+        """Возвращает адрес представителя."""
+        try:
+            if third_person:
+                # Апеллянт - 3-е лицо
+                represent_address = self.data['third_person_represent_address']
+            else:
+                # Апеллянт - заявитель
+                represent_address = self.data['represent_address']
+            return represent_address.replace("\r\n", ", ")
         except KeyError:
             return ''
 

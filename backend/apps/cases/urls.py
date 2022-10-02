@@ -18,7 +18,11 @@ urlpatterns = [
         views.create_files_with_signs_info,
         name='cases_create_files_with_signs_info'
     ),
-
+    path(
+        'consider-for-acceptance/<int:pk>/',
+        views.CaseConsiderForAcceptance.as_view(),
+        name='case_consider_for_acceptance'
+    ),
     path('ds-file/', views.ds_file, name='cases_ds_file'),
     path('ds-token/', views.ds_token, name='cases_ds_token'),
     path('ds-iframe/', views.ds_iframe, name='cases_ds_iframe'),

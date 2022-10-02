@@ -3,8 +3,9 @@ from django.db.models import Count, Q, QuerySet, Prefetch
 
 from apps.cases.models import Case, Document, CaseStage, CaseStageStep, CaseHistory, CollegiumMembership, Sign
 from apps.filling import services as filling_services
-from .create_document_service import CollegiumDocumentCreatorService
-from .document_services import document_set_reg_number, document_set_barcode, document_add_history
+from . import create_document_service
+from .document_services import document_set_reg_number, document_set_barcode
+from apps.classifiers import services as classifiers_services
 
 from typing import Iterable, List, Union
 import datetime
@@ -226,13 +227,8 @@ def case_create_collegium(case_id: int, head_id: int, members_ids: List[int], si
         )
 
     # Создание документа распоряжения
-    service = CollegiumDocumentCreatorService()
-    document = service.execute(case_id=case_id, signer_id=signer_id)
-    document_add_history(
-        document.pk,
-        'Документ додано у систему (створено автоматично)',
-        user_id
-    )
+    service = create_document_service.Service()
+    document = service.execute(case_id=case_id, doc_code='0005', signer_id=signer_id, user_id=user_id)
 
     # Подписант
     Sign.objects.create(
@@ -247,5 +243,36 @@ def case_create_collegium(case_id: int, head_id: int, members_ids: List[int], si
         user_id
     )
 
-    # Смена статуса дела
-    # case_change_stage_step(case_id, 2002, user_id)
+
+def case_create_docs_consider_for_acceptance(case_id: int, signer_id: int, expert_head_id: int, user_id: int) -> None:
+    """Создаёт документы для стадии принятия дела к рассмотрению."""
+    # Получение дела
+    case = case_get_one(case_id)
+
+    # Типы документов, которые необходимо создать
+    doc_types = classifiers_services.get_doc_types_for_consideration(case.claim.claim_kind_id)
+
+    # Сервис создания документов
+    service = create_document_service.Service()
+
+    # Сохдание документов
+    for doc_type in doc_types:
+        document = service.execute(
+            case_id=case_id,
+            doc_code=doc_type['code'],
+            signer_id=signer_id,
+            user_id=user_id,
+            expert_head_id=expert_head_id
+        )
+        # Подписант документа
+        Sign.objects.create(
+            document=document,
+            user_id=signer_id,
+        )
+
+    # Запись в историю дела
+    # case_add_history_action(
+    #     case_id,
+    #     'Створено документи для прийняття справи до розгляду.',
+    #     user_id
+    # )

@@ -10,14 +10,25 @@ from apps.classifiers.models import ObjKind
 class User(AbstractUser):
     username = None
     email = models.EmailField(_('email address'), unique=True)
+
     last_name = models.CharField("Прізвище", max_length=255, blank=True, null=True)
     first_name = models.CharField("Ім'я", max_length=255, blank=True, null=True)
     middle_name = models.CharField("По-батькові", max_length=255, blank=True, null=True)
-    phone_number = models.CharField("Номер телефону", max_length=255, blank=True, null=True)
     position = models.CharField("Посада", max_length=512, blank=True, null=True,
                                 help_text='Вкажіть повну посаду із відділом, наприклад, '
                                           '"Начальник відділу забезпечення діяльності колегіальних '
                                           'органів Укрпатенту"')
+
+    # Имя и должность в родительном падеже (может быть необходимо, например, при генерации документов)
+    last_name_genitive = models.CharField("Прізвище у родовому відмінку", max_length=255, blank=True, null=True)
+    first_name_genitive = models.CharField("Ім'я у родовому відмінку", max_length=255, blank=True, null=True)
+    middle_name_genitive = models.CharField("По-батькові у родовому відмінку", max_length=255, blank=True, null=True)
+    position_genitive = models.CharField("Посада у родовому відмінку", max_length=512, blank=True, null=True,
+                                         help_text='Вкажіть повну посаду із відділом, наприклад, '
+                                                   '"Начальнику відділу забезпечення діяльності колегіальних '
+                                                   'органів Укрпатенту"')
+
+    phone_number = models.CharField("Номер телефону", max_length=255, blank=True, null=True)
     specialities = models.ManyToManyField(ObjKind, blank=True, verbose_name='Спеціальності')
 
     USERNAME_FIELD = 'email'
@@ -28,11 +39,22 @@ class User(AbstractUser):
         return self.email
 
     @cached_property
-    def get_full_name(self):
+    def get_full_name(self) -> str:
         if self.last_name:
             return ('%s %s %s' % (self.last_name, self.first_name, self.middle_name)).strip()
         else:
             return self.certificateowner_set.first().pszSubjFullName.strip()
+
+    def get_full_name_initials(self) -> str:
+        return f"{self.last_name} {self.first_name[:1]}. {self.middle_name[:1]}."
+
+    def get_full_name_genitive(self) -> str:
+        """Возвращает ФИО пользователя в родительном падеже."""
+        return f"{self.last_name_genitive} {self.first_name_genitive} {self.middle_name_genitive}"
+
+    def get_full_name_initials_genitive(self) -> str:
+        """Возвращает ФИО (имя и отчество - инициалы) пользователя в родительном падеже."""
+        return f"{self.last_name_genitive} {self.first_name_genitive[:1]}. {self.middle_name_genitive[:1]}."
 
     def get_groups(self):
         groups = self.groups.values_list('name', flat=True)

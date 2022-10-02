@@ -24,7 +24,7 @@ from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializer
 from apps.common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_external_task
-from .forms import CaseUpdateForm, CaseCreateCollegiumForm
+from .forms import CaseUpdateForm, CaseCreateCollegiumForm, CaseAcceptForConsiderationForm
 from apps.classifiers import services as classifiers_services
 
 
@@ -70,7 +70,7 @@ class CaseDetailView(LoginRequiredMixin, DetailView):
 
 
 @method_decorator(group_required('Секретар'), name='dispatch')
-class CaseUpdateView(LoginRequiredMixin, UpdateView):
+class CaseUpdateView(UpdateView):
     """Отображает страницу обновления данных дела."""
     model = Case
     form_class = CaseUpdateForm
@@ -90,7 +90,6 @@ class CaseUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('cases_update', kwargs={'pk': self.kwargs['pk']})
 
 
-@login_required
 @group_required('Секретар')
 def take_to_work(request, pk: int):
     """Принимает дело в работу и переадресовывает на страницу деталей дела."""
@@ -222,7 +221,7 @@ def document_history(request, document_id: int):
 
 
 @method_decorator(group_required('Секретар'), name='dispatch')
-class CaseCreateCollegium(LoginRequiredMixin, UpdateView):
+class CaseCreateCollegium(UpdateView):
     """Отображает страницу создания коллегии."""
     model = Case
     form_class = CaseCreateCollegiumForm
@@ -238,6 +237,38 @@ class CaseCreateCollegium(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+@method_decorator(group_required('Секретар'), name='dispatch')
+class CaseConsiderForAcceptance(UpdateView):
+    """Отображает страницу принятия дела к рассмотрению."""
+    model = Case
+    form_class = CaseAcceptForConsiderationForm
+    template_name = 'cases/consider_for_acceptance/index.html'
+
+    def get_queryset(self):
+        # Функция доступна только на стадии 2003 "Розпорядження підписано. Очікує на прийняття до розгляду."
+        return case_services.case_get_all_qs().filter(secretary=self.request.user, stage_step__code=2003)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Типы документов, которые будут сгенерированы
+        context['docs_to_generate'] = classifiers_services.get_doc_types_for_consideration(
+            self.object.claim.claim_kind_id
+        )
+        # Проверка все ли типы документов присутствуют
+        context['templates_missed'] = any([not x['template'] for x in context['docs_to_generate']])
+
+        return context
 
 
 @require_POST

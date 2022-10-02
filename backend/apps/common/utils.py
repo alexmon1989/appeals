@@ -174,7 +174,7 @@ def get_temp_file_path(file_name: str) -> Path:
 
 
 def first_lower(s):
-    """Делает первую букву строки заглавной."""
+    """Делает первую букву строки строчной."""
     if not s:
         return s
     return s[0].lower() + s[1:]

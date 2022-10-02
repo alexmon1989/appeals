@@ -121,6 +121,8 @@ class CaseSetActualStageStepService:
             notifier.set_addressees(users)
             notifier.notify(message, 'success')
 
+        # TODO: уведомление подписанту, что ему на подписание передано документ
+
     def _call_2003_actions(self):
         """Выполнение действий, характерных для стадии 2003 -
         "Розпорядження підписано. Очікує на прийняття до розгляду."."""

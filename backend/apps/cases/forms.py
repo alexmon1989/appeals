@@ -202,7 +202,6 @@ class CaseCreateCollegiumForm(forms.ModelForm):
           'signer_id': self.cleaned_data['signer'].pk,
           'user_id': self.request.user.pk,
         }
-        # Создание коллегии
         case_services.case_create_collegium(**data)
         self.instance.refresh_from_db()
 
@@ -221,3 +220,49 @@ class CaseCreateCollegiumForm(forms.ModelForm):
             multiple_user_notifiers
         )
         stage_set_service.execute()
+
+
+class CaseAcceptForConsiderationForm(forms.ModelForm):
+    """Форма принятия дела к рассмотрению."""
+    # Подписант (варианты выбора - глава коллегии (глава АП + заместители))
+    signer = UserField(
+        queryset=UserModel.objects.filter(
+            groups__name__in=['Голова Апеляційної палати', 'Заступник голови Апеляційної палати']
+        ).order_by('last_name', 'first_name', 'middle_name').distinct(),
+        label='Підписант документів',
+        required=True
+    )
+    # Начальник экспертизы
+    expert_head = UserField(
+        queryset=UserModel.objects.filter(
+            groups__name__in=['Начальники експертизи']
+        ).order_by('last_name', 'first_name', 'middle_name').distinct(),
+        label='Адресат службової записки у експертизу',
+        required=True
+    )
+
+    class Meta:
+        model = Case
+        fields = ['signer', 'expert_head']
+
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.form_id = "case-consider-for-acceptance-form"
+        self.helper.label_class = "fw-bold"
+        self.helper.field_class = "mb-4"
+
+        fields = ['signer', 'expert_head']
+
+        self.helper.layout = Layout(*fields)
+
+    def save(self, commit=True):
+        data = {
+            'case_id': self.instance.pk,
+            'signer_id': self.cleaned_data['signer'].pk,
+            'expert_head_id': self.cleaned_data['expert_head'].pk,
+            'user_id': self.request.user.pk,
+        }
+        case_services.case_create_docs_consider_for_acceptance(**data)
