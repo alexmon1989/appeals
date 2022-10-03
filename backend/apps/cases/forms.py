@@ -31,12 +31,13 @@ class UserFieldMultiple(forms.ModelMultipleChoiceField):
 
 
 class CaseUpdateForm(forms.ModelForm):
+    """Форма редактирования данных дела."""
     goto_2001 = forms.BooleanField(
         required=False,
         label=mark_safe('Перейти до стадії <b>"Досьє заповнено. Очікує на розподіл колегії" (код стадії - 2001)</b>.')
     )
     expert = UserField(
-        queryset=UserModel.objects.filter(groups__name='Секретар').order_by('last_name', 'first_name', 'middle_name'),
+        queryset=UserModel.objects.filter(groups__name='Експерт').order_by('last_name', 'first_name', 'middle_name'),
         label='Експерт',
         required=False
     )

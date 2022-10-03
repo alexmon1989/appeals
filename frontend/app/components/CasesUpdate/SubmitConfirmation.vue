@@ -49,8 +49,8 @@ export default {
     },
     setMessage() {
       let message = 'Ви впевнені, що бажаєте зберегти дані?'
-      const goto_2001_checked = document.getElementById('id_goto_2001').checked
-      if (goto_2001_checked) {
+      const goto2001 = document.getElementById('id_goto_2001')
+      if (goto2001 && goto2001.checked) {
         message += '<br><br><span class="fw-bold text-danger">Увага! Стадію справи буде змінено на "Досьє заповнено. Очікує на розподіл колегії" (код стадії - 2001)"</span>'
       }
       this.message = message
