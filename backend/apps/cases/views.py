@@ -9,6 +9,7 @@ from django.views.generic.edit import UpdateView, CreateView
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
+from django.contrib import messages
 
 from rest_framework import viewsets
 
@@ -341,6 +342,7 @@ class DocumentAddView(LoginRequiredMixin, CreateView):
         return res
 
     def get_success_url(self):
+        messages.add_message(self.request, messages.SUCCESS, 'Документ успішно додано до справи.')
         return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
 
 
