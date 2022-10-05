@@ -6,10 +6,11 @@ from django.contrib import messages
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div
+from django_select2 import forms as s2forms
 
 from dateutil.relativedelta import relativedelta
 
-from .models import Case
+from .models import Case, Document
 from apps.classifiers.models import RefusalReason
 from .services import case_services, case_stage_step_change_action_service
 from apps.notifications.services import AlertNotifier, UsersDbNotifier
@@ -267,3 +268,42 @@ class CaseAcceptForConsiderationForm(forms.ModelForm):
             'user_id': self.request.user.pk,
         }
         case_services.case_create_docs_consider_for_acceptance(**data)
+
+
+class DocumentTypeWidget(s2forms.ModelSelect2Widget):
+    search_fields = [
+        "title__icontains",
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.i18n_name = 'uk'
+
+
+class DocumentForm(forms.ModelForm):
+    """Форма загрузки вторичных документов."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.include_media = False
+        self.helper.form_id = "document-add-form"
+        self.helper.label_class = "fw-bold"
+        self.helper.field_class = "mb-4"
+
+    class Meta:
+        model = Document
+        fields = ['document_type', 'file']
+        widgets = {
+            "document_type": DocumentTypeWidget(
+                attrs={
+                    'data-minimum-input-length': 0,
+                    'data-allow-clear': True,
+                    'data-placeholder': 'Оберіть тип документа',
+                    'data-theme': 'bootstrap-5',
+                    'data-container-css-class': '',
+                    'data-dropdown-css-class': 'select2--small',
+                }
+            ),
+        }

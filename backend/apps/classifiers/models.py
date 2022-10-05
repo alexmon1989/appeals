@@ -88,6 +88,7 @@ class DocumentType(TimeStampModel):
         verbose_name = "Тип документа"
         verbose_name_plural = "Типи документів"
         db_table = 'cl_document_kinds'
+        ordering = ('title',)
 
 
 class RefusalReason(TimeStampModel):

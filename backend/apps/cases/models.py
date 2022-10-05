@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+from django.core.validators import FileExtensionValidator
 
 from apps.common.models import TimeStampModel
 from apps.classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason
@@ -132,7 +133,8 @@ class Document(TimeStampModel):
     input_date = models.DateTimeField('Дата отримання', null=True, blank=True)
     file = models.FileField(
         verbose_name='Оригінальний файл документа',
-        upload_to=document_get_original_file_path
+        upload_to=document_get_original_file_path,
+        validators=[FileExtensionValidator(['pdf', 'docx', 'doc', 'xlsx', 'xls', 'jpg', 'jpeg', 'png', 'gif'])]
     )
     auto_generated = models.BooleanField('Сгенеровано автоматично', default=False)
     claim_document = models.BooleanField(

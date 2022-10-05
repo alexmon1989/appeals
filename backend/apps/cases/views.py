@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView, CreateView
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
 from django.utils.decorators import method_decorator
@@ -19,12 +19,12 @@ from apps.common.decorators import group_required
 from .services import case_services, document_services, sign_services, case_stage_step_change_action_service
 from apps.notifications.services import AlertNotifier, UsersDbNotifier
 from apps.filling import services as filling_services
-from .models import Case
+from .models import Case, Document
 from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializer
 from apps.common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_external_task
-from .forms import CaseUpdateForm, CaseCreateCollegiumForm, CaseAcceptForConsiderationForm
+from .forms import CaseUpdateForm, CaseCreateCollegiumForm, CaseAcceptForConsiderationForm, DocumentForm
 from apps.classifiers import services as classifiers_services
 
 
@@ -308,6 +308,40 @@ def create_files_with_signs_info(request, case_id):
             "success": 1
         }
     )
+
+
+@method_decorator(group_required('Секретар'), name='dispatch')
+class DocumentAddView(LoginRequiredMixin, CreateView):
+    """Страница создания вторичного документа."""
+    model = Document
+    template_name = 'cases/document_add/index.html'
+    form_class = DocumentForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['case'] = case_services.case_get_all_qs().filter(
+            secretary=self.request.user,
+            stage_step__case_stopped=False,
+            pk=self.kwargs['pk']
+        ).first()
+        if not context['case']:
+            raise Http404
+
+        return context
+
+    def form_valid(self, form):
+        form.instance.case_id = self.kwargs['pk']
+        res = super().form_valid(form)
+        document_services.document_add_history(form.instance.pk, 'Документ додано у систему', self.request.user.pk)
+        case_services.case_add_history_action(
+            form.instance.case_id,
+            f'Додано документ до справи (тип документа: {form.instance.document_type.title})',
+            self.request.user.pk
+        )
+        return res
+
+    def get_success_url(self):
+        return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
 
 
 @xframe_options_exempt
