@@ -28,6 +28,11 @@ urlpatterns = [
         views.DocumentAddView.as_view(),
         name='case_add_document'
     ),
+    path(
+        'update-document/<int:pk>/',
+        views.DocumentUpdateView.as_view(),
+        name='case_update_document'
+    ),
     path('ds-file/', views.ds_file, name='cases_ds_file'),
     path('ds-token/', views.ds_token, name='cases_ds_token'),
     path('ds-iframe/', views.ds_iframe, name='cases_ds_iframe'),

@@ -8,7 +8,7 @@ from typing import List
 from pathlib import Path
 from docx import Document as DocumentWord
 import random
-
+from typing import Union
 
 UserModel = get_user_model()
 
@@ -17,10 +17,13 @@ def document_get_by_id(doc_id: int) -> Document:
     """Возвращает документ по его идентификатору."""
     doc = Document.objects.filter(pk=doc_id).prefetch_related(
         'sign_set',
+        'sign_set__user',
         'documenthistory_set',
         'documenthistory_set__user'
     ).select_related(
-        'document_type'
+        'document_type',
+        'case',
+        'claim',
     )
     return doc.first()
 
@@ -94,9 +97,10 @@ def document_get_signs_info(doc_id: int) -> List[dict]:
     return res
 
 
-def document_can_be_signed_by_user(document_id: int, user: UserModel) -> bool:
+def document_can_be_signed_by_user(document: Union[int, Document], user: UserModel) -> bool:
     """Проверяет, может ли пользователь подписывать документ."""
-    document = document_get_by_id(document_id)
+    if isinstance(document, int):
+        document = document_get_by_id(document)
     if document.case:
         for sign in document.sign_set.all():
             if sign.user_id == user.pk:

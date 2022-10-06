@@ -280,7 +280,7 @@ class DocumentTypeWidget(s2forms.ModelSelect2Widget):
         self.i18n_name = 'uk'
 
 
-class DocumentForm(forms.ModelForm):
+class DocumentAddForm(forms.ModelForm):
     """Форма загрузки вторичных документов."""
 
     def __init__(self, *args, **kwargs):
@@ -307,3 +307,20 @@ class DocumentForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class DocumentUpdateForm(forms.ModelForm):
+    """Форма обновления документа."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper = FormHelper()
+        self.helper.include_media = False
+        self.helper.form_id = "document-update-form"
+        self.helper.label_class = "fw-bold"
+        self.helper.field_class = "mb-4"
+
+    class Meta:
+        model = Document
+        fields = ['file']

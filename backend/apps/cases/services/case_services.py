@@ -75,6 +75,7 @@ def case_get_documents_qs(case_id: int) -> Iterable[Document]:
     ).select_related(
         'document_type',
         'case',
+        'case__secretary',
         'claim',
         'claim__user',
     ).prefetch_related(

@@ -153,6 +153,14 @@ class Document(TimeStampModel):
         return False
 
     @property
+    def is_signed(self) -> bool:
+        """Подписан ли документ главой АП или его заместителем."""
+        for sign in self.sign_set.all():
+            if sign.timestamp:  # Документ подписан, а не ждёт подписания
+                return True
+        return False
+
+    @property
     def signed_file_url(self):
         """Возвращает путь к файлу с информацией о цифровых подписях."""
         path = Path(self.file.name)
@@ -178,6 +186,11 @@ class Document(TimeStampModel):
                 self.file.save(file_name or file_path.name, file_content)
                 self.save()
         os.remove(file_path)
+
+    def can_be_updated(self, user: UserModel):
+        """Можно ли загрузить новый файл для документа."""
+        # Проверка секретаря дела, сгенерирован ли документ автоматически и не подписан ли
+        return self.case and self.case.secretary == user and self.auto_generated and not self.is_signed
 
     def __str__(self):
         return self.document_type.title

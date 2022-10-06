@@ -11,4 +11,10 @@ UserModel = get_user_model()
 @register.simple_tag
 def user_can_sign_document(document: Document, user: UserModel):
     """Может ли пользователь подписывать документ."""
-    return document_can_be_signed_by_user(document.pk, user)
+    return document_can_be_signed_by_user(document, user)
+
+
+@register.simple_tag
+def user_can_update_document(document: Document, user: UserModel):
+    """Может ли пользователь подписывать документ."""
+    return document.can_be_updated(user)

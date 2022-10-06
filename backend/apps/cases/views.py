@@ -25,7 +25,8 @@ from .permissions import HasAccessToCase
 from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializer
 from apps.common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_external_task
-from .forms import CaseUpdateForm, CaseCreateCollegiumForm, CaseAcceptForConsiderationForm, DocumentForm
+from .forms import (CaseUpdateForm, CaseCreateCollegiumForm, CaseAcceptForConsiderationForm, DocumentAddForm,
+                    DocumentUpdateForm)
 from apps.classifiers import services as classifiers_services
 
 
@@ -316,7 +317,7 @@ class DocumentAddView(LoginRequiredMixin, CreateView):
     """Страница создания вторичного документа."""
     model = Document
     template_name = 'cases/document_add/index.html'
-    form_class = DocumentForm
+    form_class = DocumentAddForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -344,6 +345,34 @@ class DocumentAddView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         messages.add_message(self.request, messages.SUCCESS, 'Документ успішно додано до справи.')
         return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+@method_decorator(group_required('Секретар'), name='dispatch')
+class DocumentUpdateView(LoginRequiredMixin, UpdateView):
+    """Страница обновления файла документа."""
+    model = Document
+    template_name = 'cases/document_update/index.html'
+    form_class = DocumentUpdateForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['case'] = self.object.case
+        if not context['case'].secretary == self.request.user:
+            raise Http404
+
+        return context
+
+    def form_valid(self, form):
+        res = super().form_valid(form)
+        # Запись в историю дела и документа
+        message = 'Оновлено файл документу'
+        document_services.document_add_history(form.instance.pk, message, self.request.user.pk)
+        case_services.case_add_history_action(form.instance.case_id, message, self.request.user.pk)
+        return res
+
+    def get_success_url(self):
+        messages.add_message(self.request, messages.SUCCESS, 'Документ успішно оновлено.')
+        return reverse_lazy('cases-detail', kwargs={'pk': self.object.case.pk})
 
 
 @xframe_options_exempt

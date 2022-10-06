@@ -1,0 +1,15 @@
+<header>
+    <div class="row g-1 align-items-center">
+        <div class="col">
+            <h1 class="h4">Додання вторинного документу до справи №{{ case.case_number }}</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small">
+                    <li class="breadcrumb-item"><a href="{% url 'cases-list' %}">Апеляційні справи</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'cases-list' %}">Список справ</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'cases-detail' pk=case.pk %}">{{ case.case_number }}</a></li>
+                    <li class="breadcrumb-item text-muted active" aria-current="page">Оновле</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</header>
