@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from apps.cases.models import Case, CaseStageStep
+from apps.classifiers import services as classifiers_services
 from .case_services import case_change_stage_step, case_get_all_persons_for_notifying
 
 from apps.notifications.services import Notifier, MultipleUsersNotifier
@@ -23,6 +24,8 @@ class CaseStageStepQualifier:
             2001: self._satisfies_2001,
             2002: self._satisfies_2002,
             2003: self._satisfies_2003,
+            2004: self._satisfies_2004,
+            3000: self._satisfies_3000,
         }
 
     def _satisfies_2000(self):
@@ -44,6 +47,43 @@ class CaseStageStepQualifier:
                 # Документ "Розпорядження про створення колегії" существует и подписан главой комиссии
                 if document.document_type.code == '0005' and document.is_signed_by_head:
                     return True
+        return False
+
+    def _satisfies_2004(self):
+        """Удовлетворяет условиям стадии 2003 "Документи для прийняття справи до розгляду очікують на підписання."."""
+        if self.case.stage_step.code == 2003:
+            # Множество кодов документов, которые должны присутствовать на стадии
+            doc_types_should_exist = {
+                x['code'] for x in classifiers_services.get_doc_types_for_consideration(self.case.claim.claim_kind_id)
+            }
+
+            # Множество кодов документов, которые присутствуют у дела
+            doc_types_current = {
+                x.document_type.code for x in self.case.document_set.all()
+            }
+
+            # Проверка есть ли коды документов, которые должны присутствовать на стадии, в текущих документах дела
+            return doc_types_should_exist.issubset(doc_types_current)
+
+        return False
+
+    def _satisfies_3000(self):
+        """Удовлетворяет условиям стадии 3000 "Справу прийнято до розгляду"."""
+        if self.case.stage_step.code == 2004:
+            # Множество кодов документов, которые должны присутствовать на стадии
+            doc_types_should_exist = {
+                x['code'] for x in classifiers_services.get_doc_types_for_consideration(self.case.claim.claim_kind_id)
+            }
+
+            # Множество кодов подписанных документов, которые присутствуют у дела
+            doc_types_current = {
+                x.document_type.code for x in self.case.document_set.all() if x.is_signed_by_head
+            }
+
+            # Проверка есть ли коды документов, которые должны присутствовать на стадии,
+            # в текущих подписанных документах дела
+            return doc_types_should_exist.issubset(doc_types_current)
+
         return False
 
     def get_stage_step(self, case: Case) -> int:
@@ -131,6 +171,22 @@ class CaseSetActualStageStepService:
         self.case.refresh_from_db()
         self.notify_all_persons()
 
+    def _call_2004_actions(self):
+        """Выполнение действий, характерных для стадии 2004 -
+        "Документи для прийняття справи до розгляду очікують на підписання."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 2004, self.user.pk)
+        self.case.refresh_from_db()
+        self.notify_all_persons()
+
+    def _call_3000_actions(self):
+        """Выполнение действий, характерных для стадии 2004 -
+        "Справу прийнято до розгляду. Очікує на призначення засідання."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 3000, self.user.pk)
+        self.case.refresh_from_db()
+        self.notify_all_persons()
+
     def notify_all_persons(self):
         """Делает оповещение всех пользователей, которые причастны к делу,
         главы АП, заместителей, текущего пользователя."""
@@ -165,6 +221,8 @@ class CaseSetActualStageStepService:
                 2001: self._call_2001_actions,
                 2002: self._call_2002_actions,
                 2003: self._call_2003_actions,
+                2004: self._call_2004_actions,
+                3000: self._call_3000_actions,
             }
             try:
                 stage_actions[case_stage_step]()

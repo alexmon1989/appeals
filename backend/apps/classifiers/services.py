@@ -21,6 +21,6 @@ def get_doc_types_for_consideration(claim_kind_id: Type[int]) -> List[dict]:
     """Возвращает список документов, которые должны быть сгенерированы на этапе приёма дела к рассмотрению."""
     doc_types = DocumentType.objects.filter(
         claim_kinds__id=claim_kind_id,
-        code__in=['0006', '0007', '0008']
+        code__in=['0006', '0007', '0009', '0010', '0011']
     ).values('pk', 'title', 'template', 'code')
     return list(doc_types)

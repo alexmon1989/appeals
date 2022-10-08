@@ -32,8 +32,6 @@ class Service:
             return get_file_vars_0006(self.case, self.document)
         elif self.doc_type.code == '0007':
             return get_file_vars_0007(self.case, self.document)
-        elif self.doc_type.code == '0008':
-            return get_file_vars_0008(self.case, self.document, self.extra_args['expert_head_id'])
         else:
             return {}
 
@@ -255,49 +253,4 @@ def get_file_vars_0007(case: Case, document: Document) -> dict:
         '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
 
         '{{ DOC_DOWNLOAD_CODE }}': claim_doc.barcode[-10:],  # последние 10 цифр штрих-кода
-    }
-
-
-def get_file_vars_0008(case: Case, document: Document, expert_head_id) -> dict:
-    """Возвращает словарь со значениями переменных для формирования документа с кодом 0008
-    (служебная в экспертизу)."""
-    # Документ обращения
-    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002'), claim=case.claim)
-    claim_doc_reg_num = claim_doc.registration_number
-    claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
-
-    # Коллегия
-    collegium_head = ''
-    collegium_head_position = ''
-    collegium = []
-    for item in case.collegiummembership_set.all():
-        collegium.append(item.person.get_full_name_initials())
-        if item.is_head:
-            collegium_head = item.person.get_full_name
-            collegium_head_position = item.person.position
-
-    # Адресат служебной записки
-    expert_head = UserModel.objects.get(pk=expert_head_id)
-
-    return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
-        '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
-        '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
-        '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
-        '{{ OBJ_TITLE }}': case.claim.obj_title,
-        '{{ APP_NUMBER }}': case.claim.obj_number,
-        '{{ APPELAINT_TITLE }}': case.claim.get_appellant_title(),
-        '{{ APPELAINT_ADDRESS }}': case.claim.get_appellant_address(),
-        '{{ APPLICANT_TITLE }}': case.claim.get_applicant_title(),
-        '{{ APPLICANT_ADDRESS }}': case.claim.get_applicant_address(),
-        '{{ COLLEGIUM_MEMBERS }}': ', '.join(collegium),
-        '{{ SECRETARY_EMAIL }}': case.secretary.email,
-        '{{ COLLEGIUM_HEAD }}': collegium_head,
-        '{{ COLLEGIUM_HEAD_POSITION }}': collegium_head_position,
-        '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
-        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
-
-        '{{ ADDRESSEE_POSITION }}': expert_head.position_genitive,
-        '{{ ADDRESSEE_TITLE }}': expert_head.get_full_name_genitive()
     }

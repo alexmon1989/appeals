@@ -234,18 +234,10 @@ class CaseAcceptForConsiderationForm(forms.ModelForm):
         label='Підписант документів',
         required=True
     )
-    # Начальник экспертизы
-    expert_head = UserField(
-        queryset=UserModel.objects.filter(
-            groups__name__in=['Начальники експертизи']
-        ).order_by('last_name', 'first_name', 'middle_name').distinct(),
-        label='Адресат службової записки у експертизу',
-        required=True
-    )
 
     class Meta:
         model = Case
-        fields = ['signer', 'expert_head']
+        fields = ['signer']
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -256,18 +248,30 @@ class CaseAcceptForConsiderationForm(forms.ModelForm):
         self.helper.label_class = "fw-bold"
         self.helper.field_class = "mb-4"
 
-        fields = ['signer', 'expert_head']
-
-        self.helper.layout = Layout(*fields)
-
     def save(self, commit=True):
         data = {
             'case_id': self.instance.pk,
             'signer_id': self.cleaned_data['signer'].pk,
-            'expert_head_id': self.cleaned_data['expert_head'].pk,
             'user_id': self.request.user.pk,
         }
         case_services.case_create_docs_consider_for_acceptance(**data)
+        self.instance.refresh_from_db()
+
+        # Изменение стадии дела, создание оповещений
+        current_user_notifiers = (
+            AlertNotifier(self.request),
+        )
+        multiple_user_notifiers = (
+            UsersDbNotifier(),
+        )
+        stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+            case_stage_step_change_action_service.CaseStageStepQualifier(),
+            self.instance,
+            self.request.user,
+            current_user_notifiers,
+            multiple_user_notifiers
+        )
+        stage_set_service.execute()
 
 
 class DocumentTypeWidget(s2forms.ModelSelect2Widget):

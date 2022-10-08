@@ -245,7 +245,7 @@ def case_create_collegium(case_id: int, head_id: int, members_ids: List[int], si
     )
 
 
-def case_create_docs_consider_for_acceptance(case_id: int, signer_id: int, expert_head_id: int, user_id: int) -> None:
+def case_create_docs_consider_for_acceptance(case_id: int, signer_id: int, user_id: int) -> None:
     """Создаёт документы для стадии принятия дела к рассмотрению."""
     # Получение дела
     case = case_get_one(case_id)
@@ -263,7 +263,6 @@ def case_create_docs_consider_for_acceptance(case_id: int, signer_id: int, exper
             doc_code=doc_type['code'],
             signer_id=signer_id,
             user_id=user_id,
-            expert_head_id=expert_head_id
         )
         # Подписант документа
         Sign.objects.create(

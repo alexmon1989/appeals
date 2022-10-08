@@ -36,6 +36,7 @@ class CaseAdmin(admin.ModelAdmin):
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
     inlines = (SignInline,)
+    list_display = ('document_type', 'case', 'claim', 'registration_number', 'created_at')
 
 
 @admin.register(CaseStage)
