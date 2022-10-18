@@ -54,6 +54,8 @@ class Case(TimeStampModel):
     hearing = models.DateField('Дата призначенного засідання', null=True, blank=True)
     stage_step = models.ForeignKey('CaseStageStep', on_delete=models.SET_NULL, verbose_name='Етап стадії розгляду',
                                    null=True, blank=True)
+    stopped = models.BooleanField('Розгляд справи припинений', default=False)
+    paused = models.BooleanField('Діловодство по справі зупинене', default=False)
     archived = models.BooleanField('Передано в архів', default=False)
     refusal_reasons = models.ManyToManyField(
         RefusalReason,
@@ -63,6 +65,17 @@ class Case(TimeStampModel):
 
     def __str__(self):
         return self.case_number
+
+    @property
+    def collegium_head(self) -> UserModel:
+        """Глава коллегии."""
+        item = self.collegiummembership_set.filter(is_head=True).first()
+        return item.person if item else None
+
+    @property
+    def has_unsigned_docs(self) -> bool:
+        """Имеет ли дело неподписанные документы."""
+        return self.document_set.filter(sign__timestamp='').exists()
 
     class Meta:
         verbose_name = 'Справа'
@@ -89,7 +102,6 @@ class CaseStageStep(TimeStampModel):
     title = models.CharField('Назва етапу', max_length=1024)
     stage = models.ForeignKey(CaseStage, on_delete=models.CASCADE, verbose_name='Стадія')
     code = models.PositiveIntegerField('Код етапу')
-    case_stopped = models.BooleanField('Діловодство припинено', default=False)
 
     def __str__(self):
         return self.title

@@ -13,6 +13,9 @@ urlpatterns = [
     path('document-history/<int:document_id>/', views.document_history, name='document-history'),
     path('take_to_work/<int:pk>/', views.take_to_work, name='cases_take_to_work'),
     path('create-collegium/<int:pk>/', views.CaseCreateCollegium.as_view(), name='case_create_collegium'),
+    path('pause/<int:pk>/', views.CasePausingView.as_view(), name='case_pausing'),
+    path('stop/<int:pk>/', views.CaseStoppingView.as_view(), name='case_stopping'),
+    path('renew-consideration/<int:pk>/', views.case_renew_consideration, name='case_renew_consideration'),
     path(
         'create-files-with-signs-info/<int:case_id>/',
         views.create_files_with_signs_info,

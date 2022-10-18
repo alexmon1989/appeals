@@ -121,7 +121,7 @@ def document_get_case_documents_to_sign(case_id: int, user: UserModel) -> list:
         sign__user=user,
         sign__timestamp='',
         case_id=case_id
-    ).order_by('-created_at')
+    ).select_related('document_type').order_by('-created_at')
 
     res = []
 

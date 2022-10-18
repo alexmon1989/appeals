@@ -13,7 +13,7 @@ from dateutil.relativedelta import relativedelta
 from .models import Case, Document
 from apps.classifiers.models import RefusalReason
 from .services import case_services, case_stage_step_change_action_service
-from apps.notifications.services import AlertNotifier, UsersDbNotifier
+from apps.notifications.services import Service as NotificationService, DbChannel
 
 import random
 
@@ -108,18 +108,11 @@ class CaseUpdateForm(forms.ModelForm):
 
         # Переход к стадии 2001 - "Досьє заповнено. Очікує на розподіл колегії."
         if self.cleaned_data.get('goto_2001') and self.instance.stage_step.code == 2000:
-            current_user_notifiers = (
-                AlertNotifier(self.request),
-            )
-            multiple_user_notifiers = (
-                UsersDbNotifier(),
-            )
             stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
                 case_stage_step_change_action_service.CaseStageStepQualifier(),
                 self.instance,
-                self.request.user,
-                current_user_notifiers,
-                multiple_user_notifiers
+                self.request,
+                NotificationService([DbChannel()])
             )
             stage_set_service.execute()
 
@@ -208,36 +201,21 @@ class CaseCreateCollegiumForm(forms.ModelForm):
         self.instance.refresh_from_db()
 
         # Изменение стадии дела, создание оповещений
-        current_user_notifiers = (
-            AlertNotifier(self.request),
-        )
-        multiple_user_notifiers = (
-            UsersDbNotifier(),
-        )
         stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
             case_stage_step_change_action_service.CaseStageStepQualifier(),
             self.instance,
-            self.request.user,
-            current_user_notifiers,
-            multiple_user_notifiers
+            self.request,
+            NotificationService([DbChannel()])
         )
         stage_set_service.execute()
 
 
 class CaseAcceptForConsiderationForm(forms.ModelForm):
     """Форма принятия дела к рассмотрению."""
-    # Подписант (варианты выбора - глава коллегии (глава АП + заместители))
-    signer = UserField(
-        queryset=UserModel.objects.filter(
-            groups__name__in=['Голова Апеляційної палати', 'Заступник голови Апеляційної палати']
-        ).order_by('last_name', 'first_name', 'middle_name').distinct(),
-        label='Підписант документів',
-        required=True
-    )
 
     class Meta:
         model = Case
-        fields = ['signer']
+        fields = []
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -251,27 +229,108 @@ class CaseAcceptForConsiderationForm(forms.ModelForm):
     def save(self, commit=True):
         data = {
             'case_id': self.instance.pk,
-            'signer_id': self.cleaned_data['signer'].pk,
+            'signer_id': self.instance.collegium_head.pk,
             'user_id': self.request.user.pk,
         }
         case_services.case_create_docs_consider_for_acceptance(**data)
         self.instance.refresh_from_db()
 
         # Изменение стадии дела, создание оповещений
-        current_user_notifiers = (
-            AlertNotifier(self.request),
-        )
-        multiple_user_notifiers = (
-            UsersDbNotifier(),
-        )
         stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
             case_stage_step_change_action_service.CaseStageStepQualifier(),
             self.instance,
-            self.request.user,
-            current_user_notifiers,
-            multiple_user_notifiers
+            self.request,
+            NotificationService([DbChannel()])
         )
         stage_set_service.execute()
+
+
+class CasePausingForm(forms.ModelForm):
+    """Форма остановки рассмотрения дела."""
+    # Тип документа
+    document_type = forms.ChoiceField(
+        label='Тип документа, який буде сгенеровано',
+        help_text='Підписант документа - голова колегії'
+    )
+
+    class Meta:
+        model = Case
+        fields = ['document_type']
+
+    def __init__(self, request, doc_types, *args, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+
+        self.fields['document_type'].choices = ((x['code'], x['title']) for x in doc_types)
+
+        self.helper = FormHelper()
+        self.helper.form_id = "case-pausing-form"
+        self.helper.label_class = "fw-bold"
+        self.helper.field_class = "mb-4"
+
+    def save(self, commit=True):
+        # Генерация документов
+        case_services.case_create_docs(
+            case_id=self.instance.pk,
+            signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
+            doc_types_codes=[self.cleaned_data['document_type']],
+            user_id=self.request.user.pk
+        )
+
+        # Остановка дела
+        self.instance.paused = True
+        self.instance.save()
+
+        # Запись в историю дела
+        case_services.case_add_history_action(
+            self.instance.id,
+            'Залишення без розгляду / зупинка розгляду',
+            self.request.user.pk
+        )
+
+
+class CaseStoppingForm(forms.ModelForm):
+    """Форма признания дела непригодным к рассмотрению."""
+    # Тип документа
+    document_type = forms.ChoiceField(
+        label='Тип документа, який буде сгенеровано',
+        help_text='Підписант документа - голова колегії'
+    )
+
+    class Meta:
+        model = Case
+        fields = ['document_type']
+
+    def __init__(self, request, doc_types, *args, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+
+        self.fields['document_type'].choices = ((x['code'], x['title']) for x in doc_types)
+
+        self.helper = FormHelper()
+        self.helper.form_id = "case-stopping-form"
+        self.helper.label_class = "fw-bold"
+        self.helper.field_class = "mb-4"
+
+    def save(self, commit=True):
+        # Генерация документов
+        case_services.case_create_docs(
+            case_id=self.instance.pk,
+            signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
+            doc_types_codes=[self.cleaned_data['document_type']],
+            user_id=self.request.user.pk
+        )
+
+        # Остановка дела
+        self.instance.stopped = True
+        self.instance.save()
+
+        # Запись в историю дела
+        case_services.case_add_history_action(
+            self.instance.id,
+             'Вважати неподаним / не підлягає розгляду',
+            self.request.user.pk
+        )
 
 
 class DocumentTypeWidget(s2forms.ModelSelect2Widget):

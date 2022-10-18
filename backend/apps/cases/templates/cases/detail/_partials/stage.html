@@ -1,5 +1,8 @@
 <div class="section rounded mb-3">
-    <case-stages :stages="{{ stages }}"></case-stages>
-
-    <p><strong>Крок стадії:</strong> {{ case.stage_step.title }} (код: <strong>{{ case.stage_step.code }}</strong>)</p>
+    <case-stages :stages="{{ stages }}"
+                 stage-step-title="{{ case.stage_step.title }}"
+                 stage-step-code="{{ case.stage_step.code }}"
+                 :paused="{{ case.paused|yesno:"1,0" }}"
+                 :stopped="{{ case.stopped|yesno:"1,0" }}"
+    ></case-stages>
 </div>

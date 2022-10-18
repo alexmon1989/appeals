@@ -1,5 +1,7 @@
 {% if case.stage_step.code == 1000 %}
     <span class="text-danger fw-bold text-nowrap">Нова справа</span>
+{% elif case.stopped %}
+    <span class="text-danger fw-bold text-nowrap">Розгляд припинений</span>
 {% else %}
     <span class="text-primary fw-bold text-nowrap">В роботі</span>
 {% endif %}

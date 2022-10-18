@@ -35,6 +35,11 @@ def case_get_all_qs(order_by: str = '-created_at') -> QuerySet[Case]:
     return cases
 
 
+def case_get_all_active_qs(order_by: str = '-created_at') -> QuerySet[Case]:
+    """Возвращает активные ап. дела."""
+    return case_get_all_qs(order_by).exclude(stoped=True)
+
+
 def case_get_one(case_id: int) -> Case:
     """Возвращает список апелляционных дел, к которым есть доступ у пользователя"""
     return case_get_all_qs().filter(pk=case_id).first()
@@ -61,8 +66,10 @@ def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str =
     if stage and stage != 'all':
         if stage == 'new':
             cases = cases.filter(stage_step__code=1000)
+        if stage == 'finished':
+            cases = cases.filter(stopped=True)
         else:
-            cases = cases.filter(stage_step__code__gt=1000)
+            cases = cases.filter(stage_step__code__gt=1000).exclude(stopped=True)
 
     return cases
 
@@ -132,8 +139,10 @@ def case_get_stages(case_id: int) -> Union[List[dict], None]:
             if current_stage_step.stage.number > stage.number:
                 status = 'done'
             elif current_stage_step.stage.number == stage.number:
-                if current_stage_step.case_stopped:
-                    status = 'done'
+                if case.stopped:
+                    status = 'stopped'
+                elif case.paused:
+                    status = 'paused'
                 else:
                     status = 'current'
             else:
@@ -170,9 +179,8 @@ def case_change_stage_step(case_id: int, stage_step_code: int, user_id: int) -> 
     )
 
 
-def case_get_all_persons_for_notifying(case_id: int) -> List[UserModel]:
-    """Возвращает список всех пользователей, причастных к ап. делу,
-    которые должны быть оповещены сервисом оповещений."""
+def case_get_all_persons(case_id: int) -> List[int]:
+    """Возвращает список всех пользователей, причастных к ап. делу."""
     res = []
     case = Case.objects.select_related(
         'papers_owner',
@@ -198,7 +206,8 @@ def case_get_all_persons_for_notifying(case_id: int) -> List[UserModel]:
     ):
         res.append(user)
 
-    return list({user.pk: user for user in res}.values())
+    return list(set([user.pk for user in res]))
+    # return list({user.pk: user for user in res}.values())
 
 
 def case_get_history(case_id: int):
@@ -256,7 +265,7 @@ def case_create_docs_consider_for_acceptance(case_id: int, signer_id: int, user_
     # Сервис создания документов
     service = create_document_service.Service()
 
-    # Сохдание документов
+    # Создание документов
     for doc_type in doc_types:
         document = service.execute(
             case_id=case_id,
@@ -276,3 +285,38 @@ def case_create_docs_consider_for_acceptance(case_id: int, signer_id: int, user_
     #     'Створено документи для прийняття справи до розгляду.',
     #     user_id
     # )
+
+
+def case_create_docs(case_id: int, doc_types_codes: Iterable[str], signer_id: int, user_id: int):
+    """Создаёт документы ап. дела определённых типов."""
+    # Сервис создания документов
+    service = create_document_service.Service()
+
+    # Создание документов
+    for doc_type_code in doc_types_codes:
+        document = service.execute(
+            case_id=case_id,
+            doc_code=doc_type_code,
+            signer_id=signer_id,
+            user_id=user_id,
+        )
+        # Подписант документа
+        Sign.objects.create(
+            document=document,
+            user_id=signer_id,
+        )
+
+
+def case_renew_consideration(case_id: int, user_id: int) -> None:
+    """Возобновляет рассмотрение ап. дела."""
+    case = case_get_one(case_id)
+    if case.paused:
+        case.paused = False
+        case.save()
+
+        # Запись в историю дела
+        case_add_history_action(
+            case_id,
+            'Відновлення розгляду справи.',
+            user_id
+        )

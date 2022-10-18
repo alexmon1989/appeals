@@ -24,3 +24,21 @@ def get_doc_types_for_consideration(claim_kind_id: Type[int]) -> List[dict]:
         code__in=['0006', '0007', '0009', '0010', '0011']
     ).values('pk', 'title', 'template', 'code')
     return list(doc_types)
+
+
+def get_doc_types_for_pausing(claim_kind_id: Type[int]) -> List[dict]:
+    """Возвращает список документов, которые могут быть сгенерированы при остановке рассмотрения дела."""
+    doc_types = DocumentType.objects.filter(
+        claim_kinds__id=claim_kind_id,
+        code__in=['0012', '0013', '0016', '0019', '0021', '0022']
+    ).values('pk', 'title', 'template', 'code')
+    return list(doc_types)
+
+
+def get_doc_types_for_stopping(claim_kind_id: Type[int]) -> List[dict]:
+    """Возвращает список документов, которые должны быть сгенерированы при фун."""
+    doc_types = DocumentType.objects.filter(
+        claim_kinds__id=claim_kind_id,
+        code__in=['0014', '0015', '0017', '0018', '0020', '0023']
+    ).values('pk', 'title', 'template', 'code')
+    return list(doc_types)

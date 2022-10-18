@@ -18,7 +18,6 @@ from apps.common.utils import files_to_base64
 from apps.common.decorators import group_required
 
 from .services import case_services, document_services, sign_services, case_stage_step_change_action_service
-from apps.notifications.services import AlertNotifier, UsersDbNotifier
 from apps.filling import services as filling_services
 from .models import Case, Document
 from .permissions import HasAccessToCase
@@ -26,8 +25,9 @@ from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializ
 from apps.common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_external_task
 from .forms import (CaseUpdateForm, CaseCreateCollegiumForm, CaseAcceptForConsiderationForm, DocumentAddForm,
-                    DocumentUpdateForm)
+                    DocumentUpdateForm, CasePausingForm, CaseStoppingForm)
 from apps.classifiers import services as classifiers_services
+from apps.notifications.services import Service as NotificationService, DbChannel
 
 
 @login_required
@@ -68,6 +68,7 @@ class CaseDetailView(LoginRequiredMixin, DetailView):
         context['documents_to_sign'] = document_services.document_get_case_documents_to_sign(
             self.object.pk, self.request.user
         )
+        context['case_has_unsigned_docs'] = self.object.has_unsigned_docs
         return context
 
 
@@ -79,7 +80,7 @@ class CaseUpdateView(UpdateView):
     template_name = 'cases/update/index.html'
 
     def get_queryset(self):
-        return case_services.case_get_all_qs().filter(secretary=self.request.user)
+        return case_services.case_get_all_active_qs().filter(secretary=self.request.user, stage_step__code__gte=2000)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -97,18 +98,11 @@ def take_to_work(request, pk: int):
     """Принимает дело в работу и переадресовывает на страницу деталей дела."""
     # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
     case = case_services.case_get_one(pk)
-    current_user_notifiers = (
-        AlertNotifier(request),
-    )
-    multiple_user_notifiers = (
-        UsersDbNotifier(),
-    )
     stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
         case_stage_step_change_action_service.CaseStageStepQualifier(),
         case,
-        request.user,
-        current_user_notifiers,
-        multiple_user_notifiers
+        request,
+        NotificationService([DbChannel()])
     )
     if stage_set_service.execute():
         return redirect('cases-detail', pk=pk)
@@ -162,20 +156,13 @@ def upload_sign_internal(request, document_id: int):
         )
 
         # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
-        current_user_notifiers = (
-            AlertNotifier(request),
-            # UsersDbNotifier([request.user])
-        )
-        multiple_user_notifiers = (
-            UsersDbNotifier(),
-        )
-        case_stage_step_change_action_service.CaseSetActualStageStepService(
+        stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
             case_stage_step_change_action_service.CaseStageStepQualifier(),
             document.case,
-            request.user,
-            current_user_notifiers,
-            multiple_user_notifiers
-        ).execute()
+            request,
+            NotificationService([DbChannel()])
+        )
+        stage_set_service.execute()
 
         return JsonResponse(
             {
@@ -210,6 +197,12 @@ class CaseHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         return case_services.case_get_history(self.kwargs['id'])
 
 
+def case_renew_consideration(request, pk: int):
+    """Возобновляет рассмотрение ап. дела."""
+    case_services.case_renew_consideration(pk, request.user.pk)
+    return redirect('cases-detail', pk=pk)
+
+
 def document_signs_info(request, document_id: int):
     """Отображает информацию о цифровых подписях документа."""
     document = document_services.document_get_by_id(document_id)
@@ -230,7 +223,7 @@ class CaseCreateCollegium(UpdateView):
     template_name = 'cases/create_collegium/index.html'
 
     def get_queryset(self):
-        return case_services.case_get_all_qs().filter(secretary=self.request.user)
+        return case_services.case_get_all_qs().filter(secretary=self.request.user, stage_step__code=2001)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -250,7 +243,12 @@ class CaseConsiderForAcceptance(UpdateView):
 
     def get_queryset(self):
         # Функция доступна только на стадии 2003 "Розпорядження підписано. Очікує на прийняття до розгляду."
-        return case_services.case_get_all_qs().filter(secretary=self.request.user, stage_step__code=2003)
+        return case_services.case_get_all_qs().filter(
+            secretary=self.request.user,
+            stage_step__code=2003,
+            stopped=False,
+            paused=False
+        ).exclude(document__sign__timestamp='')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -271,6 +269,62 @@ class CaseConsiderForAcceptance(UpdateView):
         context['templates_missed'] = any([not x['template'] for x in context['docs_to_generate']])
 
         return context
+
+
+@method_decorator(group_required('Секретар'), name='dispatch')
+class CasePausingView(UpdateView):
+    """Отображает страницу остановки рассмотрения дела."""
+    model = Case
+    form_class = CasePausingForm
+    template_name = 'cases/pausing/index.html'
+
+    def get_queryset(self):
+        # Функция доступна когда сформирована коллегия
+        return case_services.case_get_all_qs().filter(
+            secretary=self.request.user,
+            stage_step__code__gte=2003,
+            paused=False,
+            stopped=False
+        ).exclude(document__sign__timestamp='')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        kwargs['doc_types'] = classifiers_services.get_doc_types_for_pausing(
+            self.object.claim.claim_kind_id
+        )
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+@method_decorator(group_required('Секретар'), name='dispatch')
+class CaseStoppingView(UpdateView):
+    """Отображает страницу остановки рассмотрения дела."""
+    model = Case
+    form_class = CaseStoppingForm
+    template_name = 'cases/stopping/index.html'
+
+    def get_queryset(self):
+        # Функция доступна когда сформирована коллегия
+        return case_services.case_get_all_qs().filter(
+            secretary=self.request.user,
+            stage_step__code=2003,
+            paused=False,
+            stopped=False
+        ).exclude(document__sign__timestamp='')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        kwargs['doc_types'] = classifiers_services.get_doc_types_for_stopping(
+            self.object.claim.claim_kind_id
+        )
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
 
 
 @require_POST
@@ -323,7 +377,7 @@ class DocumentAddView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['case'] = case_services.case_get_all_qs().filter(
             secretary=self.request.user,
-            stage_step__case_stopped=False,
+            stopped=False,
             pk=self.kwargs['pk']
         ).first()
         if not context['case']:

@@ -1,6 +1,6 @@
 <div class="section rounded mb-3 pb-4" >
     <h4 class="mb-3">Дії</h4>
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between mb-4">
         <div>
             {% if case.stage_step.code == 1000 %}
                 <a href="#" data-href="{% url 'cases_take_to_work' pk=case.pk %}"
@@ -28,7 +28,7 @@
                 </a>
             {% endif %}
 
-            {% if case.stage_step.code >= 2000 and case.secretary == request.user %}
+            {% if not case.stopped and not case.paused and case.stage_step.code >= 2000 and case.secretary == request.user %}
                 <a href="{% url 'cases_update' pk=case.pk %}" class="btn btn-primary me-2">
                     <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
                       <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001zm-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708l-1.585-1.585z"></path>
@@ -49,17 +49,48 @@
             {% endif %}
 
             {% if case.stage_step.code == 2003 and case.secretary == request.user %}
-                <a href="{% url 'case_consider_for_acceptance' pk=case.pk %}" class="btn btn-primary me-2">
-                    <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-hammer" viewBox="0 0 16 16">
-                      <path d="M9.972 2.508a.5.5 0 0 0-.16-.556l-.178-.129a5.009 5.009 0 0 0-2.076-.783C6.215.862 4.504 1.229 2.84 3.133H1.786a.5.5 0 0 0-.354.147L.146 4.567a.5.5 0 0 0 0 .706l2.571 2.579a.5.5 0 0 0 .708 0l1.286-1.29a.5.5 0 0 0 .146-.353V5.57l8.387 8.873A.5.5 0 0 0 14 14.5l1.5-1.5a.5.5 0 0 0 .017-.689l-9.129-8.63c.747-.456 1.772-.839 3.112-.839a.5.5 0 0 0 .472-.334z"></path>
+                <a href="{% url 'case_consider_for_acceptance' pk=case.pk %}"
+                   class="btn btn-primary me-2 {% if case.stopped or case.paused or case_has_unsigned_docs %}disabled{% endif %}"
+                >
+                    <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+                      <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"></path>
                     </svg>
                     Прийняти до розгляду
+                </a>
+            {% endif %}
+
+            {% if case.paused and case.secretary == request.user %}
+                <a href="#"
+                   data-href="{% url 'case_renew_consideration' pk=case.pk %}"
+                   class="js-ajax-confirm btn btn-primary me-2 {% if case_has_unsigned_docs %}disabled{% endif %}"
+
+                   data-ajax-confirm-mode="regular"
+
+                   data-ajax-confirm-size="modal-md"
+                   data-ajax-confirm-centered="false"
+
+                   data-ajax-confirm-title="Необхідне підтвердження"
+                   data-ajax-confirm-body="Ви дійсно бажаєте відновити розгляд справи?"
+
+                   data-ajax-confirm-btn-yes-class="btn btn-sm btn-primary"
+                   data-ajax-confirm-btn-yes-text="Підтвердити"
+                   data-ajax-confirm-btn-yes-icon="fi fi-check"
+
+                   data-ajax-confirm-btn-no-class="btn btn-sm btn-secondary"
+                   data-ajax-confirm-btn-no-text="Закрити"
+                   data-ajax-confirm-btn-no-icon="fi fi-close">
+                    <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"></path>
+                      <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"></path>
+                    </svg>
+                    Відновити розгляд
                 </a>
             {% endif %}
         </div>
 
         <div>
-            {% if not case.stage_step.case_stopped %}
+            {% if not case.stopped %}
                 <a href="{% url 'case_add_document' pk=case.pk %}" class="btn btn-success me-2 text-white">
                     <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-file-arrow-up" viewBox="0 0 16 16">
                       <path d="M8 11a.5.5 0 0 0 .5-.5V6.707l1.146 1.147a.5.5 0 0 0 .708-.708l-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L7.5 6.707V10.5a.5.5 0 0 0 .5.5z"></path>
@@ -69,5 +100,29 @@
                 </a>
             {% endif %}
         </div>
+    </div>
+
+    <div class="d-flex">
+        {% if case.stage_step.code == 2003 and case.secretary == request.user %}
+            <a href="{% url 'case_pausing' pk=case.pk %}"
+               class="btn btn-warning me-2 {% if case_has_unsigned_docs %}disabled{% endif %}">
+                <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-pause-circle" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+                  <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0v-3.5zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0v-3.5z"></path>
+                </svg>
+                Залишити без руху / зупинити розгляд
+            </a>
+        {% endif %}
+
+        {% if case.stage_step.code >= 2003 and case.secretary == request.user %}
+            <a href="{% url 'case_stopping' pk=case.pk %}"
+               class="btn btn-danger me-2 {% if case_has_unsigned_docs %}disabled{% endif %}">
+                <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-dash-circle" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+                  <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"></path>
+                </svg>
+                Вважати неподаним / не підлягає розгляду
+            </a>
+        {% endif %}
     </div>
 </div>

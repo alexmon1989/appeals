@@ -3,12 +3,13 @@ from .models import DocumentType, ObjKind, ClaimKind, RefusalReason, Speciality
 
 
 @admin.register(DocumentType)
-class Admin(admin.ModelAdmin):
+class DocumentTypeAdmin(admin.ModelAdmin):
     ordering = ('pk',)
     list_display = ('title', 'direction', 'origin', 'code', 'created_at', 'updated_at')
     list_filter = ('direction', 'origin',)
     search_fields = ('title',)
     filter_horizontal = ('claim_kinds',)
+    list_editable = ('code',)
 
     def get_queryset(self, request):
         return DocumentType.objects.prefetch_related('claim_kinds', 'claim_kinds__obj_kind')
