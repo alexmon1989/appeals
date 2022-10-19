@@ -1,0 +1,59 @@
+<div class="section rounded mb-3">
+    <!--
+        FULLCALENDAR
+        See below more info about attributes
+
+        NOTE:
+            data-fullcalendar-modal-event-edit
+            also used on event resize & drag (GET method only)
+            Open your console to see the request for event drag/resize (debug is enabled in demo)
+    -->
+    <div class="fullcalendar rounded"
+        data-fullcalendar-default-view="dayGridMonth"
+        data-fullcalendar-editable="true"
+        data-fullcalendar-timezone="local"
+        data-fullcalendar-default-date="now"
+
+        data-fullcalendar-modal-size="modal-lg"
+
+        data-fullcalendar-event-create-modal="true"
+        data-fullcalendar-modal-event-create="_ajax/fullcalendar_event_create.html"
+
+        data-fullcalendar-event-edit-modal="true"
+        data-fullcalendar-modal-event-edit="{% url 'meetings-event-detail' %}?id="
+
+        data-fullcalendar-date-click="false"
+        data-fullcalendar-modal-date-click-modal="_ajax/fullcalendar_event_create.html?date="
+
+        data-toast-success="Successfully Updated!"
+        data-toast-position="top-center"
+
+        data-fullcalendar-plugins='[ "interaction", "dayGrid", "timeGrid", "list", "bootstrap"]'
+
+        data-fullcalendar-source-json-url='[
+            {
+                "url": "{% url 'meetings-calendar-events' %}",
+                "method": "GET"
+            }
+        ]'
+
+        data-fullcalendar-lang-btn='{
+            "today" : "сьогодні",
+            "month" : "місяць",
+            "week"	 : "тиждень",
+            "day"	 : "день",
+            "list"	 : "список"
+        }'
+
+        data-fullcalendar-header='{
+            "left"		 : "prev, next, today",
+            "center"	 : "title",
+            "right"	 : "dayGridMonth,timeGridWeek,timeGridDay,listWeek"
+        }'
+
+        data-fullcalendar-time-format='{
+            "hour"		 : "numeric",
+            "minute"	 : "2-digit",
+            "meridiem"	 : "short"
+        }'></div>
+</div>

@@ -1,0 +1,20 @@
+{% extends 'base_cabinet.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Створення періоду відсутності{% endblock %}
+
+{% block main %}
+    {% include 'meetings/absence_create/_partials/header.html' %}
+
+    <div class="section rounded mb-3 p-4">
+        {% crispy form %}
+
+        <submit-confirmation message1="Ви впевнені, що бажаєте зберегти дані?"
+                             btn-text="Зберегти"
+                             form-id="absence-create-form"
+        ></submit-confirmation>
+    </div>
+
+
+{% endblock %}

@@ -1,0 +1,24 @@
+<div class="modal-header">
+    <h5 class="modal-title m-0">Апеляційне засідання</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body p-3">
+    <div class="accordion">
+
+        <div class="collapse show">
+            <ul class="list-unstyled small">
+                <li class="list-item d-flex mb-2">
+                    <div style="width:180px" class="flex-none fw-medium">Дата та час засідання:</div>
+                    <div class="flex-grow-1 text-truncate">{{ meeting.datetime }}</div>
+                </li>
+
+                <li class="list-item d-flex">
+                    <div style="width:180px" class="flex-none fw-medium">Справа:</div>
+                    <div class="flex-grow-1 text-truncate">
+                        <a href="{% url 'cases-detail' pk=meeting.case.pk %}">{{ meeting.case.case_number }}</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

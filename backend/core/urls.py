@@ -39,6 +39,7 @@ urlpatterns = [
     path('notifications/', include('apps.notifications.urls')),
     path('search/', include('apps.search.urls')),
     path('statistics/', include('apps.stats.urls')),
+    path('meetings/', include('apps.meetings.urls')),
 
     path('users/', include('apps.users.urls')),
     path('users/', include('django.contrib.auth.urls')),

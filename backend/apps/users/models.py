@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
 from django.utils.translation import gettext_lazy as _
-from django.utils.functional import cached_property
 from .managers import UserManager
 from apps.common.models import TimeStampModel
 from apps.classifiers.models import ObjKind
@@ -38,7 +37,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
-    @cached_property
+    @property
     def get_full_name(self) -> str:
         if self.last_name:
             return ('%s %s %s' % (self.last_name, self.first_name, self.middle_name)).strip()

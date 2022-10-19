@@ -1,0 +1,60 @@
+<div class="section rounded mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 text-gray-700 doc-section-title">Мої періоди відсутності</h2>
+        <a class="btn btn-primary btn-sm" href="{% url 'meetings-absence-create' %}">
+            <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"></path>
+            </svg>
+            Додати
+        </a>
+    </div>
+
+    {% if absences %}
+    <p class="small my-1">Нижче показані таперешні та/або майбутні періоди</p>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Дата з</th>
+                <th scope="col" class="text-center">Дата по</th>
+                <th scope="col" class="text-end">Дії</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for absence in absences %}
+                <tr>
+                    <td>{{ absence.date_from }}</td>
+                    <td class="text-center">{{ absence.date_to }}</td>
+                    <td class="text-end">
+                        <a href="#"
+                           data-href="{% url 'meetings-delete-absence' pk=absence.pk %}"
+                           class="js-ajax-confirm btn btn-danger small py-1 px-2"
+
+                           data-ajax-confirm-mode="regular"
+
+                           data-ajax-confirm-size="modal-md"
+                           data-ajax-confirm-centered="false"
+
+                           data-ajax-confirm-title="Необхідне підтвердження"
+                           data-ajax-confirm-body="Ви дійсно бажаєте видалити період відсутності?"
+
+                           data-ajax-confirm-btn-yes-class="btn btn-sm btn-danger"
+                           data-ajax-confirm-btn-yes-text="Підтвердити"
+                           data-ajax-confirm-btn-yes-icon="fi fi-check"
+
+                           data-ajax-confirm-btn-no-class="btn btn-sm btn-secondary"
+                           data-ajax-confirm-btn-no-text="Закрити"
+                           data-ajax-confirm-btn-no-icon="fi fi-close">
+                            <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
+                            </svg>
+                            Видалити
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="mt-3 mb-0"><em>Записи відсутні</em></p>
+    {% endif %}
+</div>

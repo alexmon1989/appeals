@@ -37,7 +37,7 @@ def case_get_all_qs(order_by: str = '-created_at') -> QuerySet[Case]:
 
 def case_get_all_active_qs(order_by: str = '-created_at') -> QuerySet[Case]:
     """Возвращает активные ап. дела."""
-    return case_get_all_qs(order_by).exclude(stoped=True)
+    return case_get_all_qs(order_by).exclude(stopped=True)
 
 
 def case_get_one(case_id: int) -> Case:

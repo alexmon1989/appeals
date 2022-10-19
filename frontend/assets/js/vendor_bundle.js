@@ -18874,7 +18874,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
           editable        : editable,
           eventLimit      : true, // allow "more" link when too many events
-          locale          : 'en', // enable 'locales-all.js' or 'de|fr|etc.js' on config
+          locale          : 'uk', // enable 'locales-all.js' or 'de|fr|etc.js' on config
           themeSystem     : 'bootstrap',
           defaultView     : defaultView || 'dayGridMonth',
           defaultDate     : defaultDate,

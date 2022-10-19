@@ -1,0 +1,83 @@
+<div class="section rounded mb-4">
+    <h2 class="h5 mb-2 text-gray-700 doc-section-title">Запрошення до участі у засіданнях</h2>
+
+    {% if invitations %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">№ справи</th>
+                    <th scope="col" class="text-center">Дата та час засідання</th>
+                    <th scope="col" class="text-center">Статус</th>
+                    <th scope="col" class="text-end">Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invitation in invitations %}
+                    <tr>
+                        <td><a href="{% url 'cases-detail' pk=invitation.meeting.case.pk %}">{{ invitation.meeting.case.case_number }}</a></td>
+                        <td class="text-center">{{ invitation.meeting.datetime }}</td>
+                        <td class="text-center">
+                            {% if not invitation.accepted_at and not invitation.rejected_at %}
+                                очікує
+                            {% elif invitation.accepted_at %}
+                                <span class="text-success fw-bold">прийнято</span>
+                            {% elif invitation.rejected_at %}
+                                <span class="text-danger fw-bold">відхилено</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="#"
+                               data-href="{% url 'meetings-invitation-accept' pk=invitation.pk %}"
+                               class="js-ajax-confirm btn btn-success text-white small py-1 px-2 {% if invitation.accepted_at %}disabled{% endif %}"
+
+                               data-ajax-confirm-mode="regular"
+
+                               data-ajax-confirm-size="modal-md"
+                               data-ajax-confirm-centered="false"
+
+                               data-ajax-confirm-title="Необхідне підтвердження"
+                               data-ajax-confirm-body="Ви дійсно бажаєте прийняти запрошення на участь у засіданні щодо справи №{{ invitation.meeting.case.case_number }}?"
+
+                               data-ajax-confirm-btn-yes-class="btn btn-sm btn-primary"
+                               data-ajax-confirm-btn-yes-text="Підтвердити"
+                               data-ajax-confirm-btn-yes-icon="fi fi-check"
+
+                               data-ajax-confirm-btn-no-class="btn btn-sm btn-secondary"
+                               data-ajax-confirm-btn-no-text="Закрити"
+                               data-ajax-confirm-btn-no-icon="fi fi-close">
+                                <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16">
+                                  <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"></path>
+                                </svg>
+                            </a>
+                            <a href="#"
+                               data-href="{% url 'meetings-invitation-reject' pk=invitation.pk %}"
+                               class="js-ajax-confirm btn btn-danger small py-1 px-2 {% if invitation.rejected_at or invitation.meeting.case.stage_step.code == 3001 %}disabled{% endif %}"
+
+                               data-ajax-confirm-mode="regular"
+
+                               data-ajax-confirm-size="modal-md"
+                               data-ajax-confirm-centered="false"
+
+                               data-ajax-confirm-title="Необхідне підтвердження"
+                               data-ajax-confirm-body="Ви дійсно бажаєте відхилити запрошення на участь у засіданні щодо справи №{{ invitation.meeting.case.case_number }}?"
+
+                               data-ajax-confirm-btn-yes-class="btn btn-sm btn-danger"
+                               data-ajax-confirm-btn-yes-text="Підтвердити"
+                               data-ajax-confirm-btn-yes-icon="fi fi-check"
+
+                               data-ajax-confirm-btn-no-class="btn btn-sm btn-secondary"
+                               data-ajax-confirm-btn-no-text="Закрити"
+                               data-ajax-confirm-btn-no-icon="fi fi-close">
+                                <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="mt-3 mb-0"><em>Нові запрошення відсутні</em></p>
+    {% endif %}
+</div>

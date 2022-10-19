@@ -40,3 +40,17 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
 #case-create-collegium-form > #div_id_members > div:nth-child(2) > div:nth-child(1) {
     column-count: 3;
 }
+
+.fc-today.alert {
+    position: inherit;
+}
+
+.fc-today.alert-info {
+  color: #458b94;
+  background-color: #e3fafd !important;
+  border-color: #d5f8fd !important;
+}
+
+.small {
+  font-size: 0.875em;
+}

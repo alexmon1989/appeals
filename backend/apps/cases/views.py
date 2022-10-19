@@ -310,7 +310,6 @@ class CaseStoppingView(UpdateView):
         # Функция доступна когда сформирована коллегия
         return case_services.case_get_all_qs().filter(
             secretary=self.request.user,
-            stage_step__code=2003,
             paused=False,
             stopped=False
         ).exclude(document__sign__timestamp='')

@@ -1,0 +1,23 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Графік засідань{% endblock %}
+
+{% block main %}
+    {% include 'meetings/index/_partials/header.html' %}
+
+    <div class="row">
+        <div class="col-7">
+            {% include 'meetings/index/_partials/calendar.html' %}
+        </div>
+        <div class="col-5">
+            {% include 'meetings/index/_partials/invitations.html' %}
+
+            {% include 'meetings/index/_partials/absence.html' %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@4.4.2/locales/uk.js"></script>
+{% endblock %}+
