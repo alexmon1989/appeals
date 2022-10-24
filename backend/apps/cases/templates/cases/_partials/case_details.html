@@ -61,7 +61,28 @@
         </div>
 
         <div class="text-muted text-uppercase">Дата призначеного засідання (засідань)</div>
-        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+        <div class="fw-medium mb-3">
+            {% if case.meeting_set.count == 0 %}
+                <i class="text-black-50">Не визначено</i>
+            {% else %}
+                <ul>
+                    {% for meeting in case.meeting_set.all %}
+                        <li>
+                            {{ meeting.datetime }}
+                            <i>(осіб погодилися: <a href="#"
+                                                    title="Натисніть, щоб подивитися хто прийняв запрошення"
+                                                    data-href="{% url 'meetings-detail' pk=meeting.pk %}"
+                                                    data-ajax-modal-size="modal-md"
+                                                    data-ajax-modal-centered="true"
+                                                    data-ajax-modal-callback-function=""
+                                                    class="js-ajax-modal">
+                                                    <b>{{ meeting.accept_count }} / 3</b>
+                            </a>)</i>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
 
         <div class="text-muted text-uppercase">Дата прийняття колегією рішення</div>
         <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>

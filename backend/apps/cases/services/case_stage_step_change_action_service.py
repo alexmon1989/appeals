@@ -25,6 +25,8 @@ class CaseStageStepQualifier:
             2003: self._satisfies_2003,
             2004: self._satisfies_2004,
             3000: self._satisfies_3000,
+            3001: self._satisfies_3001,
+            3002: self._satisfies_3002,
         }
 
     def _satisfies_2000(self):
@@ -83,6 +85,30 @@ class CaseStageStepQualifier:
             # в текущих подписанных документах дела
             return doc_types_should_exist.issubset(doc_types_current)
 
+        return False
+
+    def _satisfies_3001(self):
+        """Удовлетворяет условиям стадии 3001 "Створене засідання АП. Чекає на погодження членів колегії."."""
+        if self.case.stage_step.code == 3000:
+            # Проверка что существует заседание с непринятыми приглашениями от всех членов коллегии
+            meeting = self.case.meeting_set.prefetch_related('invitation_set').order_by('-pk').first()
+            if meeting:
+                for invitation in meeting.invitation_set.all():
+                    if invitation.accepted_at:
+                        return False
+                return True
+        return False
+
+    def _satisfies_3002(self):
+        """Удовлетворяет условиям стадии 3002 "Створене засідання АП. Чекає на підписання документів."."""
+        if self.case.stage_step.code == 3001:
+            # Проверка что существует заседание с принятыми приглашениями от всех членов коллегии
+            meeting = self.case.meeting_set.prefetch_related('invitation_set').order_by('-pk').first()
+            if meeting:
+                for invitation in meeting.invitation_set.all():
+                    if not invitation.accepted_at:
+                        return False
+                return True
         return False
 
     def get_stage_step(self, case: Case) -> int:
@@ -170,12 +196,47 @@ class CaseSetActualStageStepService:
         self.notify_all_persons()
 
     def _call_3000_actions(self):
-        """Выполнение действий, характерных для стадии 2004 -
+        """Выполнение действий, характерных для стадии 3000 -
         "Справу прийнято до розгляду. Очікує на призначення засідання."."""
         # Изменение стадии дела
         case_change_stage_step(self.case.pk, 3000, self.request.user.pk)
         self.case.refresh_from_db()
         self.notify_all_persons()
+
+    def _call_3001_actions(self):
+        """Выполнение действий, характерных для стадии 3001 -
+        "Створене засідання АП. Чекає на погодження членів колегії."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 3001, self.request.user.pk)
+        self.case.refresh_from_db()
+
+        # Оповещение членов коллегии о приглашении к участии в заседании
+        case_url = reverse('cases-detail', kwargs={'pk': self.case.pk})
+        meetings_url = reverse('meetings-index')
+        message = f'Вас запрошено прийняти участь в апеляційному засіданні щода' \
+                  f'розгляду справи <b><a href="{case_url}">{self.case.case_number}</a>.</b> ' \
+                  f'Прийняти або відхилити запрошення можна на <a href="{meetings_url}">цій сторінці</a>.'
+        self.notification_service.execute(
+            message,
+            [item.person_id for item in self.case.collegiummembership_set.all()]
+        )
+
+        # Оповещение людей, причастных к данному ап. делу, а также главы АП и его заместителей
+        self.notify_all_persons()
+
+    def _call_3002_actions(self):
+        """Выполнение действий, характерных для стадии 3002 -
+        "Створене засідання АП. Чекає на підписання документів."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 3002, self.request.user.pk)
+        self.case.refresh_from_db()
+
+        # Оповещение людей, причастных к данному ап. делу, а также главы АП и его заместителей
+        self.notify_all_persons()
+
+        # Формирование документа "Повідомлення про засідання"
+
+
 
     def notify_all_persons(self):
         """Делает оповещение всех пользователей, которые причастны к делу,
@@ -210,6 +271,8 @@ class CaseSetActualStageStepService:
                 2003: self._call_2003_actions,
                 2004: self._call_2004_actions,
                 3000: self._call_3000_actions,
+                3001: self._call_3001_actions,
+                3002: self._call_3002_actions,
             }
             try:
                 stage_actions[case_stage_step]()

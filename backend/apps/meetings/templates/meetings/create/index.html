@@ -1,0 +1,35 @@
+{% extends 'base_cabinet.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Створення апеляціяного засідання{% endblock %}
+
+{% block main %}
+    {% include 'meetings/create/_partials/header.html' %}
+
+    <div class="section rounded mb-3 p-4">
+
+        <div class="alert alert-primary" role="alert">
+            <b>Увага!</b> Після створення апеляційного засідання кожний член колегії має прийтняти запрошення у своєму кабінеті. Якщо усі члени колегії приймуть запрошення, то автоматично буде створено документ "Повідомлення про засідання".
+        </div>
+
+        {% if absences %}
+        <div class="alert alert-warning" role="alert">
+            <b>Найближчі періоди відсутності членів колегії:</b><br>
+            {% for item in absences %}
+                {{ item.name }}: {% for item in item.periods %}{{ item.date_from|date:"SHORT_DATE_FORMAT" }} - {{ item.date_to|date:"SHORT_DATE_FORMAT" }}{% if not forloop.last %},&nbsp;{% endif %}{% endfor %}<br>
+            {% endfor %}
+            <small class="text-muted">Ви не зможете створити засідання, якщо хоча б один з членів колегії буде відсутній на дату, вказану у полі нижче.</small>
+        </div>
+        {% endif %}
+
+        {% crispy form %}
+
+        <submit-confirmation message1="Ви впевнені, що бажаєте зберегти дані?"
+                     btn-text="Зберегти"
+                     form-id="meeting-create-form"
+        ></submit-confirmation>
+    </div>
+
+
+{% endblock %}

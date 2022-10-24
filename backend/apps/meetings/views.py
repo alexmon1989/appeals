@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseRedirect
 from django.contrib import messages
 from django.views.generic.edit import CreateView
+from django.views.generic.detail import DetailView
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,9 +12,11 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import permissions
 
 from . import services
-from .models import Absence
-from .forms import AbsenceForm
+from .models import Absence, Meeting
+from .forms import AbsenceForm, MeetingForm
 from apps.common.mixins import LoginRequiredMixin
+from apps.cases.services import case_stage_step_change_action_service, case_services
+from apps.notifications.services import Service as NotificationService, DbChannel
 
 
 @login_required
@@ -48,7 +51,25 @@ def invitation_accept(request, pk):
     if services.invitation_accept(pk, request.user.pk):
         messages.success(request, "Запит на участь у засідання прийнято. "
                                   "Подія з'явиться у календарі коли усі інші запрошені особи приймуть запрошення.")
-        # todo Оповещение секретарю дела
+        # Оповещение секретарю дела
+        case = services.invitation_get_one(pk).meeting.case
+        secretary_id = case.secretary_id
+        case_number = case.case_number
+        notification_service = NotificationService([DbChannel()])
+        notification_service.execute(
+            f"{request.user.get_full_name} прийняв(ла) запрошення до участі у засіданні АП "
+            f"щодо справи № <a href=\"{reverse('cases-detail', kwargs={'pk': case.pk})}\">{case_number}</a>.",
+            [secretary_id]
+        )
+
+        # Изменение стадии дела, создание оповещений
+        stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+            case_stage_step_change_action_service.CaseStageStepQualifier(),
+            case,
+            request,
+            NotificationService([DbChannel()])
+        )
+        stage_set_service.execute()
 
         return redirect('meetings-index')
     raise Http404
@@ -59,7 +80,16 @@ def invitation_reject(request, pk):
     """Отказ от предложения об участии в заседании."""
     if services.invitation_reject(pk, request.user.pk):
         messages.info(request, 'Запит на участь у засідання відхилено.')
-        # todo Оповещение секретарю дела
+        # Оповещение секретарю дела
+        case = services.invitation_get_one(pk).meeting.case
+        secretary_id = case.secretary_id
+        case_number = case.case_number
+        notification_service = NotificationService([DbChannel()])
+        notification_service.execute(
+            f"{request.user.get_full_name} відхилив(ла) запрошення до участі у засіданні АП "
+            f"щодо справи № <a href=\"{reverse('cases-detail', kwargs={'pk': case.pk})}\">{case_number}</a>.",
+            [secretary_id]
+        )
 
         return redirect('meetings-index')
     raise Http404
@@ -120,3 +150,60 @@ class EventDetailAPIView(APIView):
             )
         else:
             raise Http404
+
+
+class MeetingCreateView(LoginRequiredMixin, CreateView):
+    """Страница создания апеляционного заседания."""
+    model = Meeting
+    template_name = 'meetings/create/index.html'
+    success_url = reverse_lazy('meetings-index')
+    form_class = MeetingForm
+    success_message = 'Апеляційне засідання успішно створене.'
+    case = None
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['case'] = self.case = case_services.case_get_one(self.kwargs['case_id'])
+        if not self.case:
+            raise Http404
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['case'] = self.case
+        context['absences'] = services.absence_get_users_periods(
+            [item.person_id for item in self.case.collegiummembership_set.all()]
+        )
+        return context
+
+    def get_success_url(self):
+        return reverse('cases-detail', kwargs={'pk': self.kwargs['case_id']})
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.case_id = self.kwargs['case_id']
+        self.object.save()
+        messages.success(self.request, self.success_message)
+
+        # Создание приглашений
+        services.invitation_create_collegium_invitations(self.object.pk)
+
+        # Изменение стадии дела, создание оповещений
+        stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+            case_stage_step_change_action_service.CaseStageStepQualifier(),
+            self.object.case,
+            self.request,
+            NotificationService([DbChannel()])
+        )
+        stage_set_service.execute()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class MeetingDetailView(DetailView):
+    """Возвращает html с информацией о заседании."""
+    model = Meeting
+    template_name = 'meetings/detail.html'
+
+    def get_queryset(self):
+        return Meeting.objects.prefetch_related('invitation_set', 'invitation_set__user')

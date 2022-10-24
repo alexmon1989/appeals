@@ -20,6 +20,11 @@ class Meeting(TimeStampModel):
     def __str__(self):
         return f"{self.case.case_number} - {self.datetime}"
 
+    @property
+    def accept_count(self):
+        """Количество принявших приглашение."""
+        return self.invitation_set.filter(accepted_at__isnull=False).count()
+
 
 class Invitation(TimeStampModel):
     """Модель приглашения на заседание."""

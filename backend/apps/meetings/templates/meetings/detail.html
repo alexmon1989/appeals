@@ -1,0 +1,23 @@
+<div class="modal-header border-0 pb-0">
+    <h5 class="modal-title m-0">Дані засідання</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body p-0 m-3">
+    <ul class="list-unstyled">
+        {% for invitation in meeting.invitation_set.all %}
+            {% if not invitation.accepted_at and not invitation.rejected_at %}
+                <li>
+                    <b>{{ forloop.counter }}.</b> {{ invitation.user.get_full_name }} - <b>відсутня відповідь</b>
+                </li>
+            {% elif invitation.accepted_at %}
+                <li>
+                    <b>{{ forloop.counter }}.</b> {{ invitation.user.get_full_name }} - <b class="text-success">позитивна відповідь</b> ({{ invitation.accepted_at }})
+                </li>
+            {% else %}
+                <li>
+                    <b>{{ forloop.counter }}.</b> {{ invitation.user.get_full_name }} - <b class="text-danger">негативна відповідь</b> ({{ invitation.accepted_at }})
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>

@@ -3,7 +3,8 @@ from .models import Absence, Meeting, Invitation
 from django.utils import timezone
 from django.db.models import Q, QuerySet
 
-from datetime import timedelta
+from datetime import timedelta, date
+from typing import Iterable, List
 
 
 def invitation_get_list_qs(user_id: int) -> QuerySet[Invitation]:
@@ -32,12 +33,33 @@ def invitation_reject(pk: int, user_id: int) -> bool:
     """Отклоняет приглашение к участию в заседании."""
     invitation = Invitation.objects.filter(pk=pk, user_id=user_id).first()
     # Отменять можно только если не сформировано оповещение апеллянту
-    if invitation and invitation.meeting.case.stage_step.code == 3000:
+    if invitation and invitation.meeting.case.stage_step.code == 3001:
         invitation.accepted_at = None
         invitation.rejected_at = timezone.now()
         invitation.save()
         return True
     return False
+
+
+def invitation_create_collegium_invitations(meeting_id: int) -> None:
+    """Создаёт приглашения к участию в заседании членов коллегии."""
+    meeting = Meeting.objects.prefetch_related(
+        'case__collegiummembership_set__person'
+    ).filter(
+        pk=meeting_id
+    ).first()
+
+    if meeting:
+        for item in meeting.case.collegiummembership_set.all():
+            Invitation.objects.create(
+                user_id=item.person.pk,
+                meeting_id=meeting_id
+            )
+
+
+def invitation_get_one(pk: int) -> Invitation:
+    """Возвращает приглошение."""
+    return Invitation.objects.filter(pk=pk).first()
 
 
 def absence_get_all_qs(user_id: int) -> QuerySet[Absence]:
@@ -78,6 +100,41 @@ def absense_get_one(pk: int, user_id: int) -> Meeting:
 def absense_delete_one(pk: int, user_id: int) -> tuple:
     """Удаляет данные периода отсутствия пользователя."""
     return Absence.objects.filter(pk=pk, user_id=user_id).delete()
+
+
+def absence_is_user_at_work(user_id: int) -> bool:
+
+    return True
+
+
+def absence_get_users_periods(users_ids: Iterable[int]) -> List[dict]:
+    """Возвращает список периодами, когда пользователи users_ids отсутствуют."""
+    res = {}
+
+    date_now = timezone.now().date()
+    absences = Absence.objects.filter(
+        Q(user_id__in=users_ids),
+        Q(date_from__gte=date_now) | Q(date_from__lte=date_now, date_to__gte=date_now)
+    ).select_related('user')
+
+    for absence in absences:
+        item = {
+            'date_from': absence.date_from,
+            'date_to': absence.date_to,
+        }
+        if absence.user.get_full_name in res:
+            res[absence.user.get_full_name].append(item)
+        else:
+            res[absence.user.get_full_name] = [item]
+
+    return [{'name': key, 'periods': res[key]} for key in res.keys()]
+
+
+def absence_users_present_on_date(date_check: date, users_ids: Iterable[int]) -> bool:
+    """Проверяет не отсутствуют ли сотрудники на конкретную дату."""
+    return not Absence.objects.filter(
+        user_id__in=users_ids, date_from__lte=date_check, date_to__gte=date_check
+    ).exists()
 
 
 def meeting_get_calendar_events(user_id: int, start: str, end: str):

@@ -54,3 +54,13 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
 .small {
   font-size: 0.875em;
 }
+
+#table-documents tr td:nth-child(2),
+#table-documents tr td:nth-child(3),
+#table-documents tr td:nth-child(4),
+#table-documents tr td:nth-child(5),
+#table-documents tr td:nth-child(6),
+#table-documents tr td:nth-child(7)
+{
+    white-space: nowrap;
+}
