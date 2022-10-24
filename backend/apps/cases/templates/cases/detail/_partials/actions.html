@@ -90,7 +90,7 @@
         </div>
 
         <div>
-            {% if not case.stopped %}
+            {% if not case.stopped and case.secretary == request.user %}
                 <a href="{% url 'case_add_document' pk=case.pk %}" class="btn btn-success me-2 text-white">
                     <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-file-arrow-up" viewBox="0 0 16 16">
                       <path d="M8 11a.5.5 0 0 0 .5-.5V6.707l1.146 1.147a.5.5 0 0 0 .708-.708l-2-2a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L7.5 6.707V10.5a.5.5 0 0 0 .5.5z"></path>

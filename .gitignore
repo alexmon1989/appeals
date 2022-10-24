@@ -158,3 +158,4 @@ cython_debug/
 /database/
 /node_modules/
 /celery_daemon.conf
+/docker-compose.yml
