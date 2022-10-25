@@ -36,9 +36,18 @@ def get_doc_types_for_pausing(claim_kind_id: Type[int]) -> List[dict]:
 
 
 def get_doc_types_for_stopping(claim_kind_id: Type[int]) -> List[dict]:
-    """Возвращает список документов, которые должны быть сгенерированы при фун."""
+    """Возвращает список документов, которые должны быть сгенерированы при остановке дела."""
     doc_types = DocumentType.objects.filter(
         claim_kinds__id=claim_kind_id,
         code__in=['0014', '0015', '0017', '0018', '0020', '0023']
+    ).values('pk', 'title', 'template', 'code')
+    return list(doc_types)
+
+
+def get_doc_types_for_meeting(claim_kind_id: Type[int]) -> List[dict]:
+    """Возвращает список документов, которые должны быть сгенерированы при остановке дела."""
+    doc_types = DocumentType.objects.filter(
+        claim_kinds__id=claim_kind_id,
+        code__in=['0024', '0025', '0026']
     ).values('pk', 'title', 'template', 'code')
     return list(doc_types)

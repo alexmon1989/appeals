@@ -4,8 +4,9 @@ from django.contrib import messages
 
 from apps.cases.models import Case, CaseStageStep
 from apps.classifiers import services as classifiers_services
-from .case_services import case_change_stage_step, case_get_all_persons
+from .case_services import case_change_stage_step, case_get_all_persons, case_create_docs
 
+from apps.classifiers.services import get_doc_types_for_meeting
 from apps.notifications.services import Service as NotificationService
 
 
@@ -235,8 +236,17 @@ class CaseSetActualStageStepService:
         self.notify_all_persons()
 
         # Формирование документа "Повідомлення про засідання"
-
-
+        print([x['code'] for x in get_doc_types_for_meeting(self.case.claim.claim_kind_id)])
+        case_create_docs(
+            self.case.pk,
+            [x['code'] for x in get_doc_types_for_meeting(self.case.claim.claim_kind_id)],
+            self.case.collegium_head.pk,
+            self.request.user.pk
+        )
+        self.notification_service.execute(
+            'Вам передано на підпис документ.',
+            [self.case.collegium_head.pk]
+        )
 
     def notify_all_persons(self):
         """Делает оповещение всех пользователей, которые причастны к делу,

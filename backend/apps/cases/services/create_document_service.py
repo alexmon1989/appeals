@@ -35,6 +35,8 @@ class Service:
         elif self.doc_type.code in ('0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021',
                                     '0022', '0023'):
             return get_file_vars_stopping(self.case, self.document)
+        elif self.doc_type.code in ('0024', '0025', '0026'):
+            return get_file_vars_meeting(self.case, self.document)
         else:
             return {}
 
@@ -291,4 +293,39 @@ def get_file_vars_stopping(case: Case, document: Document):
         '{{ COLLEGIUM_HEAD }}': case.collegium_head.get_full_name,
         '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
         '{{ SECRETARY_PHONE }}': case.secretary.phone_number or ''
+    }
+
+
+def get_file_vars_meeting(case: Case, document: Document):
+    """Переменные для формирования файла документа оповещения об назначении заседания."""
+    # Представитель заявителя или заявитель
+    represent = case.claim.get_represent_title()
+    if represent:
+        header_person_title = represent
+        header_person_address = case.claim.get_represent_address()
+    else:
+        header_person_title = case.claim.get_applicant_title()
+        header_person_address = case.claim.get_applicant_address()
+
+    # Документ обращения
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002'), claim=case.claim)
+    claim_doc_reg_num = claim_doc.registration_number
+    claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
+
+    return {
+        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
+        '{{ DOC_REG_NUM }}': document.registration_number,
+        '{{ HEADER_PERSON_TITLE }}': header_person_title,
+        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
+        '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
+        '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
+        '{{ OBJ_TITLE }}': case.claim.obj_title,
+        '{{ APPELAINT_TITLE }}': case.claim.get_appellant_title(),
+        '{{ APPELAINT_ADDRESS }}': case.claim.get_appellant_address(),
+        '{{ COLLEGIUM_HEAD }}': case.collegium_head.get_full_name,
+        '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
+        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+        '{{ SECRETARY_EMAIL }}': case.secretary.email,
+        '{{ MEETING_DATETIME }}': case.meeting_set.order_by('-pk').first().datetime.strftime('%d.%m.%Y %H:%M:%S'),
     }
