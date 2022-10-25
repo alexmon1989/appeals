@@ -18,3 +18,9 @@ def user_can_sign_document(document: Document, user: UserModel):
 def user_can_update_document(document: Document, user: UserModel):
     """Может ли пользователь подписывать документ."""
     return document.can_be_updated(user)
+
+
+@register.simple_tag
+def user_can_delete_document(document: Document, user: UserModel):
+    """Может ли пользователь удалять документ."""
+    return document.can_be_deleted(user)

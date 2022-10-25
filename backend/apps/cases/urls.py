@@ -32,6 +32,11 @@ urlpatterns = [
         name='case_add_document'
     ),
     path(
+        'delete-document/<int:pk>/',
+        views.document_delete,
+        name='case_delete_document'
+    ),
+    path(
         'update-document/<int:pk>/',
         views.DocumentUpdateView.as_view(),
         name='case_update_document'

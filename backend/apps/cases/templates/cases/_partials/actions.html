@@ -25,6 +25,32 @@
             </a>
         </div>
     {% endif %}
+    {% user_can_delete_document document=document user=request.user as can_be_deleted %}
+    {% if can_be_deleted %}
+        <div class="px-1">
+            <a href="#"
+               data-href="{% url 'case_delete_document' pk=document.pk %}"
+               title="Видалити документ"
+               class="js-ajax-confirm"
+               data-ajax-confirm-mode="regular"
+               data-ajax-confirm-size="modal-md"
+               data-ajax-confirm-centered="false"
+               data-ajax-confirm-title="Необхідне підтвердження"
+               data-ajax-confirm-body='Ви дійсно бажаєте видалити документ <b>"{{ document.document_type.title }}"</b>?'
+               data-ajax-confirm-btn-yes-class="btn btn-sm btn-danger"
+               data-ajax-confirm-btn-yes-text="Підтвердити"
+               data-ajax-confirm-btn-yes-icon="fi fi-check"
+
+               data-ajax-confirm-btn-no-class="btn btn-sm btn-secondary"
+               data-ajax-confirm-btn-no-text="Закрити"
+               data-ajax-confirm-btn-no-icon="fi fi-close">
+                <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"></path>
+                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"></path>
+                </svg>
+            </a>
+        </div>
+    {% endif %}
     <div class="px-1">
         <a href="#"
            data-href="{% url 'document-history' document_id=document.pk %}"

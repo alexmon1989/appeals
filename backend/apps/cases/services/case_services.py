@@ -80,7 +80,8 @@ def case_get_documents_qs(case_id: int) -> Iterable[Document]:
     """Возвращает документы дела."""
     claim_id = Case.objects.get(pk=case_id).claim_id
     queryset = Document.objects.filter(
-        Q(case_id=case_id) | Q(claim_id=claim_id)
+        Q(case_id=case_id) | Q(claim_id=claim_id),
+        deleted=False
     ).select_related(
         'document_type',
         'case',

@@ -144,3 +144,14 @@ def document_add_history(doc_id: int, action: str, user_id: int) -> None:
         action=action,
         user_id=user_id
     )
+
+
+def document_soft_delete(doc_id: int, user: UserModel) -> Union[Document, None]:
+    """Удаляет документ (мягкое удаление)."""
+    document = document_get_by_id(doc_id)
+    if document and document.can_be_deleted(user):
+        document.deleted = True
+        document.save()
+        document_add_history(doc_id, 'Видалено', user.pk)
+        return document
+    return None

@@ -428,6 +428,21 @@ class DocumentUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('cases-detail', kwargs={'pk': self.object.case.pk})
 
 
+@group_required('Секретар')
+def document_delete(request, pk: int):
+    """Удаление документа."""
+    document = document_services.document_soft_delete(pk, request.user)
+    if document:
+        case_services.case_add_history_action(
+            document.case_id,
+            f'Видалено документ "{document.document_type.title}"',
+            request.user.pk
+        )
+        messages.add_message(request, messages.SUCCESS, 'Документ успішно видалено.')
+        return redirect('cases-detail', pk=document.case_id)
+    raise Http404
+
+
 @xframe_options_exempt
 def ds_file(request):
     return render(request, template_name='cases/digital_sign/file.html')

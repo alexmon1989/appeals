@@ -153,6 +153,7 @@ class Document(TimeStampModel):
         'Подано або сформовано під час подання звернненя',
         default=False
     )
+    deleted = models.BooleanField('Видалено', default=False)
 
     @property
     def is_signed_by_head(self) -> bool:
@@ -203,6 +204,10 @@ class Document(TimeStampModel):
         """Можно ли загрузить новый файл для документа."""
         # Проверка секретаря дела, сгенерирован ли документ автоматически и не подписан ли
         return self.case and self.case.secretary == user and self.auto_generated and not self.is_signed
+
+    def can_be_deleted(self, user: UserModel):
+        """Может ли пользователь удалить документ (удалять можно только вторичные документы)."""
+        return self.case and self.case.secretary == user and not self.auto_generated and not self.barcode
 
     def __str__(self):
         return self.document_type.title

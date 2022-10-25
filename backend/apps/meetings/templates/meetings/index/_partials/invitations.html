@@ -30,7 +30,7 @@
                         <td class="text-end">
                             <a href="#"
                                data-href="{% url 'meetings-invitation-accept' pk=invitation.pk %}"
-                               class="js-ajax-confirm btn btn-success text-white small py-1 px-2 {% if invitation.accepted_at %}disabled{% endif %}"
+                               class="js-ajax-confirm btn btn-success text-white small py-1 px-2 {% if invitation.accepted_at or invitation.meeting.case.stage_step.code > 3001 %}disabled{% endif %}"
 
                                data-ajax-confirm-mode="regular"
 
@@ -53,7 +53,7 @@
                             </a>
                             <a href="#"
                                data-href="{% url 'meetings-invitation-reject' pk=invitation.pk %}"
-                               class="js-ajax-confirm btn btn-danger small py-1 px-2 {% if invitation.rejected_at or invitation.meeting.case.stage_step.code == 3002 %}disabled{% endif %}"
+                               class="js-ajax-confirm btn btn-danger small py-1 px-2 {% if invitation.rejected_at or invitation.meeting.case.stage_step.code > 3001 %}disabled{% endif %}"
 
                                data-ajax-confirm-mode="regular"
 
