@@ -128,7 +128,7 @@
     </div>
 
     <div class="d-flex">
-        {% if case.stage_step.code == 2003 and case.secretary == request.user %}
+        {% if case.stage_step.code  >= 2003 and case.secretary == request.user %}
             <a href="{% url 'case_pausing' pk=case.pk %}"
                class="btn btn-warning me-2 {% if case_has_unsigned_docs %}disabled{% endif %}">
                 <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-pause-circle" viewBox="0 0 16 16">
