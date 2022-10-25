@@ -179,7 +179,7 @@ def get_file_vars_0006(case: Case, document: Document) -> dict:
         header_person_address = case.claim.get_appellant_address()
 
     # Документ обращения
-    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002'), claim=case.claim)
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
     claim_doc_reg_num = claim_doc.registration_number
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
@@ -225,7 +225,7 @@ def get_file_vars_0007(case: Case, document: Document) -> dict:
         header_person_address = case.claim.get_applicant_address()
 
     # Документ обращения
-    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002'), claim=case.claim)
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
     claim_doc_reg_num = claim_doc.registration_number
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
@@ -271,7 +271,7 @@ def get_file_vars_stopping(case: Case, document: Document):
         header_person_address = case.claim.get_applicant_address()
 
     # Документ обращения
-    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002'), claim=case.claim)
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
     claim_doc_reg_num = claim_doc.registration_number
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
@@ -308,7 +308,7 @@ def get_file_vars_meeting(case: Case, document: Document):
         header_person_address = case.claim.get_applicant_address()
 
     # Документ обращения
-    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002'), claim=case.claim)
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
     claim_doc_reg_num = claim_doc.registration_number
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
