@@ -28,6 +28,7 @@ class CaseStageStepQualifier:
             3000: self._satisfies_3000,
             3001: self._satisfies_3001,
             3002: self._satisfies_3002,
+            4000: self._satisfies_4000,
         }
 
     def _satisfies_2000(self):
@@ -110,6 +111,33 @@ class CaseStageStepQualifier:
                     if not invitation.accepted_at:
                         return False
                 return True
+        return False
+
+    def _satisfies_4000(self):
+        """Удовлетворяет условиям стадии 4000 "Чекає на проведення засідання Апеляційної палати."."""
+        if self.case.stage_step.code == 3002:
+            # Проверка что существует заседание с принятыми приглашениями от всех членов коллегии
+            meeting = self.case.meeting_set.prefetch_related('invitation_set').order_by('-pk').first()
+            if meeting:
+                for invitation in meeting.invitation_set.all():
+                    if not invitation.accepted_at:
+                        return False
+
+                # Множество кодов документов, которые должны присутствовать на стадии
+                doc_types_should_exist = {
+                    x['code'] for x in
+                    classifiers_services.get_doc_types_for_meeting(self.case.claim.claim_kind_id)
+                }
+
+                # Множество кодов подписанных документов, которые присутствуют у дела
+                doc_types_current = {
+                    x.document_type.code for x in self.case.document_set.all() if x.is_signed_by_head
+                }
+
+                # Проверка есть ли коды документов, которые должны присутствовать на стадии,
+                # в текущих подписанных документах дела
+                return doc_types_should_exist.issubset(doc_types_current)
+
         return False
 
     def get_stage_step(self, case: Case) -> int:
@@ -236,7 +264,6 @@ class CaseSetActualStageStepService:
         self.notify_all_persons()
 
         # Формирование документа "Повідомлення про засідання"
-        print([x['code'] for x in get_doc_types_for_meeting(self.case.claim.claim_kind_id)])
         case_create_docs(
             self.case.pk,
             [x['code'] for x in get_doc_types_for_meeting(self.case.claim.claim_kind_id)],
@@ -247,6 +274,14 @@ class CaseSetActualStageStepService:
             'Вам передано на підпис документ.',
             [self.case.collegium_head.pk]
         )
+
+    def _call_4000_actions(self):
+        """Выполнение действий, характерных для стадии 4000 -
+        "Чекає на проведення засідання Апеляційної палати."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 4000, self.request.user.pk)
+        self.case.refresh_from_db()
+        self.notify_all_persons()
 
     def notify_all_persons(self):
         """Делает оповещение всех пользователей, которые причастны к делу,
@@ -283,6 +318,7 @@ class CaseSetActualStageStepService:
                 3000: self._call_3000_actions,
                 3001: self._call_3001_actions,
                 3002: self._call_3002_actions,
+                4000: self._call_4000_actions,
             }
             try:
                 stage_actions[case_stage_step]()
