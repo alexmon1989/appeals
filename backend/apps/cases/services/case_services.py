@@ -32,6 +32,7 @@ def case_get_all_qs(order_by: str = '-created_at') -> QuerySet[Case]:
         'refusal_reasons',
         'meeting_set',
         'meeting_set__invitation_set',
+        'payment_set',
     ).order_by(order_by)
 
     return cases

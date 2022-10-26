@@ -1,0 +1,66 @@
+<table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
+       id="table-payments"
+       data-lng-empty="No data available in table"
+       data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
+       data-lng-filtered="(filtered from _MAX_ total entries)"
+       data-lng-loading="Loading..."
+       data-lng-processing="Processing..."
+       data-lng-search="Пошук..."
+       data-lng-norecords="Результати відсутні"
+       data-lng-sort-ascending=": activate to sort column ascending"
+       data-lng-sort-descending=": activate to sort column descending"
+
+       data-main-search="true"
+       data-column-search="false"
+       data-row-reorder="false"
+       data-col-reorder="true"
+       data-responsive="true"
+       data-header-fixed="true"
+       data-select-onclick="false"
+       data-enable-paging="true"
+       data-enable-col-sorting="true"
+       data-autofill="false"
+       data-group="false"
+       data-items-per-page="15"
+
+       data-enable-column-visibility="true"
+       data-lng-column-visibility="Видимість стовбчиків"
+
+       data-enable-export="false"
+
+       data-custom-config='{
+        "stateSave": false,
+        "server-side": true,
+        "processing": true,
+        "serverSide": true,
+        "ajax": "{% url 'payments-list-json' %}?format=datatables",
+        "order": [],
+          "columnDefs": [
+              {
+                  "targets": [2, 3, 4, 5],
+                  "searchable": false
+              }
+          ]
+       }'>
+    <thead>
+    <tr>
+        <th data-data="title">Назва платежу</th>
+        <th data-data="value">Сума</th>
+        <th data-data="payment_date">Дата платежу</th>
+        <th data-data="created_at" class="text-nowrap">Дата надходження в систему</th>
+        <th data-data="num_cases" class="text-nowrap">Кількість справ, яким присвоїно платіж</th>
+        <th data-data="actions" data-orderable="false">Дії</th>
+    </tr>
+    </thead>
+
+    <tfoot>
+    <tr>
+        <th>Назва платежу</th>
+        <th>Сума</th>
+        <th>Дата платежу</th>
+        <th>Дата надходження в систему</th>
+        <th>Кількість справ, яким присвоїно платіж</th>
+        <th>Дії</th>
+    </tr>
+    </tfoot>
+</table>

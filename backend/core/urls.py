@@ -40,6 +40,7 @@ urlpatterns = [
     path('search/', include('apps.search.urls')),
     path('statistics/', include('apps.stats.urls')),
     path('meetings/', include('apps.meetings.urls')),
+    path('payments/', include('apps.payments.urls')),
 
     path('users/', include('apps.users.urls')),
     path('users/', include('django.contrib.auth.urls')),

@@ -1,6 +1,7 @@
 <div class="section rounded mb-3">
     <h4 class="mb-3">Платежі (зараховані)</h4>
 
+    {% if case.payment_set.count > 0 %}
     <table class="table table-striped">
         <thead>
         <tr>
@@ -11,12 +12,17 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
-            <th scope="row">1</th>
-            <td>01.08.2022</td>
-            <td>1000 UAH</td>
-            <td>За подання звернення до апеляційної палати національного органу інтелектуальної власності</td>
-        </tr>
+        {% for payment in case.payment_set.all %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ payment.payment_date }}</td>
+                <td>{{ payment.value }} UAH</td>
+                <td>{{ payment.title }}</td>
+            </tr>
+        {% endfor %}
         </tbody>
     </table>
+    {% else %}
+        <p>Платежі відсутні.</p>
+    {% endif %}
 </div>

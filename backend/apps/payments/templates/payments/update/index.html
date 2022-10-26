@@ -1,0 +1,51 @@
+{% extends 'base_cabinet.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Редагування платежу{% endblock %}
+
+{% block main %}
+    {% include 'payments/update/_partials/header.html' %}
+
+    <div class="section rounded mb-3">
+        <dl class="row mt-3">
+            <dt class="col-sm-3">Назва платежу</dt>
+            <dd class="col-sm-9">{{ payment.title }}</dd>
+
+            <dt class="col-sm-3">Сума</dt>
+            <dd class="col-sm-9">{{ payment.value }}</dd>
+
+            <dt class="col-sm-3">Дата платежу</dt>
+            <dd class="col-sm-9">{{ payment.payment_date }}</dd>
+
+            <dt class="col-sm-3">ID у системі БОП</dt>
+            <dd class="col-sm-9">{{ payment.bop_id }}</dd>
+
+            <dt class="col-sm-3">Дата та час надходження у систему</dt>
+            <dd class="col-sm-9">{{ payment.created_at }}</dd>
+        </dl>
+
+        {% crispy form %}
+
+        <submit-confirmation message1="Ви впевнені, що бажаєте зберегти дані?"
+                             btn-text="Зберегти"
+                             form-id="payment-update-form"
+        ></submit-confirmation>
+
+        <p class="mt-5"><a href="{% url 'payments-list' %}">
+            <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-arrow-return-left" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.707l3.347 3.346a.5.5 0 0 1-.708.708l-4.2-4.2a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 8.3H12.5A1.5 1.5 0 0 0 14 6.8V2a.5.5 0 0 1 .5-.5z"></path>
+            </svg>
+            Назад на сторінку списку платежів
+        </a></p>
+    </div>
+{% endblock %}
+
+{% block extra_styles %}
+    {{ form.media.css }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ form.media.js }}
+{% endblock %}
