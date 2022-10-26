@@ -69,11 +69,10 @@ def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str =
     if stage and stage != 'all':
         if stage == 'new':
             cases = cases.filter(stage_step__code=1000)
-        if stage == 'finished':
+        elif stage == 'finished':
             cases = cases.filter(stopped=True)
         else:
             cases = cases.filter(stage_step__code__gt=1000).exclude(stopped=True)
-
     return cases
 
 
