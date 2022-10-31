@@ -32,6 +32,12 @@ class Service:
             return get_file_vars_0006(self.case, self.document)
         elif self.doc_type.code == '0007':
             return get_file_vars_0007(self.case, self.document)
+        elif self.doc_type.code == '0009':
+            return get_file_vars_0009(self.case, self.document)
+        elif self.doc_type.code == '0010':
+            return get_file_vars_0010(self.case, self.document)
+        elif self.doc_type.code == '0011':
+            return get_file_vars_0011(self.case, self.document)
         elif self.doc_type.code in ('0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021',
                                     '0022', '0023'):
             return get_file_vars_stopping(self.case, self.document)
@@ -249,6 +255,143 @@ def get_file_vars_0007(case: Case, document: Document) -> dict:
         '{{ APPELAINT_ADDRESS }}': case.claim.get_appellant_address(),
         '{{ APPLICANT_TITLE }}': case.claim.get_applicant_title(),
         '{{ APPLICANT_ADDRESS }}': case.claim.get_applicant_address(),
+        '{{ COLLEGIUM_MEMBERS }}': ', '.join(collegium),
+        '{{ SECRETARY_EMAIL }}': case.secretary.email,
+        '{{ COLLEGIUM_HEAD }}': collegium_head,
+        '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
+        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+
+        '{{ DOC_DOWNLOAD_CODE }}': claim_doc.barcode[-10:],  # последние 10 цифр штрих-кода
+    }
+
+
+def get_file_vars_0009(case: Case, document: Document) -> dict:
+    """Возвращает словарь со значениями переменных для формирования документа с кодом 0009 -
+    Повідомлення апелянту про прийняття апеляційної заяви до розгляду"""
+    # Представитель апелянта или заявитель
+    represent = case.claim.get_represent_title()
+    if represent:
+        header_person_title = represent
+        header_person_address = case.claim.get_represent_address()
+    else:
+        header_person_title = case.claim.get_applicant_title()
+        header_person_address = case.claim.get_applicant_address()
+
+    # Документ обращения
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
+    claim_doc_reg_num = claim_doc.registration_number
+    claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
+
+    # Коллегия
+    collegium = []
+    for item in case.collegiummembership_set.all():
+        collegium.append(item.person.get_full_name_initials())
+    collegium_head = case.collegium_head.get_full_name
+
+    return {
+        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
+        '{{ DOC_REG_NUM }}': document.registration_number,
+        '{{ HEADER_PERSON_TITLE }}': header_person_title,
+        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
+        '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
+        '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
+        '{{ OBJ_TITLE }}': case.claim.obj_title,
+        '{{ REGISTRATION_NUMBER }}': case.claim.obj_number,
+        '{{ APPELAINT_TITLE }}': case.claim.get_appellant_title(),
+        '{{ APPELAINT_ADDRESS }}': case.claim.get_appellant_address(),
+        '{{ COLLEGIUM_MEMBERS }}': ', '.join(collegium),
+        '{{ SECRETARY_EMAIL }}': case.secretary.email,
+        '{{ COLLEGIUM_HEAD }}': collegium_head,
+        '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
+        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+
+        '{{ DOC_DOWNLOAD_CODE }}': claim_doc.barcode[-10:],  # последние 10 цифр штрих-кода
+    }
+
+
+def get_file_vars_0010(case: Case, document: Document) -> dict:
+    """Возвращает словарь со значениями переменных для формирования документа с кодом 0010 -
+    Повідомлення власнику про прийняття апеляційної заяви до розгляду"""
+    # Представитель апелянта или заявитель
+    represent = case.claim.get_represent_title()
+    if represent:
+        header_person_title = represent
+        header_person_address = case.claim.get_represent_address()
+    else:
+        header_person_title = case.claim.get_applicant_title()
+        header_person_address = case.claim.get_applicant_address()
+
+    # Документ обращения
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
+    claim_doc_reg_num = claim_doc.registration_number
+    claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
+
+    # Коллегия
+    collegium = []
+    for item in case.collegiummembership_set.all():
+        collegium.append(item.person.get_full_name_initials())
+    collegium_head = case.collegium_head.get_full_name
+
+    return {
+        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
+        '{{ DOC_REG_NUM }}': document.registration_number,
+        '{{ HEADER_PERSON_TITLE }}': header_person_title,
+        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
+        '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
+        '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
+        '{{ OBJ_TITLE }}': case.claim.obj_title,
+        '{{ REGISTRATION_NUMBER }}': case.claim.obj_number,
+        '{{ APPELAINT_TITLE }}': case.claim.get_appellant_title(),
+        '{{ APPELAINT_ADDRESS }}': case.claim.get_appellant_address(),
+        '{{ OWNER_TITLE }}': case.claim.get_owner_title(),
+        '{{ OWNER_ADDRESS }}': case.claim.get_owner_address(),
+        '{{ COLLEGIUM_MEMBERS }}': ', '.join(collegium),
+        '{{ SECRETARY_EMAIL }}': case.secretary.email,
+        '{{ COLLEGIUM_HEAD }}': collegium_head,
+        '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
+        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+
+        '{{ DOC_DOWNLOAD_CODE }}': claim_doc.barcode[-10:],  # последние 10 цифр штрих-кода
+    }
+
+
+def get_file_vars_0011(case: Case, document: Document) -> dict:
+    """Возвращает словарь со значениями переменных для формирования документа с кодом 0011 -
+    Повідомлення апелянту про прийняття заяви про визнання ТМ ДВ до розгляду"""
+    # Представитель апелянта или заявитель
+    represent = case.claim.get_represent_title()
+    if represent:
+        header_person_title = represent
+        header_person_address = case.claim.get_represent_address()
+    else:
+        header_person_title = case.claim.get_applicant_title()
+        header_person_address = case.claim.get_applicant_address()
+
+    # Документ обращения
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
+    claim_doc_reg_num = claim_doc.registration_number
+    claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
+
+    # Коллегия
+    collegium = []
+    for item in case.collegiummembership_set.all():
+        collegium.append(item.person.get_full_name_initials())
+    collegium_head = case.collegium_head.get_full_name
+
+    return {
+        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
+        '{{ DOC_REG_NUM }}': document.registration_number,
+        '{{ HEADER_PERSON_TITLE }}': header_person_title,
+        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
+        '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
+        '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
+        '{{ OBJ_TITLE }}': case.claim.obj_title,
+        '{{ APP_NUMBER }}': case.claim.obj_number,
+        '{{ APPELAINT_TITLE }}': case.claim.get_appellant_title(),
+        '{{ APPELAINT_ADDRESS }}': case.claim.get_appellant_address(),
         '{{ COLLEGIUM_MEMBERS }}': ', '.join(collegium),
         '{{ SECRETARY_EMAIL }}': case.secretary.email,
         '{{ COLLEGIUM_HEAD }}': collegium_head,

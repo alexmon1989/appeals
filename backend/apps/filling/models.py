@@ -146,6 +146,14 @@ class Claim(TimeStampModel):
         except KeyError:
             return ''
 
+    def get_owner_address(self):
+        """Возвращает адрес владельца охранного документа """
+        try:
+            owner_address = self.data['owner_address']
+            return owner_address.replace("\r\n", ", ")
+        except KeyError:
+            return ''
+
     def get_represent_title(self, third_person: bool = False):
         """Возвращает имя представителя."""
         try:
