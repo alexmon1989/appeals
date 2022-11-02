@@ -1,14 +1,18 @@
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.conf import settings
 
 from apps.cases.models import Document, Sign, DocumentHistory
 from apps.cases.utils import set_cell_border
+from apps.common.utils import (docx_replace, generate_barcode_img, substitute_image_docx)
 
 from typing import List
 from pathlib import Path
 from docx import Document as DocumentWord
 import random
 from typing import Union
+import subprocess
 
 UserModel = get_user_model()
 
@@ -28,8 +32,15 @@ def document_get_by_id(doc_id: int) -> Document:
     return doc.first()
 
 
-def document_add_sign_info_to_file(doc_id: int, signs: list) -> None:
-    """Создаёт .docx с инф-ей о цифровых подписях в конце (на основе оригинального файла документа)"""
+def document_add_sign_info_to_file(doc_id: int, signs: list, internal_document: bool = False) -> None:
+    """Создаёт .docx с инф-ей о номере документа, штрихкоде
+    и цифровых подписях в конце (на основе оригинального файла документа)"""
+    # Присвоение документу номера, штрихкода, даты регистрации
+    if internal_document:  # Документ создаётся во внутреннем модуле
+        document_set_reg_number(doc_id)
+        document_set_barcode(doc_id)
+        document_set_reg_date(doc_id)
+
     document = document_get_by_id(doc_id)
 
     if Path(str(document.file)).suffix == '.docx':
@@ -38,7 +49,19 @@ def document_add_sign_info_to_file(doc_id: int, signs: list) -> None:
         docx_with_signs_file_path = docx_file_path.parent / f"{docx_file_path.stem}_signs.docx"
         docx = DocumentWord(docx_file_path)
 
+        # Документ создаётся во внутреннем модуле
+        if internal_document:
+            # Добавление номера документа, даты регистрации и штрих-кода в файл
+            file_vars = {
+                '{{ DOC_REG_DATE }}': document.registration_date.strftime('%d.%m.%Y'),
+                '{{ DOC_REG_NUM }}': document.registration_number,
+            }
+            docx_replace(docx, file_vars)
+            barcode_file_path = generate_barcode_img(document.barcode)
+            substitute_image_docx(docx, '{{ BARCODE_IMG }}', barcode_file_path, 6)
+
         # Добавление таблички с информацией о подписях
+        # todo: добавлять табличку только если один подписант
         docx.add_paragraph('Підписали:')
         table = docx.add_table(rows=len(signs), cols=1)
         for i, sign in enumerate(signs):
@@ -60,8 +83,13 @@ def document_add_sign_info_to_file(doc_id: int, signs: list) -> None:
         # Сохранение
         docx.save(docx_with_signs_file_path)
 
-    # Смена статуса обращения если все документы подписаны
-    # filling_services.claim_set_status_if_all_docs_signed(document.claim_id)
+        # Конвертация в pdf
+        subprocess.call(
+            ["libreoffice", "--headless", '--convert-to', 'pdf', docx_with_signs_file_path],
+            cwd=str(Path(docx_with_signs_file_path).parent)
+        )
+        document.converted_to_pdf = True
+        document.save()
 
 
 def document_set_reg_number(doc_id: int) -> None:
@@ -69,6 +97,13 @@ def document_set_reg_number(doc_id: int) -> None:
     numbers = ''.join([str(random.randint(0, 9)) for _ in range(5)])
     document = Document.objects.get(pk=doc_id)
     document.registration_number = f"Вх-{numbers}/2022"
+    document.save()
+
+
+def document_set_reg_date(doc_id: int) -> None:
+    """Присваивает документу дату регистрации."""
+    document = Document.objects.get(pk=doc_id)
+    document.registration_date = datetime.datetime.now()
     document.save()
 
 

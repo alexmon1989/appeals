@@ -348,7 +348,7 @@ def create_files_with_signs_info(request, case_id):
     for document in documents:
         # Может ли пользователь подписывать файл
         if document_services.document_can_be_signed_by_user(document['id'], request.user):
-            document_services.document_add_sign_info_to_file(document['id'], signs)
+            document_services.document_add_sign_info_to_file(document['id'], signs, True)
         else:
             return JsonResponse(
                 {

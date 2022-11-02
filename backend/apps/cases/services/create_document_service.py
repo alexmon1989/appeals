@@ -3,14 +3,12 @@ from django.contrib.auth import get_user_model
 from apps.cases.models import Document, Case
 from apps.classifiers.models import DocumentType
 
-from .document_services import document_set_barcode, document_set_reg_number, document_add_history
-from apps.common.utils import (docx_replace, first_lower, get_random_file_name, get_temp_file_path,
-                               generate_barcode_img, substitute_image_docx)
+from .document_services import document_add_history
+from apps.common.utils import docx_replace, first_lower, get_random_file_name, get_temp_file_path
 
 from docx import Document as PyDocxDocument
 
 from pathlib import Path
-import datetime
 
 UserModel = get_user_model()
 
@@ -27,7 +25,7 @@ class Service:
     def _get_file_vars(self) -> dict:
         """Формирует список с переменными для замены в файле docx."""
         if self.doc_type.code == '0005':
-            return get_file_vars_0005(self.case, self.document, self.signer)
+            return get_file_vars_0005(self.case, self.signer)
         elif self.doc_type.code == '0006':
             return get_file_vars_0006(self.case, self.document)
         elif self.doc_type.code == '0007':
@@ -54,30 +52,25 @@ class Service:
         # Получение и замена переменных в файле
         docx_replace(docx, self.file_vars)
 
-        # Создание и помещение штрих-кода в файл
-        barcode_file_path = generate_barcode_img(self.document.barcode)
-
-        substitute_image_docx(docx, '{{ BARCODE_IMG }}', barcode_file_path, 6)
-
-        def iter_target_paragraphs(document):
-            """Generate each paragraph inside all tables of `document`."""
-            for table in document.tables:
-                for row in table.rows:
-                    for cell in row.cells:
-                        for paragraph in cell.paragraphs:
-                            yield paragraph
-
-        def substitute_image_placeholder(paragraph, image_var, barcode_file):
-            # --- start with removing the placeholder text ---
-            paragraph.text = paragraph.text.replace(image_var, "")
-            # --- then append a run containing the image ---
-            run = paragraph.add_run()
-            from docx.shared import Cm
-            run.add_picture(barcode_file, height=Cm(6))
-
-        for paragraph in iter_target_paragraphs(docx):
-            if '{{ BARCODE_IMG }}' in paragraph.text:
-                substitute_image_placeholder(paragraph, '{{ BARCODE_IMG }}', str(barcode_file_path))
+        # def iter_target_paragraphs(document):
+        #     """Generate each paragraph inside all tables of `document`."""
+        #     for table in document.tables:
+        #         for row in table.rows:
+        #             for cell in row.cells:
+        #                 for paragraph in cell.paragraphs:
+        #                     yield paragraph
+        #
+        # def substitute_image_placeholder(paragraph, image_var, barcode_file):
+        #     # --- start with removing the placeholder text ---
+        #     paragraph.text = paragraph.text.replace(image_var, "")
+        #     # --- then append a run containing the image ---
+        #     run = paragraph.add_run()
+        #     from docx.shared import Cm
+        #     run.add_picture(barcode_file, height=Cm(6))
+        #
+        # for paragraph in iter_target_paragraphs(docx):
+        #     if '{{ BARCODE_IMG }}' in paragraph.text:
+        #         substitute_image_placeholder(paragraph, '{{ BARCODE_IMG }}', str(barcode_file_path))
 
         # Сохранение файла во временный каталог
         tmp_file_name = get_random_file_name('docx')
@@ -90,7 +83,7 @@ class Service:
         doc = Document.objects.create(
             case=self.case,
             document_type=self.doc_type,
-            input_date=datetime.datetime.now(),
+            # input_date=datetime.datetime.now(),
             auto_generated=True,
         )
         document_add_history(
@@ -98,8 +91,8 @@ class Service:
             'Документ додано у систему (створено автоматично)',
             self.user_id
         )
-        document_set_barcode(doc.pk)
-        document_set_reg_number(doc.pk)
+        # document_set_barcode(doc.pk)
+        # document_set_reg_number(doc.pk)
         doc.refresh_from_db()
         return doc
 
@@ -119,8 +112,9 @@ class Service:
         return self.document
 
 
-def get_file_vars_0005(case: Case, document: Document, signer: UserModel) -> dict:
-    """Возвращает словарь со значениями переменных для формирования документа с кодом 0005."""
+def get_file_vars_0005(case: Case, signer: UserModel) -> dict:
+    """Возвращает словарь со значениями переменных для формирования документа с кодом 0005
+    (Розпорядження про створення колегії)."""
     # Члены коллегии
     common_members = []
     head_title = ''
@@ -152,8 +146,6 @@ def get_file_vars_0005(case: Case, document: Document, signer: UserModel) -> dic
                                f"власник: {case.claim.get_owner_title()}"
 
     return {
-        '{{ DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_NUMBER }}': document.registration_number,
         '{{ CASE_NUMBER }}': case.case_number,
         '{{ CLAIM_KIND }}': first_lower(case.claim.claim_kind.template_title),
         '{{ OBJ_KIND }}': first_lower(case.claim.obj_kind.title),

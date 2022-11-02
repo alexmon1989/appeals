@@ -179,7 +179,8 @@ export default {
     fileToSignURL(notSignedURL) {
       const fileExt = notSignedURL.split('.').pop()
       if (fileExt === 'docx') {
-        return notSignedURL.replace('.' + fileExt, '_signs.' + fileExt)
+        // На сервере должен быть файл pdf
+        return notSignedURL.replace('.' + fileExt, '_signs.pdf')
       } else {
         return notSignedURL
       }

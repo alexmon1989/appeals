@@ -153,6 +153,7 @@ class Document(TimeStampModel):
         'Подано або сформовано під час подання звернненя',
         default=False
     )
+    converted_to_pdf = models.BooleanField('Конвертовано у pdf', default=False)
     deleted = models.BooleanField('Видалено', default=False)
 
     @property
@@ -182,7 +183,7 @@ class Document(TimeStampModel):
 
     @property
     def signed_file(self):
-        """Возвращает путь к файлу с информацией о цифровых подписях."""
+        """Возвращает путь к файлу, который был подписан."""
         path = Path(self.file.name)
         return str(path).replace(path.stem, f"{path.stem}_signs")
 
