@@ -38,7 +38,7 @@ class Service:
             return get_file_vars_0011(self.case, self.document)
         elif self.doc_type.code in ('0012', '0013', '0014', '0015', '0016', '0017', '0018', '0019', '0020', '0021',
                                     '0022', '0023'):
-            return get_file_vars_stopping(self.case, self.document)
+            return get_file_vars_stopping(self.case, self.extra_args['form_data'])
         elif self.doc_type.code in ('0024', '0025', '0026'):
             return get_file_vars_meeting(self.case, self.document)
         else:
@@ -189,8 +189,6 @@ def get_file_vars_0006(case: Case, document: Document) -> dict:
         if item.is_head:
             collegium_head = item.person.get_full_name
     return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
         '{{ HEADER_PERSON_TITLE }}': header_person_title,
         '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
@@ -234,8 +232,6 @@ def get_file_vars_0007(case: Case, document: Document) -> dict:
     collegium_head = case.collegium_head.get_full_name
 
     return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
         '{{ HEADER_PERSON_TITLE }}': header_person_title,
         '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
@@ -281,8 +277,6 @@ def get_file_vars_0009(case: Case, document: Document) -> dict:
     collegium_head = case.collegium_head.get_full_name
 
     return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
         '{{ HEADER_PERSON_TITLE }}': header_person_title,
         '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
@@ -326,8 +320,6 @@ def get_file_vars_0010(case: Case, document: Document) -> dict:
     collegium_head = case.collegium_head.get_full_name
 
     return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
         '{{ HEADER_PERSON_TITLE }}': header_person_title,
         '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
@@ -373,8 +365,6 @@ def get_file_vars_0011(case: Case, document: Document) -> dict:
     collegium_head = case.collegium_head.get_full_name
 
     return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
         '{{ HEADER_PERSON_TITLE }}': header_person_title,
         '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
@@ -394,7 +384,7 @@ def get_file_vars_0011(case: Case, document: Document) -> dict:
     }
 
 
-def get_file_vars_stopping(case: Case, document: Document):
+def get_file_vars_stopping(case: Case, form_data: dict):
     """Переменные для формирования файла документа оповещения об остановке рассмотрения дела / признания непригодным."""
     # Представитель заявителя или заявитель
     represent = case.claim.get_represent_title()
@@ -411,8 +401,6 @@ def get_file_vars_stopping(case: Case, document: Document):
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
     return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
         '{{ HEADER_PERSON_TITLE }}': header_person_title,
         '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
@@ -427,7 +415,9 @@ def get_file_vars_stopping(case: Case, document: Document):
         '{{ APPLICANT_ADDRESS }}': case.claim.get_applicant_address(),
         '{{ COLLEGIUM_HEAD }}': case.collegium_head.get_full_name,
         '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
-        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or ''
+        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+        '{{ REASON }}': form_data.get('reason', ''),
+        '{{ CIRCUMSTANCES }}': form_data.get('circumstances', ''),
     }
 
 
@@ -448,8 +438,6 @@ def get_file_vars_meeting(case: Case, document: Document):
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
     return {
-        '{{ DOC_REG_DATE }}': document.input_date.strftime("%d.%m.%Y"),
-        '{{ DOC_REG_NUM }}': document.registration_number,
         '{{ HEADER_PERSON_TITLE }}': header_person_title,
         '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,

@@ -252,6 +252,16 @@ class CasePausingForm(forms.ModelForm):
         label='Тип документа, який буде сгенеровано',
         help_text='Підписант документа - голова колегії'
     )
+    circumstances = forms.CharField(
+        label='Обставини / виявлені недоліки',
+        required=False,
+        help_text='Значення поля буде додано у згенерований файл .docx'
+    )
+    reason = forms.CharField(
+        label='Підстави',
+        required=False,
+        help_text='Значення поля буде додано у згенерований файл .docx'
+    )
 
     class Meta:
         model = Case
@@ -274,7 +284,8 @@ class CasePausingForm(forms.ModelForm):
             case_id=self.instance.pk,
             signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
             doc_types_codes=[self.cleaned_data['document_type']],
-            user_id=self.request.user.pk
+            user_id=self.request.user.pk,
+            form_data=self.cleaned_data,
         )
 
         # Остановка дела
@@ -295,6 +306,16 @@ class CaseStoppingForm(forms.ModelForm):
     document_type = forms.ChoiceField(
         label='Тип документа, який буде сгенеровано',
         help_text='Підписант документа - голова колегії'
+    )
+    reason = forms.CharField(
+        label='Підстави',
+        required=False,
+        help_text='Значення поля буде додано у згенерований файл .docx'
+    )
+    circumstances = forms.CharField(
+        label='Обставини',
+        required=False,
+        help_text='Значення поля буде додано у згенерований файл .docx'
     )
 
     class Meta:
@@ -318,7 +339,8 @@ class CaseStoppingForm(forms.ModelForm):
             case_id=self.instance.pk,
             signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
             doc_types_codes=[self.cleaned_data['document_type']],
-            user_id=self.request.user.pk
+            user_id=self.request.user.pk,
+            form_data=self.cleaned_data,
         )
 
         # Остановка дела
