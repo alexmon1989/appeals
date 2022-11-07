@@ -401,6 +401,23 @@ def claim_create_files_with_signs_info(claim_id: int, signs: list) -> None:
             document_services.document_add_sign_info_to_file(doc.pk, signs)
 
 
+def claim_get_mailing_data(claim_id: int) -> tuple:
+    """Возвращает кортеж, состоящий из адресата и адреса для переписки."""
+    claim = Claim.objects.get(pk=claim_id)
+    json_data = json.loads(claim.json_data)
+
+    # Заперечення подала 3-я особа
+    if claim.claim_kind.third_person:
+        addressee = json_data.get('third_person_represent_title') or json_data.get('third_person_applicant_address')
+    # Заявник - апелянт
+    else:
+        addressee = json_data.get('represent_title') or json_data.get('applicant_title') or json_data.get('owner_title')
+
+    address = json_data.get('third_person_mailing_address', json_data['mailing_address'])
+
+    return addressee, address
+
+
 def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:
     """Возвращает словарь с данными, необходимыми для формирования основного документа обращения."""
     claim = Claim.objects.filter(pk=claim_id).first()

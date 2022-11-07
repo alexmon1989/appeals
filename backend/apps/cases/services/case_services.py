@@ -112,11 +112,14 @@ def case_generate_next_number() -> str:
 def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
     """Создаёт дело на основе обращения."""
     claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status=2).first()
+    addressee, address = filling_services.claim_get_mailing_data(claim.pk)
     if claim:
         case = Case.objects.create(
             claim=claim,
             case_number=case_generate_next_number(),
-            stage_step=CaseStageStep.objects.get(code=1000)
+            stage_step=CaseStageStep.objects.get(code=1000),
+            addressee=addressee,
+            address=address,
         )
         claim.status = 3
         claim.submission_date = datetime.datetime.now()

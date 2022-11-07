@@ -62,6 +62,8 @@ class Case(TimeStampModel):
         verbose_name='Підстави для відмови у наданні правової охорони',
         blank=True,
     )
+    addressee = models.CharField('Адресат', max_length=255, null=True, blank=True)
+    address = models.CharField('Адреса', max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.case_number
