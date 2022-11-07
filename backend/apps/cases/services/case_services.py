@@ -4,7 +4,7 @@ from django.db.models import Count, Q, QuerySet, Prefetch
 from apps.cases.models import Case, Document, CaseStage, CaseStageStep, CaseHistory, CollegiumMembership, Sign
 from apps.filling import services as filling_services
 from . import create_document_service
-from .document_services import document_set_reg_number, document_set_barcode
+from .document_services import document_set_reg_number, document_set_barcode, document_set_reg_date
 from apps.classifiers import services as classifiers_services
 
 from typing import Iterable, List, Union
@@ -112,8 +112,8 @@ def case_generate_next_number() -> str:
 def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
     """Создаёт дело на основе обращения."""
     claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status=2).first()
-    addressee, address = filling_services.claim_get_mailing_data(claim.pk)
     if claim:
+        addressee, address = filling_services.claim_get_mailing_data(claim.pk)
         case = Case.objects.create(
             claim=claim,
             case_number=case_generate_next_number(),
@@ -128,6 +128,7 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
         # Присваивание документам номеров и штрихкодов
         for doc in claim.document_set.all():
             document_set_reg_number(doc.pk)
+            document_set_reg_date(doc.pk)
             document_set_barcode(doc.pk)
 
         return case

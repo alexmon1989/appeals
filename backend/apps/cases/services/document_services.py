@@ -83,13 +83,14 @@ def document_add_sign_info_to_file(doc_id: int, signs: list, internal_document: 
         # Сохранение
         docx.save(docx_with_signs_file_path)
 
-        # Конвертация в pdf
-        subprocess.call(
-            ["libreoffice", "--headless", '--convert-to', 'pdf', docx_with_signs_file_path],
-            cwd=str(Path(docx_with_signs_file_path).parent)
-        )
-        document.converted_to_pdf = True
-        document.save()
+        if internal_document:
+            # Конвертация в pdf
+            subprocess.call(
+                ["libreoffice", "--headless", '--convert-to', 'pdf', docx_with_signs_file_path],
+                cwd=str(Path(docx_with_signs_file_path).parent)
+            )
+            document.converted_to_pdf = True
+            document.save()
 
 
 def document_set_reg_number(doc_id: int) -> None:
