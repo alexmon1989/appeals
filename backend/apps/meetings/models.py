@@ -10,8 +10,18 @@ UserModel = get_user_model()
 
 class Meeting(TimeStampModel):
     """Модель заседания."""
+    class MeetingTypeChoices(models.TextChoices):
+        PRE = 'PRE', 'Підготовче засідання'
+        COMMON = 'COMMON', 'Апеляційне засідання'
+
     datetime = models.DateTimeField('Дата та час засідання')
     case = models.ForeignKey(Case, verbose_name='Справа', on_delete=models.CASCADE)
+    meeting_type = models.CharField(
+        'Тип засідання',
+        choices=MeetingTypeChoices.choices,
+        default=MeetingTypeChoices.COMMON,
+        max_length=6
+    )
 
     class Meta:
         verbose_name = 'Засідання'

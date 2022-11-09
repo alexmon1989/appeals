@@ -25,6 +25,8 @@ class CaseStageStepQualifier:
             2002: self._satisfies_2002,
             2003: self._satisfies_2003,
             2004: self._satisfies_2004,
+            2005: self._satisfies_2005,
+            # 2006: self._satisfies_2006,
             3000: self._satisfies_3000,
             3001: self._satisfies_3001,
             3002: self._satisfies_3002,
@@ -67,6 +69,26 @@ class CaseStageStepQualifier:
 
             # Проверка есть ли коды документов, которые должны присутствовать на стадии, в текущих документах дела
             return doc_types_should_exist.issubset(doc_types_current)
+
+        return False
+
+    def _satisfies_2005(self):
+        """Удовлетворяет условиям стадии 2005 "Справу прийнято до розгляду. Створене попереднє засідання."."""
+        if self.case.stage_step.code == 2004:
+            # Множество кодов документов, которые должны присутствовать на стадии
+            doc_types_should_exist = {
+                x['code'] for x in classifiers_services.get_doc_types_for_consideration(self.case.claim.claim_kind_id)
+            }
+
+            # Множество кодов документов, которые присутствуют у дела
+            doc_types_current = {
+                x.document_type.code for x in self.case.document_set.select_related('document_type').all()
+            }
+
+            # Проверка есть ли коды документов, которые должны присутствовать на стадии, в текущих документах дела
+            if doc_types_should_exist.issubset(doc_types_current):
+                # Проверка создано ли предварительное заседание
+                return self.case.meeting_set.filter(meeting_type='PRE').exists()
 
         return False
 
@@ -224,6 +246,22 @@ class CaseSetActualStageStepService:
         self.case.refresh_from_db()
         self.notify_all_persons()
 
+    def _call_2005_actions(self):
+        """Выполнение действий, характерных для стадии 2005 -
+        "Документи для прийняття справи до розгляду очікують на підписання."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 2005, self.request.user.pk)
+        self.case.refresh_from_db()
+        self.notify_all_persons()
+
+        # Оповещение членов коллегии и секретаря о предварительном заседании
+        case_url = reverse('cases-detail', kwargs={'pk': self.case.pk})
+        message = f'Вас запрошено прийняти участь в підготовчому засіданні щодо' \
+                  f'розгляду справи <b><a href="{case_url}">{self.case.case_number}</a>.</b>'
+        persons = [item.person_id for item in self.case.collegiummembership_set.all()]
+        persons.append(self.case.secretary_id)
+        self.notification_service.execute(message, persons)
+
     def _call_3000_actions(self):
         """Выполнение действий, характерных для стадии 3000 -
         "Справу прийнято до розгляду. Очікує на призначення засідання."."""
@@ -242,7 +280,7 @@ class CaseSetActualStageStepService:
         # Оповещение членов коллегии о приглашении к участии в заседании
         case_url = reverse('cases-detail', kwargs={'pk': self.case.pk})
         meetings_url = reverse('meetings-index')
-        message = f'Вас запрошено прийняти участь в апеляційному засіданні щода' \
+        message = f'Вас запрошено прийняти участь в апеляційному засіданні щодо' \
                   f'розгляду справи <b><a href="{case_url}">{self.case.case_number}</a>.</b> ' \
                   f'Прийняти або відхилити запрошення можна на <a href="{meetings_url}">цій сторінці</a>.'
         self.notification_service.execute(
@@ -315,6 +353,7 @@ class CaseSetActualStageStepService:
                 2002: self._call_2002_actions,
                 2003: self._call_2003_actions,
                 2004: self._call_2004_actions,
+                2005: self._call_2005_actions,
                 3000: self._call_3000_actions,
                 3001: self._call_3001_actions,
                 3002: self._call_3002_actions,

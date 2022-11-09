@@ -211,14 +211,6 @@ def get_file_vars_0006(case: Case, document: Document) -> dict:
 def get_file_vars_0007(case: Case, document: Document) -> dict:
     """Возвращает словарь со значениями переменных для формирования документа с кодом 0007
     (сообщение заявителю о принятии дела к рассмотрению)."""
-    # Представитель заявителя или заявитель
-    represent = case.claim.get_represent_title()
-    if represent:
-        header_person_title = represent
-        header_person_address = case.claim.get_represent_address()
-    else:
-        header_person_title = case.claim.get_applicant_title()
-        header_person_address = case.claim.get_applicant_address()
 
     # Документ обращения
     claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
@@ -232,8 +224,8 @@ def get_file_vars_0007(case: Case, document: Document) -> dict:
     collegium_head = case.collegium_head.get_full_name
 
     return {
-        '{{ HEADER_PERSON_TITLE }}': header_person_title,
-        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ HEADER_PERSON_TITLE }}': case.addressee,
+        '{{ HEADER_PERSON_ADDRESS }}': case.address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
         '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
         '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
@@ -256,15 +248,6 @@ def get_file_vars_0007(case: Case, document: Document) -> dict:
 def get_file_vars_0009(case: Case, document: Document) -> dict:
     """Возвращает словарь со значениями переменных для формирования документа с кодом 0009 -
     Повідомлення апелянту про прийняття апеляційної заяви до розгляду"""
-    # Представитель апелянта или заявитель
-    represent = case.claim.get_represent_title()
-    if represent:
-        header_person_title = represent
-        header_person_address = case.claim.get_represent_address()
-    else:
-        header_person_title = case.claim.get_applicant_title()
-        header_person_address = case.claim.get_applicant_address()
-
     # Документ обращения
     claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
     claim_doc_reg_num = claim_doc.registration_number
@@ -276,9 +259,12 @@ def get_file_vars_0009(case: Case, document: Document) -> dict:
         collegium.append(item.person.get_full_name_initials())
     collegium_head = case.collegium_head.get_full_name
 
+    # Подготовительное заседание
+    pre_meeting = case.meeting_set.filter(meeting_type='PRE').first()
+
     return {
-        '{{ HEADER_PERSON_TITLE }}': header_person_title,
-        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ HEADER_PERSON_TITLE }}': case.addressee,
+        '{{ HEADER_PERSON_ADDRESS }}': case.address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
         '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
         '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
@@ -291,6 +277,7 @@ def get_file_vars_0009(case: Case, document: Document) -> dict:
         '{{ COLLEGIUM_HEAD }}': collegium_head,
         '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
         '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+        '{{ PRE_MEETING_DATETIME }}': pre_meeting.datetime.strftime('%d.%m.%Y %H:%M:%S') if pre_meeting else '',
 
         '{{ DOC_DOWNLOAD_CODE }}': claim_doc.barcode[-10:],  # последние 10 цифр штрих-кода
     }
@@ -299,15 +286,6 @@ def get_file_vars_0009(case: Case, document: Document) -> dict:
 def get_file_vars_0010(case: Case, document: Document) -> dict:
     """Возвращает словарь со значениями переменных для формирования документа с кодом 0010 -
     Повідомлення власнику про прийняття апеляційної заяви до розгляду"""
-    # Представитель апелянта или заявитель
-    represent = case.claim.get_represent_title()
-    if represent:
-        header_person_title = represent
-        header_person_address = case.claim.get_represent_address()
-    else:
-        header_person_title = case.claim.get_applicant_title()
-        header_person_address = case.claim.get_applicant_address()
-
     # Документ обращения
     claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
     claim_doc_reg_num = claim_doc.registration_number
@@ -319,9 +297,12 @@ def get_file_vars_0010(case: Case, document: Document) -> dict:
         collegium.append(item.person.get_full_name_initials())
     collegium_head = case.collegium_head.get_full_name
 
+    # Подготовительное заседание
+    pre_meeting = case.meeting_set.filter(meeting_type='PRE').first()
+
     return {
-        '{{ HEADER_PERSON_TITLE }}': header_person_title,
-        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ HEADER_PERSON_TITLE }}': case.addressee,
+        '{{ HEADER_PERSON_ADDRESS }}': case.address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
         '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
         '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
@@ -336,6 +317,7 @@ def get_file_vars_0010(case: Case, document: Document) -> dict:
         '{{ COLLEGIUM_HEAD }}': collegium_head,
         '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
         '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+        '{{ PRE_MEETING_DATETIME }}': pre_meeting.datetime.strftime('%d.%m.%Y %H:%M:%S') if pre_meeting else '',
 
         '{{ DOC_DOWNLOAD_CODE }}': claim_doc.barcode[-10:],  # последние 10 цифр штрих-кода
     }
@@ -344,14 +326,6 @@ def get_file_vars_0010(case: Case, document: Document) -> dict:
 def get_file_vars_0011(case: Case, document: Document) -> dict:
     """Возвращает словарь со значениями переменных для формирования документа с кодом 0011 -
     Повідомлення апелянту про прийняття заяви про визнання ТМ ДВ до розгляду"""
-    # Представитель апелянта или заявитель
-    represent = case.claim.get_represent_title()
-    if represent:
-        header_person_title = represent
-        header_person_address = case.claim.get_represent_address()
-    else:
-        header_person_title = case.claim.get_applicant_title()
-        header_person_address = case.claim.get_applicant_address()
 
     # Документ обращения
     claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
@@ -365,8 +339,8 @@ def get_file_vars_0011(case: Case, document: Document) -> dict:
     collegium_head = case.collegium_head.get_full_name
 
     return {
-        '{{ HEADER_PERSON_TITLE }}': header_person_title,
-        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ HEADER_PERSON_TITLE }}': case.addressee,
+        '{{ HEADER_PERSON_ADDRESS }}': case.address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
         '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
         '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
@@ -386,14 +360,6 @@ def get_file_vars_0011(case: Case, document: Document) -> dict:
 
 def get_file_vars_stopping(case: Case, form_data: dict):
     """Переменные для формирования файла документа оповещения об остановке рассмотрения дела / признания непригодным."""
-    # Представитель заявителя или заявитель
-    represent = case.claim.get_represent_title()
-    if represent:
-        header_person_title = represent
-        header_person_address = case.claim.get_represent_address()
-    else:
-        header_person_title = case.claim.get_applicant_title()
-        header_person_address = case.claim.get_applicant_address()
 
     # Документ обращения
     claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
@@ -401,8 +367,8 @@ def get_file_vars_stopping(case: Case, form_data: dict):
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
     return {
-        '{{ HEADER_PERSON_TITLE }}': header_person_title,
-        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ HEADER_PERSON_TITLE }}': case.addressee,
+        '{{ HEADER_PERSON_ADDRESS }}': case.address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
         '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
         '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
@@ -438,8 +404,8 @@ def get_file_vars_meeting(case: Case, document: Document):
     claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
 
     return {
-        '{{ HEADER_PERSON_TITLE }}': header_person_title,
-        '{{ HEADER_PERSON_ADDRESS }}': header_person_address,
+        '{{ HEADER_PERSON_TITLE }}': case.addressee,
+        '{{ HEADER_PERSON_ADDRESS }}': case.address,
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
         '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
         '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),

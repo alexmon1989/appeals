@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils.safestring import mark_safe
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.utils import timezone
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div
@@ -14,6 +15,7 @@ from .models import Case, Document
 from apps.classifiers.models import RefusalReason
 from .services import case_services, case_stage_step_change_action_service
 from apps.notifications.services import Service as NotificationService, DbChannel
+from apps.meetings import services as meetings_services
 
 import random
 
@@ -221,12 +223,36 @@ class CaseAcceptForConsiderationForm(forms.ModelForm):
         self.request = request
         super().__init__(*args, **kwargs)
 
+        if self.instance.claim.claim_kind.claim_sense == 'AP':
+            # Если апеляционное заявление, то необходимо создать предварительное заседание,
+            # поэтому на форме должно быть поле выбора даты этого заседания
+            self.fields['pre_meeting_datetime'] = forms.DateTimeField(
+                widget=forms.DateTimeInput(
+                    attrs={'type': 'datetime-local'}
+                ),
+                label='Дата та час підготовчого засідання'
+            )
+
         self.helper = FormHelper()
         self.helper.form_id = "case-consider-for-acceptance-form"
         self.helper.label_class = "fw-bold"
         self.helper.field_class = "mb-4"
 
+    def clean_pre_meeting_datetime(self):
+        data = self.cleaned_data['pre_meeting_datetime']
+        if data < timezone.now():
+            raise forms.ValidationError("Значення поля має містити сьогоднішню або майбутню дату.")
+        return data
+
     def save(self, commit=True):
+        # Создание предварительного заседания в случае апел. заявления
+        if self.instance.claim.claim_kind.claim_sense == 'AP':
+            meetings_services.meeting_create_pre_meeting(
+                self.cleaned_data['pre_meeting_datetime'],
+                self.instance.pk
+            )
+
+        # Создание документов
         data = {
             'case_id': self.instance.pk,
             'signer_id': self.instance.collegium_head.pk,

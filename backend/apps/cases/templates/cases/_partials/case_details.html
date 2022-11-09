@@ -69,15 +69,19 @@
                     {% for meeting in case.meeting_set.all %}
                         <li>
                             {{ meeting.datetime }}
-                            <i>(осіб погодилися: <a href="#"
-                                                    title="Натисніть, щоб подивитися хто прийняв запрошення"
-                                                    data-href="{% url 'meetings-detail' pk=meeting.pk %}"
-                                                    data-ajax-modal-size="modal-md"
-                                                    data-ajax-modal-centered="true"
-                                                    data-ajax-modal-callback-function=""
-                                                    class="js-ajax-modal">
-                                                    <b>{{ meeting.accept_count }} / 3</b>
-                            </a>)</i>
+                            {% if meeting.meeting_type == 'PRE' %}
+                                (підготовче засідання)
+                            {% else %}
+                                <i>(осіб погодилися: <a href="#"
+                                                        title="Натисніть, щоб подивитися хто прийняв запрошення"
+                                                        data-href="{% url 'meetings-detail' pk=meeting.pk %}"
+                                                        data-ajax-modal-size="modal-md"
+                                                        data-ajax-modal-centered="true"
+                                                        data-ajax-modal-callback-function=""
+                                                        class="js-ajax-modal">
+                                                        <b>{{ meeting.accept_count }} / 3</b>
+                                </a>)</i>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>

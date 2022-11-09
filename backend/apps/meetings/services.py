@@ -3,7 +3,7 @@ from .models import Absence, Meeting, Invitation
 from django.utils import timezone
 from django.db.models import Q, QuerySet
 
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from typing import Iterable, List
 
 
@@ -13,7 +13,8 @@ def invitation_get_list_qs(user_id: int) -> QuerySet[Invitation]:
         'meeting', 'meeting__case'
     ).filter(
         user_id=user_id,
-        meeting__datetime__gte=timezone.now()
+        meeting__datetime__gte=timezone.now(),
+        meeting__meeting_type='COMMON',
     ).order_by('-meeting__datetime')
     return res
 
@@ -55,6 +56,11 @@ def invitation_create_collegium_invitations(meeting_id: int) -> None:
                 user_id=item.person.pk,
                 meeting_id=meeting_id
             )
+        Invitation.objects.get_or_create(
+            user_id=meeting.case.secretary_id,
+            meeting_id=meeting.pk,
+            accepted_at=timezone.now()
+        )
 
 
 def invitation_get_one(pk: int) -> Invitation:
@@ -100,11 +106,6 @@ def absense_get_one(pk: int, user_id: int) -> Meeting:
 def absense_delete_one(pk: int, user_id: int) -> tuple:
     """Удаляет данные периода отсутствия пользователя."""
     return Absence.objects.filter(pk=pk, user_id=user_id).delete()
-
-
-def absence_is_user_at_work(user_id: int) -> bool:
-
-    return True
 
 
 def absence_get_users_periods(users_ids: Iterable[int]) -> List[dict]:
@@ -162,3 +163,28 @@ def meeting_get_calendar_events(user_id: int, start: str, end: str):
 def meeting_get_one(pk: int, user_id: int) -> Meeting:
     """Получает данные заседания, в котором участвует пользователь."""
     return Meeting.objects.select_related('case').filter(pk=pk, invitation__user_id=user_id).first()
+
+
+def meeting_create_pre_meeting(meeting_datetime: datetime, case_id: int) -> Meeting:
+    """Создание предварительного заседания."""
+    meeting = Meeting.objects.create(
+        meeting_type=Meeting.MeetingTypeChoices.PRE,
+        datetime=meeting_datetime,
+        case_id=case_id
+    )
+
+    # Создание приглашений (принятых)
+    accepted_at = timezone.now()
+    for item in meeting.case.collegiummembership_set.all():
+        Invitation.objects.create(
+            user_id=item.person.pk,
+            meeting_id=meeting.pk,
+            accepted_at=accepted_at
+        )
+    Invitation.objects.get_or_create(
+        user_id=meeting.case.secretary_id,
+        meeting_id=meeting.pk,
+        accepted_at=accepted_at
+    )
+
+    return meeting

@@ -32,7 +32,10 @@ def document_get_by_id(doc_id: int) -> Document:
     return doc.first()
 
 
-def document_add_sign_info_to_file(doc_id: int, signs: list, internal_document: bool = False) -> None:
+def document_add_sign_info_to_file(doc_id: int,
+                                   signs: list,
+                                   internal_document: bool = False,
+                                   user_id: int = None) -> None:
     """Создаёт .docx с инф-ей о номере документа, штрихкоде
     и цифровых подписях в конце (на основе оригинального файла документа)"""
     # Присвоение документу номера, штрихкода, даты регистрации
@@ -82,6 +85,11 @@ def document_add_sign_info_to_file(doc_id: int, signs: list, internal_document: 
 
         # Сохранение
         docx.save(docx_with_signs_file_path)
+        document_add_history(
+            document.pk,
+            'Створено новий документ з інформацією про підписантів (автоматично)',
+            user_id
+        )
 
         if internal_document:
             # Конвертация в pdf
@@ -91,6 +99,7 @@ def document_add_sign_info_to_file(doc_id: int, signs: list, internal_document: 
             )
             document.converted_to_pdf = True
             document.save()
+            document_add_history(document.pk, 'Конвертовано у pdf (автоматично)', user_id)
 
 
 def document_set_reg_number(doc_id: int) -> None:
@@ -173,7 +182,7 @@ def document_get_case_documents_to_sign(case_id: int, user: UserModel) -> list:
     return res
 
 
-def document_add_history(doc_id: int, action: str, user_id: int) -> None:
+def document_add_history(doc_id: int, action: str, user_id: int = None) -> None:
     """Создаёт запись в историю дела."""
     DocumentHistory.objects.create(
         document_id=doc_id,
