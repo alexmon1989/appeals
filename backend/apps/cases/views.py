@@ -365,6 +365,34 @@ def create_files_with_signs_info(request, case_id):
     )
 
 
+@group_required('Секретар')
+def case_create_pre_meeting_protocol(request, pk: int):
+    """Создаёт документ протокола о предварительном заседании."""
+    # Получение дела
+    case = case_services.case_get_all_qs().filter(
+        secretary=request.user,
+        stopped=False,
+        paused=False,
+        stage_step__code=2005,
+        pk=pk
+    ).first()
+    if not case:
+        raise Http404
+
+    # Создание документа
+    case_services.case_create_docs(
+        case_id=case.pk,
+        doc_types_codes=['0027'],
+        user_id=request.user.pk
+    )
+
+    # Сообщение об успехе
+    messages.add_message(request, messages.SUCCESS, 'Документ успішно створено та додано до справи.')
+
+    # Переадресация на страницу дела
+    return redirect('cases-detail', pk=pk)
+
+
 @method_decorator(group_required('Секретар'), name='dispatch')
 class DocumentAddView(LoginRequiredMixin, CreateView):
     """Страница создания вторичного документа."""
@@ -441,6 +469,26 @@ def document_delete(request, pk: int):
         messages.add_message(request, messages.SUCCESS, 'Документ успішно видалено.')
         return redirect('cases-detail', pk=document.case_id)
     raise Http404
+
+
+@group_required('Секретар')
+def document_send_to_sign(request, pk: int):
+    # Получение документа
+    document = document_services.document_get_by_id(pk)
+
+    # Проверка, не созданы ли записи для подписи
+    if document.sign_set.count():
+        raise Http404
+
+    # Проверка является ли пользователь секретарём дела
+    if document.case.secretary_id != request.user.id:
+        raise Http404
+
+    # Создание записей для подписи
+    document_services.document_create_sign_records(document.pk)
+
+    # Переадресация на страницу дела
+    return redirect('cases-detail', pk=document.case.pk)
 
 
 @xframe_options_exempt

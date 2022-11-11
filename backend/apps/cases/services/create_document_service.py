@@ -41,6 +41,8 @@ class Service:
             return get_file_vars_stopping(self.case, self.extra_args['form_data'])
         elif self.doc_type.code in ('0024', '0025', '0026'):
             return get_file_vars_meeting(self.case, self.document)
+        elif self.doc_type.code == '0027':
+            return get_file_vars_pre_meeting_protocol(self.case, self.document)
         else:
             return {}
 
@@ -96,9 +98,9 @@ class Service:
         doc.refresh_from_db()
         return doc
 
-    def execute(self, case_id: int, signer_id: int, doc_code: str, user_id: int, **kwargs) -> Document:
+    def execute(self, case_id: int, doc_code: str, user_id: int, signer_id: int = None, **kwargs) -> Document:
         self.user_id = user_id
-        self.signer = UserModel.objects.get(pk=signer_id)
+        self.signer = UserModel.objects.get(pk=signer_id) if signer_id else None
         self.extra_args = kwargs
         self.case = Case.objects.select_related('claim').get(pk=case_id)
         self.doc_type = DocumentType.objects.get(
@@ -389,15 +391,6 @@ def get_file_vars_stopping(case: Case, form_data: dict):
 
 def get_file_vars_meeting(case: Case, document: Document):
     """Переменные для формирования файла документа оповещения об назначении заседания."""
-    # Представитель заявителя или заявитель
-    represent = case.claim.get_represent_title()
-    if represent:
-        header_person_title = represent
-        header_person_address = case.claim.get_represent_address()
-    else:
-        header_person_title = case.claim.get_applicant_title()
-        header_person_address = case.claim.get_applicant_address()
-
     # Документ обращения
     claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
     claim_doc_reg_num = claim_doc.registration_number
@@ -417,4 +410,25 @@ def get_file_vars_meeting(case: Case, document: Document):
         '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
         '{{ SECRETARY_EMAIL }}': case.secretary.email,
         '{{ MEETING_DATETIME }}': case.meeting_set.order_by('-pk').first().datetime.strftime('%d.%m.%Y %H:%M:%S'),
+    }
+
+
+def get_file_vars_pre_meeting_protocol(case: Case, document: Document):
+    """Переменные для формирования файла документа оповещения об назначении заседания."""
+    # Коллегия
+    collegium = []
+    for item in case.collegiummembership_set.filter(is_head=False):
+        collegium.append(item.person)
+
+    return {
+        '{{ MEETING_DATE }}': case.meeting_set.order_by('-pk').first().datetime.strftime('%d.%m.%Y %H:%M:%S'),
+        '{{ CASE_NUMBER }}': case.case_number,
+        '{{ COLLEGIUM_HEAD }}': case.collegium_head.get_full_name,
+        '{{ COLLEGIUM_MEMBERS }}': f'{collegium[0].get_full_name}, {collegium[1].get_full_name}',
+        '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
+        '{{ OBJ_NUMBER }}': case.claim.obj_number,
+        '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
+        '{{ OBJ_TITLE }}': case.claim.obj_title,
+        '{{ COLLEGIUM_MEMBER_1 }}': collegium[0].get_full_name,
+        '{{ COLLEGIUM_MEMBER_2 }}': collegium[1].get_full_name,
     }

@@ -8,12 +8,14 @@
         <div class="modal-body p-0 m-3 m-2-xs">
             <ol>
                 {% for sign in document.sign_set.all %}
-                    <li>
-                        <strong>{{ sign.subject }}</strong><br>
-                        {{ sign.serial_number }}<br>
-                        {{ sign.issuer }}<br>
-                        {{ sign.timestamp }}<br>
-                    </li>
+                    {% if sign.timestamp %}
+                        <li>
+                            <strong>{{ sign.subject }}</strong><br>
+                            {{ sign.serial_number }}<br>
+                            {{ sign.issuer }}<br>
+                            {{ sign.timestamp }}<br>
+                        </li>
+                    {% endif %}
                 {% endfor %}
             </ol>
         </div>

@@ -255,8 +255,8 @@ class CaseAcceptForConsiderationForm(forms.ModelForm):
         # Создание документов
         data = {
             'case_id': self.instance.pk,
-            'signer_id': self.instance.collegium_head.pk,
             'user_id': self.request.user.pk,
+            'signer_id': self.instance.collegium_head.pk,
         }
         case_services.case_create_docs_consider_for_acceptance(**data)
         self.instance.refresh_from_db()
@@ -308,9 +308,9 @@ class CasePausingForm(forms.ModelForm):
         # Генерация документов
         case_services.case_create_docs(
             case_id=self.instance.pk,
-            signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
             doc_types_codes=[self.cleaned_data['document_type']],
             user_id=self.request.user.pk,
+            signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
             form_data=self.cleaned_data,
         )
 
@@ -363,9 +363,9 @@ class CaseStoppingForm(forms.ModelForm):
         # Генерация документов
         case_services.case_create_docs(
             case_id=self.instance.pk,
-            signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
             doc_types_codes=[self.cleaned_data['document_type']],
             user_id=self.request.user.pk,
+            signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
             form_data=self.cleaned_data,
         )
 

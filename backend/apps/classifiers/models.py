@@ -68,6 +68,10 @@ class DocumentType(TimeStampModel):
         INPUT = 'internal', 'Вхідний'
         OUTPUT = 'external', 'Вихідний'
 
+    class SignerType(models.TextChoices):
+        COLLEGIUM = 'collegium', 'Члени колегії та секретар справи'
+        COLLEGIUM_HEAD = 'collegium_head', 'Голова колегії'
+
     title = models.CharField("Назва", max_length=512)
     direction = models.CharField("Напрямок", max_length=16, choices=Direction.choices, null=True, blank=True)
     origin = models.CharField("Походження", max_length=16, choices=Origin.choices, null=True, blank=True)
@@ -80,6 +84,7 @@ class DocumentType(TimeStampModel):
     )
     claim_kinds = models.ManyToManyField(ClaimKind, verbose_name='Види звернень', blank=True)
     template = models.FileField('Шаблон документу', upload_to='doc-templates/', null=True, blank=True)
+    signer_type = models.CharField('Тип підписанта', max_length=16, choices=SignerType.choices, null=True, blank=True)
 
     def __str__(self):
         return self.title

@@ -17,6 +17,11 @@ urlpatterns = [
     path('stop/<int:pk>/', views.CaseStoppingView.as_view(), name='case_stopping'),
     path('renew-consideration/<int:pk>/', views.case_renew_consideration, name='case_renew_consideration'),
     path(
+        'create-pre-meeting-protocol/<int:pk>/',
+        views.case_create_pre_meeting_protocol,
+        name='case_create_pre_meeting_protocol'
+    ),
+    path(
         'create-files-with-signs-info/<int:case_id>/',
         views.create_files_with_signs_info,
         name='cases_create_files_with_signs_info'
@@ -35,6 +40,11 @@ urlpatterns = [
         'delete-document/<int:pk>/',
         views.document_delete,
         name='case_delete_document'
+    ),
+    path(
+        'document-send-to-sign/<int:pk>/',
+        views.document_send_to_sign,
+        name='document_send_to_sign'
     ),
     path(
         'update-document/<int:pk>/',

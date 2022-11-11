@@ -6,6 +6,7 @@ from django.conf import settings
 from apps.cases.models import Document, Sign, DocumentHistory
 from apps.cases.utils import set_cell_border
 from apps.common.utils import (docx_replace, generate_barcode_img, substitute_image_docx)
+from apps.classifiers.models import DocumentType
 
 from typing import List
 from pathlib import Path
@@ -38,68 +39,76 @@ def document_add_sign_info_to_file(doc_id: int,
                                    user_id: int = None) -> None:
     """Создаёт .docx с инф-ей о номере документа, штрихкоде
     и цифровых подписях в конце (на основе оригинального файла документа)"""
-    # Присвоение документу номера, штрихкода, даты регистрации
-    if internal_document:  # Документ создаётся во внутреннем модуле
-        document_set_reg_number(doc_id)
-        document_set_barcode(doc_id)
-        document_set_reg_date(doc_id)
-
     document = document_get_by_id(doc_id)
 
-    if Path(str(document.file)).suffix == '.docx':
-        # Открытие документа
-        docx_file_path = Path(settings.MEDIA_ROOT) / Path(str(document.file))
-        docx_with_signs_file_path = docx_file_path.parent / f"{docx_file_path.stem}_signs.docx"
-        docx = DocumentWord(docx_file_path)
-
-        # Документ создаётся во внутреннем модуле
+    if not document.registration_number:
+        # Документ создался во внутреннем модуле
         if internal_document:
-            # Добавление номера документа, даты регистрации и штрих-кода в файл
-            file_vars = {
-                '{{ DOC_REG_DATE }}': document.registration_date.strftime('%d.%m.%Y'),
-                '{{ DOC_REG_NUM }}': document.registration_number,
-            }
-            docx_replace(docx, file_vars)
-            barcode_file_path = generate_barcode_img(document.barcode)
-            substitute_image_docx(docx, '{{ BARCODE_IMG }}', barcode_file_path, 6)
+            # Присвоение документу номера, штрихкода, даты регистрации в момент подписания
+            document_set_reg_number(doc_id)
+            document_set_barcode(doc_id)
+            document_set_reg_date(doc_id)
+            document.refresh_from_db()
 
-        # Добавление таблички с информацией о подписях
-        # todo: добавлять табличку только если один подписант
-        docx.add_paragraph('Підписали:')
-        table = docx.add_table(rows=len(signs), cols=1)
-        for i, sign in enumerate(signs):
-            cells = table.rows[i].cells
-            cells[0].paragraphs[0].add_run(
-                f"{sign['subject']}\n{sign['serial_number']}\n{sign['issuer']}"
-            )
-            paragraph_format = cells[0].paragraphs[0].paragraph_format
-            paragraph_format.space_after = 0
-            # set_cell_margins(cells[0], top=50, start=50, bottom=50, end=50)
-            set_cell_border(
-                cells[0],
-                top={"sz": 12, "val": "single", "color": "black", "space": "0"},
-                bottom={"sz": 12, "val": "single", "color": "black", "space": "0"},
-                start={"sz": 12, "val": "single", "color": "black", "space": "0"},
-                end={"sz": 12, "val": "single", "color": "black", "space": "0"},
-            )
+        if Path(str(document.file)).suffix == '.docx':
+            # Открытие документа
+            docx_file_path = Path(settings.MEDIA_ROOT) / Path(str(document.file))
+            docx_with_signs_file_path = docx_file_path.parent / f"{docx_file_path.stem}_signs.docx"
+            docx = DocumentWord(docx_file_path)
 
-        # Сохранение
-        docx.save(docx_with_signs_file_path)
-        document_add_history(
-            document.pk,
-            'Створено новий документ з інформацією про підписантів (автоматично)',
-            user_id
-        )
+            # Документ создался во внутреннем модуле
+            if internal_document:
+                # Добавление номера документа, даты регистрации и штрих-кода в файл
+                file_vars = {
+                    '{{ DOC_REG_DATE }}': document.registration_date.strftime('%d.%m.%Y'),
+                    '{{ DOC_REG_NUM }}': document.registration_number,
+                }
+                docx_replace(docx, file_vars)
+                barcode_file_path = generate_barcode_img(document.barcode)
+                substitute_image_docx(docx, '{{ BARCODE_IMG }}', barcode_file_path, 6)
+                document_add_history(
+                    document.pk,
+                    'Документу присвоєні номер та штрих-код (автоматично в момент підпису).',
+                    user_id
+                )
 
-        if internal_document:
-            # Конвертация в pdf
-            subprocess.call(
-                ["libreoffice", "--headless", '--convert-to', 'pdf', docx_with_signs_file_path],
-                cwd=str(Path(docx_with_signs_file_path).parent)
-            )
-            document.converted_to_pdf = True
-            document.save()
-            document_add_history(document.pk, 'Конвертовано у pdf (автоматично)', user_id)
+            # Добавление таблички с информацией о подписях (только если один подписант)
+            if document.sign_set.count() == 1:
+                docx.add_paragraph('Підписали:')
+                table = docx.add_table(rows=len(signs), cols=1)
+                for i, sign in enumerate(signs):
+                    cells = table.rows[i].cells
+                    cells[0].paragraphs[0].add_run(
+                        f"{sign['subject']}\n{sign['serial_number']}\n{sign['issuer']}"
+                    )
+                    paragraph_format = cells[0].paragraphs[0].paragraph_format
+                    paragraph_format.space_after = 0
+                    # set_cell_margins(cells[0], top=50, start=50, bottom=50, end=50)
+                    set_cell_border(
+                        cells[0],
+                        top={"sz": 12, "val": "single", "color": "black", "space": "0"},
+                        bottom={"sz": 12, "val": "single", "color": "black", "space": "0"},
+                        start={"sz": 12, "val": "single", "color": "black", "space": "0"},
+                        end={"sz": 12, "val": "single", "color": "black", "space": "0"},
+                    )
+                document_add_history(
+                    document.pk,
+                    'Створено новий документ з інформацією про підписантів (автоматично)',
+                    user_id
+                )
+
+            # Сохранение
+            docx.save(docx_with_signs_file_path)
+
+            if internal_document:
+                # Конвертация в pdf
+                subprocess.call(
+                    ["libreoffice", "--headless", '--convert-to', 'pdf', docx_with_signs_file_path],
+                    cwd=str(Path(docx_with_signs_file_path).parent)
+                )
+                document.converted_to_pdf = True
+                document.save()
+                document_add_history(document.pk, 'Конвертовано у pdf (автоматично)', user_id)
 
 
 def document_set_reg_number(doc_id: int) -> None:
@@ -200,3 +209,25 @@ def document_soft_delete(doc_id: int, user: UserModel) -> Union[Document, None]:
         document_add_history(doc_id, 'Видалено', user.pk)
         return document
     return None
+
+
+def document_create_sign_records(doc_id: int) -> None:
+    """Создаёт записи для подписи пользователей."""
+    document = document_get_by_id(doc_id)
+    if document.document_type.signer_type == DocumentType.SignerType.COLLEGIUM:
+        for item in document.case.collegiummembership_set.all():
+            # Члены коллегии
+            Sign.objects.create(
+                document=document,
+                user=item.person,
+            )
+        # Секретарь дела
+        Sign.objects.get_or_create(
+            document=document,
+            user=document.case.secretary,
+        )
+    elif document.document_type.signer_type == DocumentType.SignerType.COLLEGIUM_HEAD:
+        Sign.objects.create(
+            document=document,
+            user=document.case.collegium_head,
+        )

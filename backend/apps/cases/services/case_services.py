@@ -294,7 +294,7 @@ def case_create_docs_consider_for_acceptance(case_id: int, signer_id: int, user_
     # )
 
 
-def case_create_docs(case_id: int, doc_types_codes: Iterable[str], signer_id: int, user_id: int,
+def case_create_docs(case_id: int, doc_types_codes: Iterable[str], user_id: int, signer_id: int = None,
                      form_data: dict = None):
     """Создаёт документы ап. дела определённых типов."""
     # Сервис создания документов
@@ -305,15 +305,16 @@ def case_create_docs(case_id: int, doc_types_codes: Iterable[str], signer_id: in
         document = service.execute(
             case_id=case_id,
             doc_code=doc_type_code,
-            signer_id=signer_id,
             user_id=user_id,
+            signer_id=signer_id,
             form_data=form_data,
         )
-        # Подписант документа
-        Sign.objects.create(
-            document=document,
-            user_id=signer_id,
-        )
+        if signer_id:
+            # Подписант документа
+            Sign.objects.create(
+                document=document,
+                user_id=signer_id,
+            )
 
 
 def case_renew_consideration(case_id: int, user_id: int) -> None:

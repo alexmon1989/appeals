@@ -79,6 +79,14 @@ class Case(TimeStampModel):
         """Имеет ли дело неподписанные документы."""
         return self.document_set.filter(sign__timestamp='').exists()
 
+    @property
+    def has_pre_meeting_doc(self) -> bool:
+        """Имеет ли дело документ протокола подгтовительного заседания."""
+        for doc in self.document_set.all():
+            if doc.document_type.code == '0027':
+                return True
+        return False
+
     class Meta:
         verbose_name = 'Справа'
         verbose_name_plural = 'Справи'
@@ -170,11 +178,14 @@ class Document(TimeStampModel):
 
     @property
     def is_signed(self) -> bool:
-        """Подписан ли документ главой АП или его заместителем."""
+        """Подписан ли документ всеми подписантами."""
+        res = False
         for sign in self.sign_set.all():
-            if sign.timestamp:  # Документ подписан, а не ждёт подписания
-                return True
-        return False
+            if not sign.timestamp:  # Документ подписан, а не ждёт подписания
+                res = False
+                break
+            res = True
+        return res
 
     @property
     def signed_file_url(self):
@@ -195,6 +206,11 @@ class Document(TimeStampModel):
         if self.converted_to_pdf:  # документ конвертирован в pdf
             return str(path).replace(path.name, f"{path.stem}_signs.pdf")
         return str(path).replace(path.stem, f"{path.stem}_signs")
+
+    @property
+    def can_be_sent_to_sign(self):
+        """Может ли документ быть передан на подпись."""
+        return self.auto_generated and self.sign_set.count() == 0
 
     @property
     def folder_path(self):
