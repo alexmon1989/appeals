@@ -24,7 +24,7 @@ class Service:
 
     def _get_file_vars(self) -> dict:
         """Формирует список с переменными для замены в файле docx."""
-        if self.doc_type.code == '0005':
+        if self.doc_type.code in ('0005', '0028'):
             return get_file_vars_0005(self.case, self.signer)
         elif self.doc_type.code == '0006':
             return get_file_vars_0006(self.case, self.document)
@@ -87,6 +87,7 @@ class Service:
             document_type=self.doc_type,
             # input_date=datetime.datetime.now(),
             auto_generated=True,
+            can_be_edited=self.extra_args.get('can_be_edited', True)
         )
         document_add_history(
             doc.pk,

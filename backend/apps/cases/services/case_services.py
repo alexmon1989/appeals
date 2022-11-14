@@ -253,6 +253,21 @@ def case_create_collegium(case_id: int, head_id: int, members_ids: List[int], si
         user_id=signer_id,
     )
 
+    # Создание протокола распоряжения
+    document = service.execute(
+        case_id=case_id,
+        doc_code='0028',
+        signer_id=signer_id,
+        user_id=user_id,
+        can_be_edited=False
+    )
+
+    # Подписант
+    Sign.objects.create(
+        document=document,
+        user_id=signer_id,
+    )
+
     # Запись в историю дела
     case_add_history_action(
         case_id,

@@ -48,10 +48,12 @@ class CaseStageStepQualifier:
     def _satisfies_2003(self):
         """Удовлетворяет условиям стадии 2003 "Розпорядження підписано. Очікує на прийняття до розгляду."."""
         if self.case.stage_step.code == 2002:
+            # Коды документов, которые д.б. подписаны
+            doc_codes_to_sign = ['0005', '0028']
             for document in self.case.document_set.all():
-                # Документ "Розпорядження про створення колегії" существует и подписан главой комиссии
-                if document.document_type.code == '0005' and document.is_signed_by_head:
-                    return True
+                if document.document_type.code in doc_codes_to_sign and document.is_signed_by_head:
+                    doc_codes_to_sign.remove(document.document_type.code)
+            return len(doc_codes_to_sign) == 0
         return False
 
     def _satisfies_2004(self):
