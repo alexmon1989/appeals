@@ -56,11 +56,14 @@ def invitation_create_collegium_invitations(meeting_id: int) -> None:
                 user_id=item.person.pk,
                 meeting_id=meeting_id
             )
-        Invitation.objects.get_or_create(
+        # Секретарь
+        invitation, created = Invitation.objects.get_or_create(
             user_id=meeting.case.secretary_id,
             meeting_id=meeting.pk,
-            accepted_at=timezone.now()
         )
+        if created:
+            invitation.accepted_at = timezone.now()
+            invitation.save()
 
 
 def invitation_get_one(pk: int) -> Invitation:
