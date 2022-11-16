@@ -12,7 +12,7 @@ from django_select2 import forms as s2forms
 from dateutil.relativedelta import relativedelta
 
 from .models import Case, Document
-from apps.classifiers.models import RefusalReason
+from apps.classifiers.models import RefusalReason, DecisionType
 from .services import case_services, case_stage_step_change_action_service
 from apps.notifications.services import Service as NotificationService, DbChannel
 from apps.meetings import services as meetings_services
@@ -435,3 +435,40 @@ class DocumentUpdateForm(forms.ModelForm):
     class Meta:
         model = Document
         fields = ['file']
+
+
+class CaseMeetingForm(forms.ModelForm):
+    """Форма проведения ап. заседания."""
+    # Заседания
+    meeting = forms.ChoiceField(
+        label='Засідання',
+    )
+    # Возможные решения АП
+    decision = forms.ModelChoiceField(
+        label='Рішення',
+        queryset=DecisionType.objects.all()
+    )
+
+    class Meta:
+        model = Case
+        fields = ['meeting', 'decision']
+
+    def __init__(self, request, *args, **kwargs):
+        self.request = request
+        super().__init__(*args, **kwargs)
+
+        self.fields['meeting'].choices = (
+            (x.pk, x.datetime) for x in self.instance.meeting_set.filter(
+                meeting_type='COMMON',
+                datetime__gte=timezone.now()
+            )
+        )
+        self.fields['decision'].queryset = DecisionType.objects.filter(claim_kinds=self.instance.claim.claim_kind_id)
+
+        self.helper = FormHelper()
+        self.helper.form_id = "case-meeting-form"
+        self.helper.label_class = "fw-bold"
+        self.helper.field_class = "mb-4"
+
+    def save(self, commit=True):
+        pass

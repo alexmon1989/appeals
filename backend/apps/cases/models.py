@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.core.validators import FileExtensionValidator
 
 from apps.common.models import TimeStampModel
-from apps.classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason
+from apps.classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason, DecisionType
 from .utils import sign_get_file_path, document_get_original_file_path
 
 from apps.filling.models import Claim
@@ -64,6 +64,13 @@ class Case(TimeStampModel):
     )
     addressee = models.CharField('Адресат', max_length=255, null=True, blank=True)
     address = models.CharField('Адреса', max_length=255, null=True, blank=True)
+    decision_type = models.ForeignKey(
+        DecisionType,
+        on_delete=models.SET_NULL,
+        verbose_name='Рішення Апеляційної палати',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.case_number

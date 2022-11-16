@@ -61,3 +61,12 @@ def get_doc_types_for_pre_meeting_protocol(claim_kind_id: Type[int]) -> List[dic
         code__in=['0027']
     ).values('pk', 'title', 'template', 'code')
     return list(doc_types)
+
+
+def get_doc_types_for_meeting_holding(claim_kind_id: Type[int]) -> List[dict]:
+    """Возвращает список документов, которые должны быть сгенерированы при проведении ап. заседания."""
+    doc_types = DocumentType.objects.filter(
+        claim_kinds__id=claim_kind_id,
+        code__in=['0029', '0030', '0031', '0032', '0033']
+    ).values('pk', 'title', 'template', 'code')
+    return list(doc_types)

@@ -131,7 +131,7 @@
             {% endif %}
 
             {% if case.stage_step.code == 4000 and case.secretary == request.user %}
-                <a href="#"
+                <a href="{% url 'case_meeting' pk=case.pk %}"
                    class="btn btn-primary me-2 {% if case.stopped or case.paused or case_has_unsigned_docs %}disabled{% endif %}"
                 >
                     <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-people-fill" viewBox="0 0 16 16">

@@ -31,6 +31,7 @@ urlpatterns = [
         views.CaseConsiderForAcceptance.as_view(),
         name='case_consider_for_acceptance'
     ),
+    path('meeting/<int:pk>/', views.CaseMeetingView.as_view(), name='case_meeting'),
     path(
         'add-document/<int:pk>/',
         views.DocumentAddView.as_view(),

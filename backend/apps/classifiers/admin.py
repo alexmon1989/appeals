@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import DocumentType, ObjKind, ClaimKind, RefusalReason, Speciality
+from .models import DocumentType, ObjKind, ClaimKind, RefusalReason, DecisionType
 
 
 @admin.register(DocumentType)
@@ -34,3 +34,13 @@ class ObjKindAdmin(admin.ModelAdmin):
 class RefusalReasonAdmin(admin.ModelAdmin):
     ordering = ('pk',)
     list_display = ('title', 'obj_kind', 'created_at', 'updated_at')
+
+
+@admin.register(DecisionType)
+class DecisionTypeAdmin(admin.ModelAdmin):
+    ordering = ('pk',)
+    list_display = ('title', 'created_at', 'updated_at')
+    filter_horizontal = ('claim_kinds',)
+
+    def get_queryset(self, request):
+        return DecisionType.objects.prefetch_related('claim_kinds', 'claim_kinds__obj_kind')

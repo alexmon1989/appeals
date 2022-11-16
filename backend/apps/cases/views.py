@@ -25,7 +25,7 @@ from .serializers import DocumentSerializer, CaseSerializer, CaseHistorySerializ
 from apps.common.mixins import LoginRequiredMixin
 from .tasks import upload_sign_external_task
 from .forms import (CaseUpdateForm, CaseCreateCollegiumForm, CaseAcceptForConsiderationForm, DocumentAddForm,
-                    DocumentUpdateForm, CasePausingForm, CaseStoppingForm)
+                    DocumentUpdateForm, CasePausingForm, CaseStoppingForm, CaseMeetingForm)
 from apps.classifiers import services as classifiers_services
 from apps.notifications.services import Service as NotificationService, DbChannel
 
@@ -391,6 +391,41 @@ def case_create_pre_meeting_protocol(request, pk: int):
 
     # Переадресация на страницу дела
     return redirect('cases-detail', pk=pk)
+
+
+@method_decorator(group_required('Секретар'), name='dispatch')
+class CaseMeetingView(UpdateView):
+    """Отображает страницу проведения дела."""
+    model = Case
+    form_class = CaseMeetingForm
+    template_name = 'cases/meeting/index.html'
+
+    def get_queryset(self):
+        # Функция доступна когда сформирована коллегия
+        return case_services.case_get_all_qs().filter(
+            secretary=self.request.user,
+            paused=False,
+            stopped=False,
+            stage_step__code=4000,
+        ).exclude(document__sign__timestamp='')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
+
+    def get_success_url(self):
+        return reverse_lazy('cases-detail', kwargs={'pk': self.kwargs['pk']})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Типы документов, которые будут сгенерированы
+        context['docs_to_generate'] = classifiers_services.get_doc_types_for_meeting_holding(
+            self.object.claim.claim_kind_id
+        )
+
+        return context
 
 
 @method_decorator(group_required('Секретар'), name='dispatch')

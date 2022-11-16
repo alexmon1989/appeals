@@ -126,3 +126,17 @@ class Speciality(TimeStampModel):
         verbose_name = "Спеціальність члена АП"
         verbose_name_plural = "Спеціальністі члені АП"
         db_table = 'cl_specialities'
+
+
+class DecisionType(TimeStampModel):
+    """Модель решения АП."""
+    title = models.CharField("Назва", max_length=255)
+    claim_kinds = models.ManyToManyField(ClaimKind, verbose_name='Види звернень', blank=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Тип рішення АП"
+        verbose_name_plural = "Типи рішень АП"
+        db_table = 'cl_decision_types'
