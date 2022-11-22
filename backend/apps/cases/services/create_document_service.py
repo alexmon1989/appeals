@@ -43,6 +43,8 @@ class Service:
             return get_file_vars_meeting(self.case, self.document)
         elif self.doc_type.code == '0027':
             return get_file_vars_pre_meeting_protocol(self.case, self.document)
+        elif self.doc_type.code in ('0029', '0030', '0031', '0032', '0033'):
+            return get_file_vars_meeting_holding(self.case, self.document)
         else:
             return {}
 
@@ -414,6 +416,46 @@ def get_file_vars_meeting(case: Case, document: Document):
     }
 
 
+def get_file_vars_meeting_holding(case: Case, document: Document):
+    """Переменные для формирования документов заседания ап. палаты."""
+    # Документ обращения
+    claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
+    claim_doc_reg_num = claim_doc.registration_number
+    claim_doc_reg_date = claim_doc.input_date.strftime("%d.%m.%Y")
+
+    # Коллегия
+    collegium = []
+    for item in case.collegiummembership_set.filter(is_head=False):
+        collegium.append(item.person)
+
+    # Аппелянт и представитель
+    appellant = case.claim.get_applicant_title()
+    represent = case.claim.get_represent_title()
+    if represent:
+        appellant = f'{appellant} (представник - {represent})'
+
+
+    return {
+        '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
+        '{{ CLAIM_DOC_REG_DATE }}': claim_doc_reg_date,
+        '{{ CASE_NUMBER }}': case.case_number,
+        '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
+        '{{ OBJ_TITLE }}': case.claim.obj_title,
+        '{{ OBJ_NUMBER }}': case.claim.obj_number,
+        '{{ APPELAINT_TITLE }}': appellant,
+        '{{ SECRETARY_TITLE }}': case.secretary.get_full_name,
+        '{{ SECRETARY_TITLE_SHORT }}': case.secretary.get_full_name_initials(),
+        '{{ SECRETARY_PHONE }}': case.secretary.phone_number or '',
+        '{{ SECRETARY_EMAIL }}': case.secretary.email,
+        '{{ MEETING_DATE }}': case.meeting_set.order_by('-pk').first().datetime.strftime('%d.%m.%Y %H:%M:%S'),
+        '{{ COLLEGIUM_HEAD }}': case.collegium_head.get_full_name,
+        '{{ COLLEGIUM_HEAD_SHORT }}': case.collegium_head.get_full_name_initials(),
+        '{{ COLLEGIUM_MEMBERS }}': f'{collegium[0].get_full_name}, {collegium[1].get_full_name}',
+        '{{ COLLEGIUM_MEMBER_1 }}': collegium[0].get_full_name_initials(),
+        '{{ COLLEGIUM_MEMBER_2 }}': collegium[1].get_full_name_initials(),
+    }
+
+
 def get_file_vars_pre_meeting_protocol(case: Case, document: Document):
     """Переменные для формирования файла документа оповещения об назначении заседания."""
     # Коллегия
@@ -430,6 +472,7 @@ def get_file_vars_pre_meeting_protocol(case: Case, document: Document):
         '{{ OBJ_NUMBER }}': case.claim.obj_number,
         '{{ OBJ_KIND_TITLE }}': first_lower(case.claim.obj_kind.title),
         '{{ OBJ_TITLE }}': case.claim.obj_title,
-        '{{ COLLEGIUM_MEMBER_1 }}': collegium[0].get_full_name,
-        '{{ COLLEGIUM_MEMBER_2 }}': collegium[1].get_full_name,
+        '{{ COLLEGIUM_HEAD_SHORT }}': case.collegium_head.get_full_name_initials(),
+        '{{ COLLEGIUM_MEMBER_1 }}': collegium[0].get_full_name_initials(),
+        '{{ COLLEGIUM_MEMBER_2 }}': collegium[1].get_full_name_initials(),
     }

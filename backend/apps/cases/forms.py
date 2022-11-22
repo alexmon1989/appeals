@@ -471,4 +471,15 @@ class CaseMeetingForm(forms.ModelForm):
         self.helper.field_class = "mb-4"
 
     def save(self, commit=True):
-        pass
+        # Создание документов
+        case_services.case_create_docs_for_meeting_holding(self.instance.pk, self.request.user.pk)
+        self.instance.refresh_from_db()
+
+        # Изменение стадии дела, создание оповещений
+        stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+            case_stage_step_change_action_service.CaseStageStepQualifier(),
+            self.instance,
+            self.request,
+            NotificationService([DbChannel()])
+        )
+        stage_set_service.execute()

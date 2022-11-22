@@ -31,6 +31,7 @@ class CaseStageStepQualifier:
             3001: self._satisfies_3001,
             3002: self._satisfies_3002,
             4000: self._satisfies_4000,
+            5000: self._satisfies_5000,
         }
 
     def _satisfies_2000(self):
@@ -186,6 +187,24 @@ class CaseStageStepQualifier:
                 # в текущих подписанных документах дела
                 return doc_types_should_exist.issubset(doc_types_current)
 
+        return False
+
+    def _satisfies_5000(self):
+        """Удовлетворяет условиям стадии 5000 "Апеляційне засідання проведено. Чекає передачу документів на підпис."."""
+        if self.case.stage_step.code == 4000:
+            # Множество кодов документов, которые должны присутствовать на стадии
+            doc_types_should_exist = {
+                x['code'] for x in classifiers_services.get_doc_types_for_meeting_holding(self.case.claim.claim_kind_id)
+            }
+
+            # Множество кодов документов, которые присутствуют у дела
+            doc_types_current = {
+                x.document_type.code for x in self.case.document_set.all()
+            }
+
+            # Проверка есть ли коды документов, которые должны присутствовать на стадии,
+            # в текущих документах дела
+            return doc_types_should_exist.issubset(doc_types_current)
         return False
 
     def get_stage_step(self, case: Case) -> int:
@@ -363,6 +382,14 @@ class CaseSetActualStageStepService:
         self.case.refresh_from_db()
         self.notify_all_persons()
 
+    def _call_5000_actions(self):
+        """Выполнение действий, характерных для стадии 5000 -
+        "Апеляційне засідання проведено. Чекає передачу документів на підпис."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 5000, self.request.user.pk)
+        self.case.refresh_from_db()
+        self.notify_all_persons()
+
     def notify_all_persons(self):
         """Делает оповещение всех пользователей, которые причастны к делу,
         главы АП, заместителей, текущего пользователя."""
@@ -401,6 +428,7 @@ class CaseSetActualStageStepService:
                 3001: self._call_3001_actions,
                 3002: self._call_3002_actions,
                 4000: self._call_4000_actions,
+                5000: self._call_5000_actions,
             }
             try:
                 stage_actions[case_stage_step]()

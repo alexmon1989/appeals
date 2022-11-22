@@ -345,3 +345,23 @@ def case_renew_consideration(case_id: int, user_id: int) -> None:
             'Відновлення розгляду справи.',
             user_id
         )
+
+
+def case_create_docs_for_meeting_holding(case_id: int, user_id: int) -> None:
+    """Создаёт документы для проведения ап. заседания."""
+    # Получение дела
+    case = case_get_one(case_id)
+
+    # Типы документов, которые необходимо создать
+    doc_types = classifiers_services.get_doc_types_for_meeting_holding(case.claim.claim_kind_id)
+
+    # Сервис создания документов
+    service = create_document_service.Service()
+
+    # Создание документов
+    for doc_type in doc_types:
+        service.execute(
+            case_id=case_id,
+            doc_code=doc_type['code'],
+            user_id=user_id,
+        )
