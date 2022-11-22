@@ -224,6 +224,11 @@ class Document(TimeStampModel):
         return self.auto_generated and self.sign_set.count() == 0
 
     @property
+    def is_sent_to_sign(self) -> bool:
+        """Передан на подпись."""
+        return self.sign_set.count() > 0
+
+    @property
     def folder_path(self):
         """Возвращает путь к каталогу с файлами."""
         path = Path(self.file.path)

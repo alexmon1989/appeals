@@ -522,6 +522,15 @@ def document_send_to_sign(request, pk: int):
     # Создание записей для подписи
     document_services.document_create_sign_records(document.pk)
 
+    # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
+    stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+        case_stage_step_change_action_service.CaseStageStepQualifier(),
+        document.case,
+        request,
+        NotificationService([DbChannel()])
+    )
+    stage_set_service.execute()
+
     # Переадресация на страницу дела
     return redirect('cases-detail', pk=document.case.pk)
 

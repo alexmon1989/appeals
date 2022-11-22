@@ -471,6 +471,17 @@ class CaseMeetingForm(forms.ModelForm):
         self.helper.field_class = "mb-4"
 
     def save(self, commit=True):
+        # Сохранение решения совещания
+        self.instance.decision_type = self.cleaned_data['decision']
+        self.instance.save()
+
+        # Запись в историю дела
+        case_services.case_add_history_action(
+            self.instance.id,
+            f'Встановлено рішення апеляційної палати: {self.instance.decision_type.title}',
+            self.request.user.pk
+        )
+
         # Создание документов
         case_services.case_create_docs_for_meeting_holding(self.instance.pk, self.request.user.pk)
         self.instance.refresh_from_db()

@@ -32,6 +32,8 @@ class CaseStageStepQualifier:
             3002: self._satisfies_3002,
             4000: self._satisfies_4000,
             5000: self._satisfies_5000,
+            6000: self._satisfies_6000,
+            7000: self._satisfies_7000,
         }
 
     def _satisfies_2000(self):
@@ -200,6 +202,44 @@ class CaseStageStepQualifier:
             # Множество кодов документов, которые присутствуют у дела
             doc_types_current = {
                 x.document_type.code for x in self.case.document_set.all()
+            }
+
+            # Проверка есть ли коды документов, которые должны присутствовать на стадии,
+            # в текущих документах дела
+            return doc_types_should_exist.issubset(doc_types_current)
+        return False
+
+    def _satisfies_6000(self):
+        """Удовлетворяет условиям стадии 6000 "Документи рішення сформовані та чекають на підписання."."""
+        if self.case.stage_step.code == 5000:
+            # Множество кодов документов, которые должны присутствовать на стадии
+            doc_types_should_exist = {
+                x['code'] for x in classifiers_services.get_doc_types_for_meeting_holding(self.case.claim.claim_kind_id)
+            }
+
+            # Множество кодов документов переданных на подпись, которые присутствуют у дела
+            doc_set = self.case.document_set.prefetch_related('sign_set').all()
+            doc_types_current = {
+                x.document_type.code for x in doc_set if x.is_sent_to_sign and not x.is_signed
+            }
+
+            # Проверка есть ли коды документов, которые должны присутствовать на стадии,
+            # в текущих документах дела
+            return doc_types_should_exist.issubset(doc_types_current)
+        return False
+
+    def _satisfies_7000(self):
+        """Удовлетворяет условиям стадии 6000 "Очікує на передачу документів на веб-сайт"."""
+        if self.case.stage_step.code == 6000:
+            # Множество кодов документов, которые должны присутствовать на стадии
+            doc_types_should_exist = {
+                x['code'] for x in classifiers_services.get_doc_types_for_meeting_holding(self.case.claim.claim_kind_id)
+            }
+
+            # Множество кодов документов переданных на подпись, которые присутствуют у дела
+            doc_set = self.case.document_set.prefetch_related('sign_set').all()
+            doc_types_current = {
+                x.document_type.code for x in doc_set if x.is_signed
             }
 
             # Проверка есть ли коды документов, которые должны присутствовать на стадии,
@@ -390,6 +430,22 @@ class CaseSetActualStageStepService:
         self.case.refresh_from_db()
         self.notify_all_persons()
 
+    def _call_6000_actions(self):
+        """Выполнение действий, характерных для стадии 6000 -
+        "Документи рішення сформовані та чекають на підписання."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 6000, self.request.user.pk)
+        self.case.refresh_from_db()
+        self.notify_all_persons()
+
+    def _call_7000_actions(self):
+        """Выполнение действий, характерных для стадии 7000 -
+        "Очікує на передачу документів на веб-сайт"."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 7000, self.request.user.pk)
+        self.case.refresh_from_db()
+        self.notify_all_persons()
+
     def notify_all_persons(self):
         """Делает оповещение всех пользователей, которые причастны к делу,
         главы АП, заместителей, текущего пользователя."""
@@ -429,6 +485,8 @@ class CaseSetActualStageStepService:
                 3002: self._call_3002_actions,
                 4000: self._call_4000_actions,
                 5000: self._call_5000_actions,
+                6000: self._call_6000_actions,
+                7000: self._call_7000_actions,
             }
             try:
                 stage_actions[case_stage_step]()
