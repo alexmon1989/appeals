@@ -339,3 +339,22 @@ class Sign(TimeStampModel):
         verbose_name = 'Цифровий підпис'
         verbose_name_plural = 'Цифрові підписи'
         db_table = 'documents_signs'
+
+
+class PostalProtocolExchange(models.Model):
+    """Таблиця для інтеграції з канцелярією."""
+    id_rec = models.AutoField(primary_key=True)
+    id_cead = models.IntegerField(blank=True, null=True)
+    saved_at = models.DateTimeField(blank=True, null=True)
+    send_to_chancellary = models.DateTimeField(blank=True, null=True)
+    send_to_recipient = models.DateTimeField(blank=True, null=True)
+    date_of_receiving = models.DateTimeField(blank=True, null=True)
+    date_of_postal_return = models.DateTimeField(blank=True, null=True)
+    postal_return_reason = models.CharField(max_length=250, blank=True, null=True)
+    cancel_sending_document_date = models.DateTimeField(blank=True, null=True)
+    cancel_sending_document_reason = models.CharField(max_length=250, blank=True, null=True)
+    doc = models.ForeignKey(Document, models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'postal_protocol_exchange'
