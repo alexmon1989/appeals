@@ -6,6 +6,7 @@ class ObjKind(TimeStampModel):
     """Модель вида объекта ИС."""
     title = models.CharField("Назва", max_length=255)
     sis_id = models.PositiveSmallIntegerField("Id типу об'єкта у СІС", null=True, blank=False)
+    cead_id = models.PositiveSmallIntegerField("Id у CEAD", null=True, blank=True)
 
     def __str__(self):
         return self.title
