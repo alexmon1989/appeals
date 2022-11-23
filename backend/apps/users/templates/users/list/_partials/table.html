@@ -1,0 +1,71 @@
+<div class="section rounded mb-3">
+    <!--
+
+        data-autofill="false|hover|click"
+        data-enable-paging="true"			 false = show all, no pagination
+        data-items-per-page="10|15|30|50|100"
+
+    -->
+    <table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
+           id="table-users"
+           data-lng-empty="No data available in table"
+           data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
+           data-lng-filtered="(filtered from _MAX_ total entries)"
+           data-lng-loading="Завантаження даних..."
+           data-lng-processing="Завантаження даних..."
+           data-lng-search="Пошук..."
+           data-lng-norecords="Результати відсутні"
+           data-lng-sort-ascending=": activate to sort column ascending"
+           data-lng-sort-descending=": activate to sort column descending"
+
+           data-main-search="true"
+           data-column-search="false"
+           data-row-reorder="false"
+           data-col-reorder="true"
+           data-responsive="true"
+           data-header-fixed="true"
+           data-select-onclick="false"
+           data-enable-paging="true"
+           data-enable-col-sorting="true"
+           data-autofill="false"
+           data-group="false"
+           data-items-per-page="10"
+
+           data-enable-column-visibility="true"
+           data-lng-column-visibility="Видимість стовбчиків"
+
+           data-enable-export="false"
+
+           data-custom-config='{
+            "stateSave": true,
+            "server-side": true,
+            "processing": true,
+            "serverSide": true,
+            "ajax": "/users/list.json?format=datatables",
+            "order": []
+           }'>
+        <thead>
+        <tr>
+            <th data-data="user_fullname" data-name="user_fullname_sort">ПІБ</th>
+            <th data-data="position">Посада</th>
+            <th data-data="specialities" data-orderable="false">Спеціалізація</th>
+            <th data-data="cases_finished_num" class="text-nowrap">Розглянуті справи</th>
+            <th data-data="cases_current_num" class="text-nowrap">На розгляді</th>
+            <th data-data="at_work" data-orderable="false" data-searchable="false">Присутність</th>
+            <th data-data="actions" data-orderable="false" data-searchable="false">Дії</th>
+        </tr>
+        </thead>
+
+        <tfoot>
+        <tr>
+            <th>ПІБ</th>
+            <th>Посада</th>
+            <th>Спеціалізація</th>
+            <th>Розглянуті справи</th>
+            <th>На розгляді</th>
+            <th>Присутність</th>
+            <th></th>
+        </tr>
+        </tfoot>
+    </table>
+</div>

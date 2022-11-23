@@ -1,0 +1,11 @@
+{% extends 'base_cabinet.html' %}
+
+{% load static %}
+
+{% block title %}Члени апеляційної палати{% endblock %}
+
+{% block main %}
+    {% include 'users/list/_partials/header.html' %}
+
+    {% include 'users/list/_partials/table.html' %}
+{% endblock %}

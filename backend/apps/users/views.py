@@ -2,6 +2,7 @@ from django.contrib.auth.views import LoginView, LogoutView, PasswordResetView, 
 from django.contrib import messages
 from django.contrib.auth import login, authenticate
 from django.contrib.messages.views import SuccessMessageMixin
+from django.views.generic import TemplateView
 from django.shortcuts import resolve_url, render
 from django.conf import settings
 from django.http import JsonResponse
@@ -10,8 +11,13 @@ import random
 import string
 import json
 
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+
 from .forms import CustomAuthenticationForm, CustomPasswordResetForm, CustomSetPasswordForm, AuthFormDSFile
-from .services import get_certificate
+from .services import get_certificate, user_get_appeals_user_list_qs
+from .serializers import UserSerializer
+from apps.common.mixins import LoginRequiredMixin
 
 
 class CustomLoginView(SuccessMessageMixin, LoginView):
@@ -90,3 +96,17 @@ class CustomPasswordResetView(PasswordResetView):
 
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     form_class = CustomSetPasswordForm
+
+
+class UsersListView(LoginRequiredMixin, TemplateView):
+    """Отображает страницу со списком членов АП."""
+    template_name = 'users/list/index.html'
+
+
+class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
+    """Возвращает JSON с документами дела."""
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return user_get_appeals_user_list_qs()

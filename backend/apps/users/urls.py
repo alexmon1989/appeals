@@ -14,3 +14,8 @@ else:
         path('password_reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
         path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     ]
+
+urlpatterns += [
+    path('list/', views.UsersListView.as_view(), name='users-list'),
+    path('list.json', views.DocumentsViewSet.as_view({'get': 'list'}), name='users-list-json'),
+]

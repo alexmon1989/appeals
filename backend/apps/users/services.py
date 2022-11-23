@@ -1,12 +1,20 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import Prefetch, Count, Q, Value, Case, When, CharField
+from django.db.models.functions import Concat
 
-from .models import CertificateOwner
+from .models import CertificateOwner, User
+from apps.classifiers.models import ObjKind
 
+from typing import Iterable
 import os
 import json
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+UserModel = get_user_model()
 
 
 def set_key_center_settings(eu_interface, key_center):
@@ -191,3 +199,23 @@ def user_get_or_create_from_cert(cert_data: dict):
         }
     )
     return cert.user
+
+
+def user_get_appeals_user_list_qs() -> Iterable[UserModel]:
+    """Возвращает Queryset членов апеляционной палаты."""
+    users = User.objects.filter(
+        groups__name='Член Апеляційної палати',
+    ).annotate(
+        present=Case(When(absence__date_from__gte='2022-11-23', then=1), default=0),
+        user_fullname_sort=Concat('last_name', 'middle_name', 'first_name'),
+        cases_finished_num=Count('collegiummembership', filter=Q(collegiummembership__case__stopped=True)),
+        cases_current_num=Count('collegiummembership', filter=Q(collegiummembership__case__stopped=False)),
+    ).prefetch_related(
+        Prefetch('specialities', queryset=ObjKind.objects.order_by('title')),
+        'collegium',
+        'absence_set'
+    ).order_by(
+        'last_name', 'first_name', 'middle_name'
+    )
+
+    return users

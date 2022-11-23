@@ -87,6 +87,9 @@ class User(AbstractUser):
         """Секретарь."""
         return self.belongs_to_group('Секретар')
 
+    @property
+    def at_work(self) -> bool:
+        return True
 
 class CertificateOwner(TimeStampModel):
     """Модель данных владельца сертификата ЭЦП."""
