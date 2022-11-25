@@ -93,7 +93,7 @@ def absence_get_calendar_events(user_id: int, start: str, end: str) -> list:
         res.append({
             "id": f"absence_{item.pk}",
             "title": "Період відсутності",
-            "description": "",
+            "description": item.reason,
             "start": item.date_from.strftime('%Y-%m-%d'),
             "end": item_end.strftime('%Y-%m-%d'),
             "className": "bg-warning border-warning text-dark"

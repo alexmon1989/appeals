@@ -535,6 +535,20 @@ def document_send_to_sign(request, pk: int):
     return redirect('cases-detail', pk=document.case.pk)
 
 
+@login_required
+def cases_get_current_cases(request, user_id: int):
+    """Возвращает HTML для модального окна с инф-ей о текущих ап. делах пользователя."""
+    cases = case_services.case_get_user_cases_current(user_id)
+    return render(request, 'cases/user_current_cases.html', {'cases': cases})
+
+
+@login_required
+def cases_get_finished_cases(request, user_id: int):
+    """Возвращает HTML для модального окна с инф-ей о законченных ап. делах пользователя."""
+    cases = case_services.case_get_user_cases_finished(user_id)
+    return render(request, 'cases/user_finished_cases.html', {'cases': cases})
+
+
 @xframe_options_exempt
 def ds_file(request):
     return render(request, template_name='cases/digital_sign/file.html')

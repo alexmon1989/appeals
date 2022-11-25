@@ -1,0 +1,12 @@
+<div class="modal-header border-0 pb-0">
+    <h5 class="modal-title m-0">Список закінчених справ особи</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body p-0 m-3 m-2-xs">
+    <ol>
+        {% for case in cases %}
+            <li><a href="{% url 'cases-detail' pk=case.pk %}">{{ case.case_number }}</a> ({{ case.claim.obj_kind.title }} "{{ case.claim.obj_title }}", № заявки/ох. документу: <b>{{ case.claim.obj_number }}</b>)</li>
+        {% endfor %}
+    </ol>
+</div>

@@ -52,6 +52,9 @@ urlpatterns = [
         views.DocumentUpdateView.as_view(),
         name='case_update_document'
     ),
+    path('user-finished-cases/<int:user_id>/', views.cases_get_finished_cases, name='cases_get_finished_cases'),
+    path('user-current-cases/<int:user_id>/', views.cases_get_current_cases, name='cases_get_current_cases'),
+
     path('ds-file/', views.ds_file, name='cases_ds_file'),
     path('ds-token/', views.ds_token, name='cases_ds_token'),
     path('ds-iframe/', views.ds_iframe, name='cases_ds_iframe'),

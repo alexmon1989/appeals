@@ -55,6 +55,7 @@ class Absence(TimeStampModel):
     """Модель отсутствия на работе сотрудника АП."""
     date_from = models.DateField('Дата з')
     date_to = models.DateField('Дата по')
+    reason = models.CharField('Причина', max_length=255, default='')
     user = models.ForeignKey(UserModel, verbose_name='Член колегії', on_delete=models.CASCADE)
 
     class Meta:

@@ -365,3 +365,19 @@ def case_create_docs_for_meeting_holding(case_id: int, user_id: int) -> None:
             doc_code=doc_type['code'],
             user_id=user_id,
         )
+
+
+def case_get_user_cases_current(user_id: int) -> Iterable[Case]:
+    """Возвращает список ап. дел пользователя (текущих)."""
+    cases = Case.objects.filter(collegiummembership__person_id=user_id).exclude(stopped=True).select_related(
+        'claim', 'claim__obj_kind'
+    )
+    return cases
+
+
+def case_get_user_cases_finished(user_id: int) -> Iterable[Case]:
+    """Возвращает список ап. дел пользователя (законченных)."""
+    cases = Case.objects.filter(collegiummembership__person_id=user_id, stopped=True).select_related(
+        'claim', 'claim__obj_kind'
+    )
+    return cases

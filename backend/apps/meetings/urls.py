@@ -13,4 +13,5 @@ urlpatterns = [
     path('absence-delete/<int:pk>/', views.delete_absence, name='meetings-delete-absence'),
     path('invitation-accept/<int:pk>/', views.invitation_accept, name='meetings-invitation-accept'),
     path('invitation-reject/<int:pk>/', views.invitation_reject, name='meetings-invitation-reject'),
+    path('user-absence-info/<int:user_id>/', views.get_user_absence_info, name='meetings-user-absence-info'),
 ]

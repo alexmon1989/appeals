@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from .managers import UserManager
 from apps.common.models import TimeStampModel
@@ -89,7 +90,15 @@ class User(AbstractUser):
 
     @property
     def at_work(self) -> bool:
+        """Отсутствует ли пользователь на работе."""
+        for absence in self.absence_set.all():
+            now = timezone.now().date()
+            date_from = absence.date_from
+            date_to = absence.date_to
+            if now >= date_from and now <= date_to:
+                return False
         return True
+
 
 class CertificateOwner(TimeStampModel):
     """Модель данных владельца сертификата ЭЦП."""

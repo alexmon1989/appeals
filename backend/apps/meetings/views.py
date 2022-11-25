@@ -207,3 +207,10 @@ class MeetingDetailView(DetailView):
 
     def get_queryset(self):
         return Meeting.objects.prefetch_related('invitation_set', 'invitation_set__user')
+
+
+@login_required
+def get_user_absence_info(request, user_id: int):
+    """Возвращает HTML для модального окна с инф-ей об периодах отсутствия пользователя."""
+    absences = services.absence_get_all_qs(user_id).order_by('-date_from')[:10]
+    return render(request, 'meetings/user_absence_info.html', {'absences': absences})

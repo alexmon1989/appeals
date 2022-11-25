@@ -1,0 +1,12 @@
+<div class="modal-header border-0 pb-0">
+    <h5 class="modal-title m-0">Список періодів відсутності особи</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="modal-body p-0 m-3 m-2-xs">
+    <ol>
+        {% for absence in absences %}
+            <li>{{ absence.date_from|date:"SHORT_DATE_FORMAT" }} - {{ absence.date_to|date:"SHORT_DATE_FORMAT" }} (причина: {{ absence.reason|default:"відсутня" }})</li>
+        {% endfor %}
+    </ol>
+</div>

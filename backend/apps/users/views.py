@@ -102,6 +102,11 @@ class UsersListView(LoginRequiredMixin, TemplateView):
     """Отображает страницу со списком членов АП."""
     template_name = 'users/list/index.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context['users'] = user_get_appeals_user_list_qs()
+        return context
+
 
 class DocumentsViewSet(viewsets.ReadOnlyModelViewSet):
     """Возвращает JSON с документами дела."""
