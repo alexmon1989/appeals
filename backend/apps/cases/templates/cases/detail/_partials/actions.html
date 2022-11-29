@@ -117,7 +117,7 @@
                 </a>
             {% endif %}
 
-            {% if case.stage_step.code == 3000 and case.secretary == request.user %}
+            {% if case.stage_step.code == 3000 or case.stage_step.code == 3001 or case.stage_step.code == 3002 or case.stage_step.code == 4000 and case.secretary == request.user %}
                 <a href="{% url 'meetings-create' case_id=case.pk %}"
                    class="btn btn-primary me-2 {% if case.stopped or case.paused or case_has_unsigned_docs %}disabled{% endif %}"
                 >

@@ -14,6 +14,10 @@ class Meeting(TimeStampModel):
         PRE = 'PRE', 'Підготовче засідання'
         COMMON = 'COMMON', 'Апеляційне засідання'
 
+    class MeetingStatusChoices(models.TextChoices):
+        PENDING = 'PENDING', 'Очікує'
+        DONE = 'DONE', 'Проведено'
+
     datetime = models.DateTimeField('Дата та час засідання')
     case = models.ForeignKey(Case, verbose_name='Справа', on_delete=models.CASCADE)
     meeting_type = models.CharField(
@@ -21,6 +25,12 @@ class Meeting(TimeStampModel):
         choices=MeetingTypeChoices.choices,
         default=MeetingTypeChoices.COMMON,
         max_length=6
+    )
+    status = models.CharField(
+        'Статус засідання',
+        choices=MeetingStatusChoices.choices,
+        default=MeetingStatusChoices.PENDING,
+        max_length=16
     )
 
     class Meta:

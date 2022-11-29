@@ -471,6 +471,11 @@ class CaseMeetingForm(forms.ModelForm):
         self.helper.field_class = "mb-4"
 
     def save(self, commit=True):
+        # Статус совещания
+        meeting = self.instance.meeting_set.filter(pk=self.cleaned_data['meeting']).first()
+        meeting.status = 'DONE'
+        meeting.save()
+
         # Сохранение решения совещания
         self.instance.decision_type = self.cleaned_data['decision']
         self.instance.save()

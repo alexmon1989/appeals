@@ -133,6 +133,7 @@ class CaseStageStepQualifier:
             # Проверка есть ли коды документов, которые должны присутствовать на стадии,
             # в текущих подписанных документах дела
             return doc_types_should_exist.issubset(doc_types_current)
+
         elif self.case.stage_step.code == 2006:
             # Проверка есть ли подписанный протокол предварительного заседания
             document = self.case.document_set.filter(document_type__code='0027').first()
@@ -142,7 +143,7 @@ class CaseStageStepQualifier:
 
     def _satisfies_3001(self):
         """Удовлетворяет условиям стадии 3001 "Створене засідання АП. Чекає на погодження членів колегії."."""
-        if self.case.stage_step.code == 3000:
+        if self.case.stage_step.code in (3000, 3001, 3002, 4000):
             # Проверка что существует заседание с непринятыми приглашениями от всех членов коллегии
             meeting = self.case.meeting_set.prefetch_related('invitation_set').order_by('-pk').first()
             if meeting:
