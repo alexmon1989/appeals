@@ -421,7 +421,12 @@ export default {
 
       try {
         const taskResult = await getTaskResult(result.task_id)
-        const message = 'Дані успішно збережено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
+        let message = ''
+        if (this.internalClaim) {
+          message = 'Дані успішно збережено.'
+        } else {
+          message = 'Дані успішно збережено. Будь ласка, перевірте дані та підпишіть додатки за допомогою КЕП.'
+        }
         await fetch('/filling/set-message/success/' + message + '/')
         location.href = taskResult.claim_url
       } catch (e) {

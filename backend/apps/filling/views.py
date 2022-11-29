@@ -16,8 +16,8 @@ from apps.common.utils import qdict_to_dict
 from apps.users import services as users_services
 from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task,
                     create_claim_task_internal, get_claim_data_task, get_claim_data_task_internal, edit_claim_task,
-                    delete_claim_task, create_case_task, get_claim_status, get_claim_list_task,
-                    create_files_with_signs_info_task)
+                    edit_claim_task_internal, delete_claim_task, delete_claim_task_internal, create_case_task,
+                    create_case_task_internal, get_claim_status, get_claim_list_task, create_files_with_signs_info_task)
 from apps.common.utils import files_to_base64
 
 import json
@@ -110,10 +110,15 @@ def claim_status(request, pk):
 @login_required
 def claim_delete(request, pk):
     """Удаление обращения."""
-    task = delete_claim_task.delay(
-        pk,
-        users_services.certificate_get_data(request.session['cert_id'])
-    )
+    internal_claim = settings.AUTH_METHOD == 'common'
+    if internal_claim:
+        task = delete_claim_task_internal.delay(pk, request.user.pk)
+    else:
+        task = delete_claim_task.delay(
+            pk,
+            users_services.certificate_get_data(request.session['cert_id'])
+        )
+
     return JsonResponse(
         {
             "task_id": task.id,
@@ -123,21 +128,29 @@ def claim_delete(request, pk):
 
 class ClaimUpdateView(LoginRequiredMixin, View):
     """Отображает страницу редактирвоания обращения."""
-
     template_name = 'filling/update_claim/index.html'
+    internal_claim = settings.AUTH_METHOD == 'common'
 
     def get(self, request, *args, **kwargs):
-        task = get_claim_data_task.delay(
-            kwargs['pk'],
-            users_services.certificate_get_data(self.request.session['cert_id']),
-            status__lt=3
-        )
+        if self.internal_claim:
+            task = get_claim_data_task_internal.delay(
+                kwargs['pk'],
+                request.user.pk,
+                status__lt=3
+            )
+        else:
+            task = get_claim_data_task.delay(
+                kwargs['pk'],
+                users_services.certificate_get_data(self.request.session['cert_id']),
+                status__lt=3
+            )
 
         return render(
             request,
             self.template_name,
             {
-                'task_id': task.id
+                'task_id': task.id,
+                'internal_claim': self.internal_claim,
             }
         )
 
@@ -146,12 +159,20 @@ class ClaimUpdateView(LoginRequiredMixin, View):
         post_data = qdict_to_dict(request.POST)
         del post_data['csrfmiddlewaretoken']
 
-        task = edit_claim_task.delay(
-            self.kwargs['pk'],
-            post_data,
-            files_to_base64(request.FILES),
-            users_services.certificate_get_data(self.request.session['cert_id'])
-        )
+        if self.internal_claim:
+            task = edit_claim_task_internal.delay(
+                self.kwargs['pk'],
+                post_data,
+                files_to_base64(request.FILES),
+                request.user.pk,
+            )
+        else:
+            task = edit_claim_task.delay(
+                self.kwargs['pk'],
+                post_data,
+                files_to_base64(request.FILES),
+                users_services.certificate_get_data(self.request.session['cert_id'])
+            )
 
         return JsonResponse({'task_id': task.id})
 
@@ -159,10 +180,17 @@ class ClaimUpdateView(LoginRequiredMixin, View):
 @login_required
 def case_create(request, claim_id):
     """Создаёт дело на основе обращения."""
-    task = create_case_task.delay(
-        claim_id,
-        users_services.certificate_get_data(request.session['cert_id'])
-    )
+    internal_claim = settings.AUTH_METHOD == 'common'
+    if internal_claim:
+        task = create_case_task_internal.delay(
+            claim_id,
+            request.user.id
+        )
+    else:
+        task = create_case_task.delay(
+            claim_id,
+            users_services.certificate_get_data(request.session['cert_id'])
+        )
 
     return JsonResponse({'task_id': task.id})
 

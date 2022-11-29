@@ -80,6 +80,14 @@ def edit_claim_task(claim_id, post_data, files_data, cert_data: dict) -> dict:
 
 
 @app.task
+def edit_claim_task_internal(claim_id, post_data, files_data, user_id: int) -> dict:
+    """Редактирует обращение (вызывается из внутреннего модуля)."""
+    user = users_services.user_get_by_pk(user_id)
+    claim = filling_services.claim_edit(claim_id, post_data, files_data, user)
+    return {'claim_url': claim.get_absolute_url()}
+
+
+@app.task
 def get_claim_data_task(claim_id: int, cert_data: dict, **kwargs) -> dict:
     """Возвращает данные обращения пользователя."""
     # Получение данных обращения
@@ -132,8 +140,28 @@ def delete_claim_task(claim_id: int, cert_data: dict) -> dict:
 
 
 @app.task
+def delete_claim_task_internal(claim_id: int, user_id: int) -> dict:
+    """Удаляет обращение пользователя (вызывается из внутреннего модуля)."""
+    user = users_services.user_get_by_pk(user_id)
+    claim = filling_services.claim_get_user_claims_qs(user).filter(pk=claim_id, status__lt=3).first()
+    if claim:
+        claim.delete()
+        return {'success': 1}
+    return {'success': 0, 'message': 'not found'}
+
+
+@app.task
 def create_case_task(claim_id: int, cert_data: dict) -> dict:
     user = users_services.user_get_or_create_from_cert(cert_data)
+    case = case_services.case_create_from_claim(claim_id, user)
+    if case:
+        return {'success': 1, 'case_number': case.case_number}
+    return {'success': 0, 'message': 'Ви не можете передати звернення, тому що документи не було підписано.'}
+
+
+@app.task
+def create_case_task_internal(claim_id: int, user_id: int) -> dict:
+    user = users_services.user_get_by_pk(user_id)
     case = case_services.case_create_from_claim(claim_id, user)
     if case:
         return {'success': 1, 'case_number': case.case_number}

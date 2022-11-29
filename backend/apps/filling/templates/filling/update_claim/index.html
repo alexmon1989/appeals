@@ -6,7 +6,8 @@
     {% include 'filling/update_claim/_partials/header.html' %}
 
     <!-- Primary -->
-    <applicant-filling-form initial-data-task-id="{{ task_id }}"></applicant-filling-form>
+    <applicant-filling-form initial-data-task-id="{{ task_id }}"
+                            :internal-claim="{{ internal_claim|lower }}"></applicant-filling-form>
     <!-- /Primary -->
 
 {% endblock %}
