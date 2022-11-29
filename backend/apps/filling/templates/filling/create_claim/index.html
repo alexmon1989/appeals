@@ -7,6 +7,6 @@
 
     {% csrf_token %}
 
-    <applicant-filling-form></applicant-filling-form>
+    <applicant-filling-form :internal-claim="{{ internal_claim|lower }}"></applicant-filling-form>
 
 {% endblock %}

@@ -39,9 +39,10 @@ def claim_process_input_data(data: dict) -> dict:
     return data
 
 
-def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Claim:
+def claim_create(post_data: QueryDict, files_data: dict, user: UserModel, internal_claim: bool = False) -> Claim:
     """Создаёт обращение пользователя."""
     stage_3_field = ClaimField.objects.filter(claim_kind=post_data['claim_kind'], stage=3).first().input_id
+    status = 2 if internal_claim else 1
     claim = Claim.objects.create(
         obj_kind_id=post_data['obj_kind'],
         claim_kind_id=post_data['claim_kind'],
@@ -49,7 +50,9 @@ def claim_create(post_data: QueryDict, files_data: dict, user: UserModel) -> Cla
         obj_number=post_data[stage_3_field],
         obj_title=post_data['obj_title'],
         json_data=json.dumps(claim_process_input_data(post_data)),
-        user=user
+        user=user,
+        internal_claim=internal_claim,
+        status=status
     )
 
     # Загрузка файлов

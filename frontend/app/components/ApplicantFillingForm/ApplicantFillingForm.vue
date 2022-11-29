@@ -207,6 +207,7 @@ export default {
 
   props: {
     initialDataTaskId: String,
+    internalClaim: Boolean,
   },
 
   data() {
@@ -547,6 +548,9 @@ export default {
     },
 
     btnText() {
+      if (this.internalClaim) {
+        return 'Зберегти'
+      }
       return this.initialData ? 'Зберегти' : 'Сформувати та підписати'
     }
   }

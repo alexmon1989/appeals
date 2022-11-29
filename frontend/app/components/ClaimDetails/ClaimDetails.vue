@@ -23,7 +23,7 @@
       <div class="row mb-3">
         <div class="col">
           <h2 class="h5 mb-3 text-indigo-800">Додатки</h2>
-          <claim-attachments :documents-init="documents" :claim-data="claimData"></claim-attachments>
+          <claim-attachments :documents-init="documents" :claim-data="claimData" :internal-claim="internalClaim"></claim-attachments>
         </div>
       </div>
 
@@ -42,7 +42,7 @@ import Buttons from "./Buttons.vue"
 import Spinner from "../Spinner.vue"
 
 export default {
-  props: ['taskId'],
+  props: ['taskId', 'internalClaim'],
 
   components: {
     ClaimAttachments,

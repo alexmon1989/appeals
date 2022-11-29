@@ -7,15 +7,16 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-
+from django.conf import settings
 
 from celery.result import AsyncResult
 
 from apps.common.mixins import LoginRequiredMixin
 from apps.common.utils import qdict_to_dict
 from apps.users import services as users_services
-from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task, get_claim_data_task,
-                    edit_claim_task, delete_claim_task, create_case_task, get_claim_status, get_claim_list_task,
+from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task,
+                    create_claim_task_internal, get_claim_data_task, get_claim_data_task_internal, edit_claim_task,
+                    delete_claim_task, create_case_task, get_claim_status, get_claim_list_task,
                     create_files_with_signs_info_task)
 from apps.common.utils import files_to_base64
 
@@ -37,22 +38,29 @@ class MyClaimsListView(LoginRequiredMixin, TemplateView):
 
 class CreateClaimView(LoginRequiredMixin, View):
     """Отображает страницу создания обращения."""
-
     template_name = 'filling/create_claim/index.html'
+    internal_claim = settings.AUTH_METHOD == 'common'
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
+        return render(request, self.template_name, {'internal_claim': self.internal_claim})
 
     def post(self, request, *args, **kwargs):
         """Обрабатывает POST-запрос, создаёт обращение (задачу на создание)."""
         post_data = request.POST.dict()
         del post_data['csrfmiddlewaretoken']
 
-        task = create_claim_task.delay(
-            post_data,
-            files_to_base64(request.FILES),
-            users_services.certificate_get_data(self.request.session['cert_id'])
-        )
+        if self.internal_claim:
+            task = create_claim_task_internal.delay(
+                post_data,
+                files_to_base64(request.FILES),
+                request.user.pk,
+            )
+        else:
+            task = create_claim_task.delay(
+                post_data,
+                files_to_base64(request.FILES),
+                users_services.certificate_get_data(self.request.session['cert_id'])
+            )
 
         return JsonResponse(
             {
@@ -65,14 +73,22 @@ class CreateClaimView(LoginRequiredMixin, View):
 class ClaimDetailView(LoginRequiredMixin, TemplateView):
     """Отображает страницу с данными обращения."""
     template_name = 'filling/claim_detail/index.html'
+    internal_claim = settings.AUTH_METHOD == 'common'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        task = get_claim_data_task.delay(
-            kwargs['pk'],
-            users_services.certificate_get_data(self.request.session['cert_id'])
-        )
+        if self.internal_claim:
+            task = get_claim_data_task_internal.delay(
+                kwargs['pk'],
+                self.request.user.pk,
+            )
+        else:
+            task = get_claim_data_task.delay(
+                kwargs['pk'],
+                users_services.certificate_get_data(self.request.session['cert_id'])
+            )
         context['task_id'] = task.id
+        context['internal_claim'] = self.internal_claim
         return context
 
 
@@ -162,8 +178,13 @@ def get_data_from_sis(request):
     except KeyError:
         return HttpResponseBadRequest('Wrong request parameters.')
 
+    internal_user = settings.AUTH_METHOD == 'common'
+
     # Имена пользователя из сертификата эцп
-    user_names = list(set(users_services.certificate_get_user_names(request.session['cert_id'])))
+    if not internal_user:
+        user_names = list(set(users_services.certificate_get_user_names(request.session['cert_id'])))
+    else:
+        user_names = None
 
     # Создание асинхронной задачи для Celery
     task = get_app_data_from_es_task.delay(
@@ -172,6 +193,7 @@ def get_data_from_sis(request):
         obj_kind_id_sis,
         obj_state,
         user_names,
+        internal_user,
     )
 
     return JsonResponse(

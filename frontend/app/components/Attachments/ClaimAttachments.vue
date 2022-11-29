@@ -7,7 +7,7 @@
         <th scope="col" class="text-center">Тип (назва) документу</th>
         <th scope="col" class="text-center text-nowrap">Сгенеровано автоматично</th>
         <th scope="col" class="text-center">Файл</th>
-        <th scope="col" class="text-center text-nowrap">Підписано КЕП</th>
+        <th scope="col" class="text-center text-nowrap" v-if="!internalClaim">Підписано КЕП</th>
       </tr>
       </thead>
       <tbody>
@@ -21,7 +21,7 @@
         <td class="text-nowrap">
           <a :href="getDocUrl(document)" target="_blank">{{ document.file_name }}</a>
         </td>
-        <td class="text-center">
+        <td class="text-center" v-if="!internalClaim">
           <span class="text-success fw-bold" v-if="document.sign__count">так</span>
           <span class="text-danger fw-bold" v-else>ні</span>
         </td>
@@ -29,7 +29,7 @@
       </tbody>
     </table>
 
-    <div class="d-flex justify-content-end" v-if="needsSign">
+    <div class="d-flex justify-content-end" v-if="!internalClaim && needsSign">
       <button class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModalLg">
         <svg width="16px" height="16px" xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-pen-fill" viewBox="0 0 16 16">
           <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001z"></path>
@@ -54,6 +54,7 @@ export default {
   props: {
     'documentsInit': Array,
     'claimData': Object,
+    'internalClaim': Boolean,
   },
   components: {
     ModalEDS,

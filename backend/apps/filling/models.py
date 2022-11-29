@@ -92,8 +92,9 @@ class Claim(TimeStampModel):
         verbose_name="Користувач",
         null=True,
     )
-    submission_date = models.DateTimeField(verbose_name='Створено', null=True, blank=True)
+    submission_date = models.DateTimeField(verbose_name='Дата та час подачі', null=True, blank=True)
     json_data = models.TextField('Дані звернення', blank=True, null=True)
+    internal_claim = models.BooleanField('Заявка створена у внутрішньому модулі', default=False)
 
     def __str__(self):
         return self.obj_number

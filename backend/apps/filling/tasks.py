@@ -15,14 +15,16 @@ def get_app_data_from_es_task(obj_num_type: str,
                               obj_number: str,
                               obj_kind_id_sis: int,
                               obj_state: int,
-                              cert_names: list) -> dict:
+                              cert_names: list = None,
+                              internal_user: bool = False) -> dict:
     """Возвращает данные объекта напрямую из ElasticSearch СИС."""
     hit = filling_services.application_get_data_from_es(obj_num_type, obj_number, obj_kind_id_sis, obj_state)
 
     res = {}
 
     # Проверка есть ли данные этого объекта и имеет ли пользователь доступ к данным
-    if hit and (filling_services.application_is_published(hit)
+    if hit and (internal_user
+                or filling_services.application_is_published(hit)
                 or filling_services.application_user_belongs_to_app(hit, cert_names)):
         # Возврат только библиографических данных
         if obj_kind_id_sis in (1, 2, 3):
@@ -55,9 +57,17 @@ def get_filling_form_data_task() -> dict:
 
 @app.task
 def create_claim_task(post_data, files_data, cert_data: dict) -> dict:
-    """Создаёт обращение."""
+    """Создаёт обращение (вызывается из внешнего модуля)."""
     user = users_services.user_get_or_create_from_cert(cert_data)
     claim = filling_services.claim_create(post_data, files_data, user)
+    return {'claim_url': claim.get_absolute_url()}
+
+
+@app.task
+def create_claim_task_internal(post_data, files_data, user_id: int) -> dict:
+    """Создаёт обращение (вызывается из внутреннего модуля)."""
+    user = users_services.user_get_by_pk(user_id)
+    claim = filling_services.claim_create(post_data, files_data, user, True)
     return {'claim_url': claim.get_absolute_url()}
 
 
@@ -80,6 +90,15 @@ def get_claim_data_task(claim_id: int, cert_data: dict, **kwargs) -> dict:
     if claim:
         filling_services.claim_copy_docs_to_external_server(claim_id)
 
+    return claim
+
+
+@app.task
+def get_claim_data_task_internal(claim_id: int, user_id: int, **kwargs) -> dict:
+    """Возвращает данные обращения пользователя (вызывается из внешнего модуля)."""
+    # Получение данных обращения
+    user = users_services.user_get_by_pk(user_id)
+    claim = filling_services.claim_get_data_by_id(claim_id, user, **kwargs)
     return claim
 
 

@@ -5,5 +5,5 @@
 {% block title %}{% endblock %}
 
 {% block main %}
-    <claim-details task-id="{{ task_id }}"></claim-details>
+    <claim-details task-id="{{ task_id }}" :internal-claim="{{ internal_claim|lower }}"></claim-details>
 {% endblock %}
