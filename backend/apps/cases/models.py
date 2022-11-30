@@ -221,7 +221,7 @@ class Document(TimeStampModel):
     @property
     def can_be_sent_to_sign(self):
         """Может ли документ быть передан на подпись."""
-        return self.auto_generated and self.sign_set.count() == 0
+        return self.auto_generated and self.case and self.sign_set.count() == 0
 
     @property
     def is_sent_to_sign(self) -> bool:

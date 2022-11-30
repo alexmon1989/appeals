@@ -5,6 +5,11 @@
       <div class="fw-medium">{{ claimData.submission_date }}</div>
     </div>
 
+    <div class="d-flex mb-3">
+      <div class="text-muted text-uppercase me-3">Канал надходження:</div>
+      <div class="fw-medium"><span v-if="claimData.internal_claim">Внутрішній модуль</span><span v-else>Зовнішній модуль</span></div>
+    </div>
+
     <div class="d-flex">
       <div class="text-muted text-uppercase me-3">Тип звернення:</div>
       <div class="fw-medium">{{ claimData.claim_kind }}</div>

@@ -371,6 +371,7 @@ def claim_get_data_by_id(claim_id: int, user: UserModel = None, **kwargs) -> dic
                 'status_verbal': claim.get_status_display(),
                 'status': claim.status,
                 'submission_date': claim.submission_date.strftime('%d.%m.%Y %H:%M:%S') if claim.submission_date else '',
+                'internal_claim': int(claim.internal_claim)
             },
             'stages': claim_get_stages_details(claim),
             'documents': claim_get_documents(claim)

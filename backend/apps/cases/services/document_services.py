@@ -166,7 +166,7 @@ def document_can_be_signed_by_user(document: Union[int, Document], user: UserMod
         return False
 
     # Заявка (могут подписывать только заявители, которые подавали)
-    return document.claim and document.claim.user_id == user.pk
+    return document.claim and document.claim.user_id == user.pk and user.is_applicant
 
 
 def document_get_case_documents_to_sign(case_id: int, user: UserModel) -> list:
