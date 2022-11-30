@@ -46,7 +46,7 @@ class CasesViewSet(viewsets.ReadOnlyModelViewSet):
         return case_services.case_filter_dt_list(
             all_cases,
             self.request.user.id,
-            self.request.GET.get('user'),
+            self.request.GET.get('users'),
             self.request.GET.get('objKind'),
             self.request.GET.get('stage'),
         )

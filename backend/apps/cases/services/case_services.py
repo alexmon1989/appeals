@@ -35,7 +35,7 @@ def case_get_all_qs(order_by: str = '-created_at') -> QuerySet[Case]:
         'payment_set',
     ).order_by(order_by)
 
-    return cases
+    return cases.distinct()
 
 
 def case_get_all_active_qs(order_by: str = '-created_at') -> QuerySet[Case]:
@@ -51,7 +51,6 @@ def case_get_one(case_id: int) -> Case:
 def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str = None, obj_kind: int = None,
                         stage: str = None) -> Iterable[Case]:
     """Фильтрует список ап. дел по определённым параметрам."""
-
     # Оставляет только ап. дела, к которым имеет отношение пользователь
     if user and user == 'me':
         current_user = UserModel.objects.get(pk=current_user_id)
@@ -73,6 +72,7 @@ def case_filter_dt_list(cases: QuerySet[Case], current_user_id: int, user: str =
             cases = cases.filter(stopped=True)
         else:
             cases = cases.filter(stage_step__code__gt=1000).exclude(stopped=True)
+
     return cases
 
 

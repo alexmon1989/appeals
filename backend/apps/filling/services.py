@@ -203,8 +203,9 @@ def claim_edit(сlaim_id: int, post_data: dict, files_data: MultiValueDict, user
             'Документ додано у систему (створено автоматично)',
             user.pk
         )
-        claim.status = 1
-        claim.save()
+        if user.is_applicant:
+            claim.status = 1
+            claim.save()
 
     return claim
 

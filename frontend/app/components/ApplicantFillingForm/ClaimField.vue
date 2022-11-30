@@ -92,6 +92,7 @@
         <Field :name="fieldId"
                :label="label"
                :rules="fileFieldRequired"
+               :validateOnMount="true"
                v-slot="{ handleChange, handleBlur, meta }">
           <input type="file"
                  :id="fieldId"
@@ -272,24 +273,26 @@ export default {
     },
 
     fileFieldRequired(value) {
-      if (this.fieldRequired && this.modelValue === undefined) {
-        if (this.fieldType === 'file') {
-          if (this.documents.length === 0) {
-            return 'Оберіть файл'
-          }
-        } else { // file_multi
-          if (this.documents.length > 0) {
-            for (let i = 0; i < this.documents.length; i++) {
-              if (!this.deleteDocIds.includes(this.documents[i].id)) {
-                return true
-              }
+      this.$nextTick(() => {
+        if (this.fieldRequired && this.modelValue === undefined) {
+          if (this.fieldType === 'file') {
+            if (this.documents.length === 0) {
+              return 'Оберіть файл'
             }
-            return 'Оберіть хоча б один файл або не видаляйте існуючий'
-          } else {
-            return 'Оберіть файл(и)'
+          } else { // file_multi
+            if (this.documents.length > 0) {
+              for (let i = 0; i < this.documents.length; i++) {
+                if (!this.deleteDocIds.includes(this.documents[i].id)) {
+                  return true
+                }
+              }
+              return 'Оберіть хоча б один файл або не видаляйте існуючий'
+            } else {
+              return 'Оберіть файл(и)'
+            }
           }
         }
-      }
+      })
 
       return true
     },
