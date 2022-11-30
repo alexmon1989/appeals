@@ -31,10 +31,12 @@
             <!-- options -->
             <ul class="list-inline list-unstyled mb-0 d-flex align-items-end">
 
-                <!-- notifications -->
-              <li class="list-inline-item mx-1 dropdown">
-                <notifications-widget></notifications-widget>
-              </li>
+                {% if not request.user.is_applicant %}
+                    <!-- notifications -->
+                    <li class="list-inline-item mx-1 dropdown">
+                        <notifications-widget></notifications-widget>
+                    </li>
+                {% endif %}
 
                 <!-- account -->
                 <li class="list-inline-item mx-1 dropdown">

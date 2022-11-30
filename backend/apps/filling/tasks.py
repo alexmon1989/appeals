@@ -193,6 +193,30 @@ def get_claim_list_task(cert_data: dict) -> list:
 
 
 @app.task
+def get_claim_list_task_internal(user_id: int) -> list:
+    """Возвращает список обращений пользователя (вызывается из внутреннего модуля)."""
+    res = []
+    user = users_services.user_get_by_pk(user_id)
+    claims = filling_services.claim_get_user_claims_qs(user).order_by('-created_at')
+    for claim in claims:
+        item = {
+            'obj_number': claim.obj_number,
+            'absolute_url': claim.get_absolute_url(),
+            'obj_kind': claim.obj_kind.title,
+            'claim_kind': claim.claim_kind.title,
+            'status': claim.status,
+            'status_display': claim.get_status_display(),
+            'case_number': '',
+            'created_at': claim.created_at.strftime('%d.%m.%Y %H:%M:%S'),
+            'created_at_timestamp': claim.created_at.timestamp(),
+        }
+        if claim.status == 3:
+            item['case_number'] = claim.case.case_number
+        res.append(item)
+    return res
+
+
+@app.task
 def create_files_with_signs_info_task(cert_data: dict, claim_id: int, signs: list) -> bool:
     """Создаёт файлы документов с информацией о цифровой подписи."""
     user = users_services.user_get_or_create_from_cert(cert_data)

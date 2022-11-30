@@ -17,7 +17,8 @@ from apps.users import services as users_services
 from .tasks import (get_app_data_from_es_task, get_filling_form_data_task, create_claim_task,
                     create_claim_task_internal, get_claim_data_task, get_claim_data_task_internal, edit_claim_task,
                     edit_claim_task_internal, delete_claim_task, delete_claim_task_internal, create_case_task,
-                    create_case_task_internal, get_claim_status, get_claim_list_task, create_files_with_signs_info_task)
+                    create_case_task_internal, get_claim_status, get_claim_list_task, get_claim_list_task_internal,
+                    create_files_with_signs_info_task)
 from apps.common.utils import files_to_base64
 
 import json
@@ -26,12 +27,19 @@ import json
 class MyClaimsListView(LoginRequiredMixin, TemplateView):
     """Отображает страницу со списком обращений."""
     template_name = 'filling/my_claims_list/index.html'
+    internal_claim = settings.AUTH_METHOD == 'common'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        task = get_claim_list_task.delay(
-            users_services.certificate_get_data(self.request.session['cert_id'])
-        )
+        if self.internal_claim:
+            task = get_claim_list_task_internal.delay(
+                self.request.user.pk
+            )
+        else:
+            task = get_claim_list_task.delay(
+                users_services.certificate_get_data(self.request.session['cert_id'])
+            )
+
         context['task_id'] = task.id
         return context
 
