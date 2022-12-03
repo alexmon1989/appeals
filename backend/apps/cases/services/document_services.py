@@ -115,7 +115,10 @@ def document_set_reg_number(doc_id: int) -> None:
     """Присваивает документу регистрационный номер, который возвращает глобальный нумератор."""
     numbers = ''.join([str(random.randint(0, 9)) for _ in range(5)])
     document = Document.objects.get(pk=doc_id)
-    document.registration_number = f"Вх-{numbers}/2022"
+    if document.case:
+        document.registration_number = f"Вих-{numbers}/2022"
+    else:
+        document.registration_number = f"Вх-{numbers}/2022"
     document.save()
 
 
