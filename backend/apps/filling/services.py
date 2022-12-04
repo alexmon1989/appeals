@@ -15,7 +15,7 @@ from docxcompose.composer import Composer
 from apps.classifiers.models import DocumentType
 from apps.cases.models import Document, Sign
 from apps.cases.services import document_services
-from .models import ClaimField, Claim
+from .models import ClaimField, Claim, Appellant
 from apps.common.utils import docx_replace, base64_to_temp_file, get_random_file_name, get_temp_file_path
 
 from typing import List, Type, Union
@@ -421,6 +421,24 @@ def claim_get_mailing_data(claim_id: int) -> tuple:
     address = json_data.get('third_person_mailing_address', json_data['mailing_address'])
 
     return addressee, address
+
+
+def claim_fill_applicant(claim_id: int) -> Appellant:
+    """Заполняет данные того кто подал заявление (апелянта или представителя)."""
+    claim = Claim.objects.get(pk=claim_id)
+
+    represent_title = claim.get_represent_title(claim.third_person)
+
+    appellant = Appellant()
+    appellant.claim = claim
+    appellant.title = represent_title or claim.get_applicant_title()
+    appellant.address = claim.get_represent_address(claim.third_person) or claim.get_applicant_address()
+    appellant.email = claim.get_appellant_email()
+    appellant.phone = claim.get_appellant_phone()
+    appellant.is_representative = len(represent_title) > 0
+    appellant.save()
+
+    return appellant
 
 
 def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:

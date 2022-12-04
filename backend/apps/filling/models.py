@@ -115,6 +115,22 @@ class Claim(TimeStampModel):
             appellant_name = self.data['applicant_title']
         return appellant_name.replace("\r\n", ", ")
 
+    def get_appellant_email(self):
+        """Возвращает email апеллянта """
+        if self.third_person:
+            email = self.data['third_person_email']
+        else:
+            email = self.data['email']
+        return email
+
+    def get_appellant_phone(self):
+        """Возвращает телефон апеллянта """
+        if self.third_person:
+            email = self.data['third_person_phone']
+        else:
+            email = self.data['phone']
+        return email
+
     def get_appellant_address(self):
         """Возвращает адрес апеллянта """
         if self.third_person:
@@ -184,3 +200,42 @@ class Claim(TimeStampModel):
     class Meta:
         verbose_name = "Звернення"
         verbose_name_plural = "Звернення"
+
+
+class Appellant(TimeStampModel):
+    """Модель данных апелянта."""
+    class RepresentativeTypes(models.TextChoices):
+        PATENT_ATTORNEY = 'patent_attorney', 'Патентний повірений'
+        LAWYER = 'lawyer', 'Адвокат'
+        OTHER = 'other', 'Інше'
+
+    class PersonTypes(models.TextChoices):
+        INDIVIDUAL = 'individual', 'Фізична особа'
+        ENTITY = 'entity', 'Юридична особа'
+
+    title = models.CharField('Найменування апелянта', max_length=512)
+    address = models.CharField('Адреса апелянта', max_length=512)
+    email = models.CharField('E-Mail апелянта', max_length=32)
+    phone = models.CharField('Телефон апелянта', max_length=32)
+    person_type = models.CharField(
+        'Тип особи',
+        max_length=16,
+        choices=PersonTypes.choices,
+        null=True,
+        blank=True,
+    )
+    is_representative = models.BooleanField('Є представником', default=False)
+    representative_type = models.CharField(
+        'Тип поля',
+        max_length=16,
+        choices=RepresentativeTypes.choices,
+        null=True,
+        blank=True,
+    )
+    resident = models.BooleanField('Резидент / не резидент', default=True)
+    claim = models.OneToOneField(Claim, on_delete=models.CASCADE, verbose_name='Звернення', primary_key=True)
+
+    class Meta:
+        verbose_name = "Апелянт"
+        verbose_name_plural = "Апелянти"
+        db_table = 'filling_appellants'
