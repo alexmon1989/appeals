@@ -535,6 +535,17 @@ def document_send_to_sign(request, pk: int):
     return redirect('cases-detail', pk=document.case.pk)
 
 
+@group_required('Секретар')
+def document_send_to_chancellary(request, pk: int):
+    """Отправляет документ в АС Вихідні документи"""
+    document = document_services.document_get_by_id(pk)
+    if not document.sent_to_chancellary:
+        document_services.document_send_to_chancellary(pk, request.user.pk)
+        messages.add_message(request, messages.SUCCESS, 'Документ успішно відправлено до АС "Вихідні документи"')
+        return redirect('cases-detail', pk=document.case.pk)
+    raise Http404('Документ вже був відправлений до АС "Вихідні документи"')
+
+
 @login_required
 def cases_get_current_cases(request, user_id: int):
     """Возвращает HTML для модального окна с инф-ей о текущих ап. делах пользователя."""

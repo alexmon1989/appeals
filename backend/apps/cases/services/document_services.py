@@ -2,11 +2,12 @@ import datetime
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.utils import timezone
 
-from apps.cases.models import Document, Sign, DocumentHistory
+from apps.cases.models import Document, Sign, DocumentHistory, Command, PostalProtocolExchange
 from apps.cases.utils import set_cell_border
 from apps.common.utils import (docx_replace, generate_barcode_img, substitute_image_docx)
-from apps.classifiers.models import DocumentType
+from apps.classifiers.models import DocumentType, CommandType
 
 from typing import List
 from pathlib import Path
@@ -234,3 +235,27 @@ def document_create_sign_records(doc_id: int) -> None:
             document=document,
             user=document.case.collegium_head,
         )
+
+
+def document_send_to_chancellary(pk: int, user_id: int) -> Command:
+    """Отправляет документ в АС Вихідні документи, фактически - создаёт записи в БД."""
+    command_type = CommandType.objects.get(command_name='send_to_chancellary')
+    now = timezone.now()
+
+    command = Command()
+    command.command_type = command_type
+    command.document_id = pk
+    command.create_date = now
+    command.is_done = False
+    command.save()
+
+    protocol = PostalProtocolExchange()
+    protocol.command = command
+    protocol.doc_id = pk
+    protocol.id_cead = 0
+    protocol.saved_at = now
+    protocol.save()
+
+    document_add_history(pk, 'Документ відправлено в АС "Вихідні документи"', user_id)
+
+    return command

@@ -48,6 +48,11 @@ urlpatterns = [
         name='document_send_to_sign'
     ),
     path(
+        'document-send-to-chancellary/<int:pk>/',
+        views.document_send_to_chancellary,
+        name='document_send_to_chancellary'
+    ),
+    path(
         'update-document/<int:pk>/',
         views.DocumentUpdateView.as_view(),
         name='case_update_document'

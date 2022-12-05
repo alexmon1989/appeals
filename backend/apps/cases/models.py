@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.core.validators import FileExtensionValidator
 
 from apps.common.models import TimeStampModel
-from apps.classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason, DecisionType
+from apps.classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason, DecisionType, CommandType
 from .utils import sign_get_file_path, document_get_original_file_path
 
 from apps.filling.models import Claim
@@ -252,6 +252,11 @@ class Document(TimeStampModel):
         """Может ли пользователь удалить документ (удалять можно только вторичные документы)."""
         return self.case and self.case.secretary == user and not self.auto_generated and not self.barcode
 
+    @property
+    def sent_to_chancellary(self) -> bool:
+        """Был ли документ отправлен в АС Вихідні документи"""
+        return self.command_set.filter(command_type__command_name='send_to_chancellary').exists()
+
     def __str__(self):
         return self.document_type.title
 
@@ -347,7 +352,6 @@ class Sign(TimeStampModel):
 
 
 class PostalProtocolExchange(models.Model):
-    """Таблиця для інтеграції з канцелярією."""
     id_rec = models.AutoField(primary_key=True)
     id_cead = models.IntegerField(blank=True, null=True)
     saved_at = models.DateTimeField(blank=True, null=True)
@@ -359,7 +363,25 @@ class PostalProtocolExchange(models.Model):
     cancel_sending_document_date = models.DateTimeField(blank=True, null=True)
     cancel_sending_document_reason = models.CharField(max_length=250, blank=True, null=True)
     doc = models.ForeignKey(Document, models.DO_NOTHING, blank=True, null=True)
+    command = models.ForeignKey('Command', models.SET_NULL, db_column='id_command', blank=True, null=True)
 
     class Meta:
         managed = False
         db_table = 'postal_protocol_exchange'
+
+
+class Command(models.Model):
+    id = models.AutoField(primary_key=True, db_column='id_command')
+    command_type = models.ForeignKey(CommandType, on_delete=models.SET_NULL, blank=True, null=True,
+                                     db_column='id_type_comm')
+    create_date = models.DateTimeField(blank=True, null=True)
+    document = models.ForeignKey(Document, on_delete=models.SET_NULL, blank=True, null=True, db_column='id_document')
+    execution_date = models.DateTimeField(blank=True, null=True)
+    is_done = models.BooleanField(blank=True, null=True)
+    is_error = models.BooleanField(blank=True, null=True)
+    error_datetime = models.DateTimeField(blank=True, null=True)
+    error_message = models.CharField(max_length=1024, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ls_list_commands'

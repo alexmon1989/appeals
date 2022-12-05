@@ -141,3 +141,14 @@ class DecisionType(TimeStampModel):
         verbose_name = "Тип рішення АП"
         verbose_name_plural = "Типи рішень АП"
         db_table = 'cl_decision_types'
+
+
+class CommandType(models.Model):
+    id = models.AutoField(primary_key=True, db_column='id_type_comm')
+    command_name = models.CharField(max_length=100, blank=True, null=True)
+    who_run = models.CharField(max_length=50, blank=True, null=True)
+    command_comment = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'cl_commands_list'
