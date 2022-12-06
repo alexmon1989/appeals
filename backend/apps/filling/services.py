@@ -441,6 +441,11 @@ def claim_fill_applicant(claim_id: int) -> Appellant:
     return appellant
 
 
+def claim_get_by_id(claim_id: int) -> Claim:
+    """Возвращает модель обращения по идентификатору."""
+    return Claim.objects.filter(pk=claim_id).first()
+
+
 def document_get_data_for_main_claim_doc_file(claim_id: Type[int]) -> dict:
     """Возвращает словарь с данными, необходимыми для формирования основного документа обращения."""
     claim = Claim.objects.filter(pk=claim_id).first()

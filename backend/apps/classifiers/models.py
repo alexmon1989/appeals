@@ -7,6 +7,7 @@ class ObjKind(TimeStampModel):
     title = models.CharField("Назва", max_length=255)
     sis_id = models.PositiveSmallIntegerField("Id типу об'єкта у СІС", null=True, blank=False)
     cead_id = models.PositiveSmallIntegerField("Id у CEAD", null=True, blank=True)
+    abbr = models.CharField('Абревіатура', null=True, blank=True, max_length=2)
 
     def __str__(self):
         return self.title
@@ -48,6 +49,7 @@ class ClaimKind(TimeStampModel):
         blank=True,
         max_length=2
     )
+    abbr = models.CharField('Абревіатура', null=True, blank=True, max_length=6)
 
     def __str__(self):
         return f"{self.obj_kind.title}: {self.title}"

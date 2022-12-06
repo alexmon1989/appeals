@@ -97,16 +97,23 @@ def case_get_documents_qs(case_id: int) -> Iterable[Document]:
     return queryset
 
 
-def case_generate_next_number() -> str:
+def case_generate_next_number(claim_id: int) -> str:
     """Генерирует следующий номер дела."""
-    cur_year = datetime.datetime.now().year
-    last_case = Case.objects.filter(created_at__year=cur_year).order_by('-created_at').first()
-    if last_case:
-        last_case_num = last_case.case_number.split('/')[0]
-        last_case_num = str(int(last_case_num) + 1).zfill(4)
-        return f"{last_case_num}/{cur_year}"
-    else:
-        return f"0001/{cur_year}"
+    claim = filling_services.claim_get_by_id(claim_id)
+
+    now = datetime.datetime.now()
+    cur_year = now.year
+    cur_month = now.month
+
+    res = f"{claim.obj_kind.abbr}-{claim.claim_kind.abbr}-{cur_year}{cur_month}"
+
+    cases_count = Case.objects.filter(
+        created_at__year=cur_year,
+        created_at__month=cur_month
+    ).count() + 1
+
+    cases_count = str(int(cases_count) + 1).zfill(3)
+    return f"{res}-{cases_count}"
 
 
 def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
@@ -116,7 +123,7 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
         addressee, address = filling_services.claim_get_mailing_data(claim.pk)
         case = Case.objects.create(
             claim=claim,
-            case_number=case_generate_next_number(),
+            case_number=case_generate_next_number(claim_id),
             stage_step=CaseStageStep.objects.get(code=1000),
             addressee=addressee,
             address=address,
