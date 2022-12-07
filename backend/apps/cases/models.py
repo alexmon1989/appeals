@@ -201,7 +201,7 @@ class Document(TimeStampModel):
 
     @property
     def signed_file_url(self):
-        """Возвращает путь к файлу с информацией о цифровых подписях."""
+        """Возвращает путь к подписанному файлу."""
         path = Path(self.file.name)
         if self.converted_to_pdf:  # документ конвертирован в pdf
             name = urllib.parse.quote_plus(path.name)
@@ -210,6 +210,14 @@ class Document(TimeStampModel):
 
         stem = urllib.parse.quote_plus(path.stem)
         return self.file.url.replace(stem, f"{stem}_signs")
+
+    @property
+    def signed_file_name(self):
+        """Возвращает название подписанного файла."""
+        path = Path(self.file.name)
+        if self.converted_to_pdf:  # документ конвертирован в pdf
+            return f"{path.stem}_signs.pdf"
+        return f"{path.stem}_signs{path.suffix}"
 
     @property
     def signed_file(self):

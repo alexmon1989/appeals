@@ -19,7 +19,7 @@
           <span v-else>ні</span>
         </td>
         <td class="text-nowrap">
-          <a :href="getDocUrl(document)" target="_blank">{{ document.file_name }}</a>
+          <a :href="document.file_url" target="_blank">{{ document.file_name }}</a>
         </td>
         <td class="text-center" v-if="!internalClaim">
           <span class="text-success fw-bold" v-if="document.sign__count">так</span>

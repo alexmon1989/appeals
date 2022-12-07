@@ -295,20 +295,35 @@ def claim_get_stages_details(claim: Claim) -> dict:
 
 
 def claim_get_documents_qs(claim_id: int) -> QuerySet[Document]:
-    """Возвращает список документов обращения."""
-    documents = Document.objects.filter(
-        claim_id=claim_id,
-        claim_document=True
+    """Возвращает список документов обращения и подписанных документов дела."""
+    claim_documents = Document.objects.filter(
+        claim_id=claim_id
     ).select_related(
         'document_type'
     ).prefetch_related(
         Prefetch('sign_set', queryset=Sign.objects.all())
-    ).order_by(
-        '-auto_generated',
-        'document_type'
     ).annotate(Count('sign'))
 
-    return documents
+    claim = Claim.objects.get(pk=claim_id)
+    if claim.case:
+        case_documents = Document.objects.filter(
+            case_id=claim.case.pk
+        ).exclude(
+            sign__timestamp='',
+        ).select_related(
+            'document_type'
+        ).prefetch_related(
+            Prefetch('sign_set', queryset=Sign.objects.all())
+        ).annotate(sign__count=Count('sign')).exclude(
+            sign__count=0,
+        )
+
+        claim_documents = claim_documents.union(case_documents)
+
+    return claim_documents.order_by(
+        '-auto_generated',
+        '-created_at',
+    )
 
 
 def claim_get_documents(claim_id: int) -> list:
@@ -320,8 +335,8 @@ def claim_get_documents(claim_id: int) -> list:
             'id': document.pk,
             'document_type': document.document_type.title,
             'auto_generated': int(document.auto_generated),
-            'file_url': document.file.url,
-            'file_name': Path(document.file.name).name,
+            'file_url': document.signed_file_url if document.is_signed else document.file.url,
+            'file_name': document.signed_file_name,
             'sign__count': document.sign__count,
         })
     return res
@@ -375,7 +390,7 @@ def claim_get_data_by_id(claim_id: int, user: UserModel = None, **kwargs) -> dic
                 'internal_claim': int(claim.internal_claim)
             },
             'stages': claim_get_stages_details(claim),
-            'documents': claim_get_documents(claim)
+            'documents': claim_get_documents(claim_id)
         }
 
         if claim.status == 3:
