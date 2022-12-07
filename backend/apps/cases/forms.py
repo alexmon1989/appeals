@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.utils import timezone
+from django.forms.widgets import DateInput
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div
@@ -445,13 +446,45 @@ class CaseMeetingForm(forms.ModelForm):
     )
     # Возможные решения АП
     decision = forms.ModelChoiceField(
-        label='Рішення',
+        label='Прийняте рішення',
         queryset=DecisionType.objects.all()
+    )
+    decision_date = forms.DateField(
+        label='Дата оголошення рішення АП',
+        required=True,
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    order_number = forms.CharField(
+        max_length=16,
+        label='Номер наказу',
+        required=False,
+        help_text='Дані будуть використані при генерації файлу наказу.'
+    )
+    order_date = forms.DateField(
+        label='Дата наказу',
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        help_text='Дані будуть використані при генерації файлу наказу.'
+    )
+    signer_position = forms.CharField(
+        max_length=255,
+        label='Посада підписанта назазу',
+        required=False,
+        help_text='Дані будуть використані при генерації файлу наказу.'
+    )
+    signer_name = forms.CharField(
+        max_length=255,
+        label='ПІБ підписанта назазу',
+        required=False,
+        help_text='Дані будуть використані при генерації файлу наказу.'
     )
 
     class Meta:
         model = Case
-        fields = ['meeting', 'decision']
+        fields = ['meeting', 'decision', 'decision_date', 'order_number', 'order_date']
+        widgets = {
+            'decision_date': DateInput(attrs={'type': 'date'}),
+        }
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -478,6 +511,7 @@ class CaseMeetingForm(forms.ModelForm):
 
         # Сохранение решения совещания
         self.instance.decision_type = self.cleaned_data['decision']
+        self.instance.decision_date = self.cleaned_data['decision_date']
         self.instance.save()
 
         # Запись в историю дела
@@ -488,7 +522,13 @@ class CaseMeetingForm(forms.ModelForm):
         )
 
         # Создание документов
-        case_services.case_create_docs_for_meeting_holding(self.instance.pk, self.request.user.pk)
+        form_data = {
+            'order_number': self.cleaned_data['order_number'],
+            'order_date': self.cleaned_data['order_date'],
+            'signer_position': self.cleaned_data['signer_position'],
+            'signer_name': self.cleaned_data['signer_name'],
+        }
+        case_services.case_create_docs_for_meeting_holding(self.instance.pk, self.request.user.pk, form_data)
         self.instance.refresh_from_db()
 
         # Изменение стадии дела, создание оповещений

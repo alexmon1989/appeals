@@ -43,8 +43,8 @@ class Service:
             return get_file_vars_meeting(self.case, self.document)
         elif self.doc_type.code == '0027':
             return get_file_vars_pre_meeting_protocol(self.case, self.document)
-        elif self.doc_type.code in ('0029', '0030', '0031', '0032', '0033'):
-            return get_file_vars_meeting_holding(self.case, self.document)
+        elif self.doc_type.code in ('0029', '0030', '0031', '0032', '0033', '0034'):
+            return get_file_vars_meeting_holding(self.case, self.document, self.extra_args['form_data'])
         else:
             return {}
 
@@ -416,7 +416,7 @@ def get_file_vars_meeting(case: Case, document: Document):
     }
 
 
-def get_file_vars_meeting_holding(case: Case, document: Document):
+def get_file_vars_meeting_holding(case: Case, document: Document, form_data: dict):
     """Переменные для формирования документов заседания ап. палаты."""
     # Документ обращения
     claim_doc = Document.objects.get(document_type__code__in=('0001', '0002', '0003', '0004'), claim=case.claim)
@@ -433,7 +433,6 @@ def get_file_vars_meeting_holding(case: Case, document: Document):
     represent = case.claim.get_represent_title()
     if represent:
         appellant = f'{appellant} (представник - {represent})'
-
 
     return {
         '{{ CLAIM_DOC_REG_NUM }}': claim_doc_reg_num,
@@ -453,6 +452,11 @@ def get_file_vars_meeting_holding(case: Case, document: Document):
         '{{ COLLEGIUM_MEMBERS }}': f'{collegium[0].get_full_name}, {collegium[1].get_full_name}',
         '{{ COLLEGIUM_MEMBER_1 }}': collegium[0].get_full_name_initials(),
         '{{ COLLEGIUM_MEMBER_2 }}': collegium[1].get_full_name_initials(),
+
+        '{{ ORDER_DATE }}': form_data['order_date'].strftime('%d.%m.%Y') if form_data.get('order_date') else 'Дата наказу',
+        '{{ ORDER_NUMBER }}': form_data['order_number'] if form_data.get('order_number') else 'Номер наказу',
+        '{{ DIRECTOR_POSITION }}': form_data['signer_position'] if form_data.get('signer_position') else 'Посада підписанта',
+        '{{ DIRECTOR_NAME }}': form_data['signer_name'] if form_data.get('signer_name') else 'ПІБ підписанта',
     }
 
 

@@ -357,7 +357,7 @@ def case_renew_consideration(case_id: int, user_id: int) -> None:
         )
 
 
-def case_create_docs_for_meeting_holding(case_id: int, user_id: int) -> None:
+def case_create_docs_for_meeting_holding(case_id: int, user_id: int, form_data: dict) -> None:
     """Создаёт документы для проведения ап. заседания."""
     # Получение дела
     case = case_get_one(case_id)
@@ -374,6 +374,7 @@ def case_create_docs_for_meeting_holding(case_id: int, user_id: int) -> None:
             case_id=case_id,
             doc_code=doc_type['code'],
             user_id=user_id,
+            form_data=form_data,
         )
 
 

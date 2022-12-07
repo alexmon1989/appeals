@@ -71,6 +71,7 @@ class Case(TimeStampModel):
         null=True,
         blank=True
     )
+    decision_date = models.DateField('Дата оголошення рішення АП', null=True, blank=True)
 
     def __str__(self):
         return self.case_number
