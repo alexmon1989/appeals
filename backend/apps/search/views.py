@@ -1,5 +1,11 @@
 from django.shortcuts import render
+from .forms import SearchForm
 
 
 def index(request):
-    return render(request, template_name='search/index/index.html')
+    form = SearchForm()
+    return render(
+        request,
+        template_name='search/index/index.html',
+        context={'form': form}
+    )
