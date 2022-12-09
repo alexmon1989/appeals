@@ -8,7 +8,7 @@
 
 -->
 <table class="table-datatable table table-bordered table-hover table-striped"
-	data-lng-empty="No data available in table"
+	data-lng-empty="Результати пошуку відсутні"
 	data-lng-page-info="Показано _START_ з _END_ of _TOTAL_ записів"
 	data-lng-filtered="(filtered from _MAX_ total entries)"
 	data-lng-loading="Loading..."
@@ -29,7 +29,7 @@
 	data-enable-col-sorting="true"
 	data-autofill="false"
 	data-group="false"
-	data-items-per-page="10"
+	data-items-per-page="15"
 
 	data-enable-column-visibility="true"
 	data-lng-column-visibility="Видимість стовбчиків"
@@ -49,60 +49,34 @@
 	data-custom-config='{}'>
 	<thead>
     <tr>
-        <th>№ справи</th>
-        <th>№ заявки або ох. документа</th>
-        <th>Вид ОПІВ</th>
-        <th>Назва ОПІВ</th>
-        <th>Дата подання звернення</th>
-        <th>Дата рішення</th>
+        <th class="text-nowrap">№ справи</th>
+        <th class="text-nowrap">№ ОПІВ</th>
+        <th class="text-nowrap">Вид ОПІВ</th>
+        <th class="text-nowrap">Назва ОПІВ</th>
+        <th class="text-nowrap">Дата подання звернення</th>
+        <th class="text-nowrap">Дата рішення</th>
     </tr>
 	</thead>
 	<tbody>
-		<tr>
-			<td class="fw-bold"><a href="#">0001/2022</a></td>
-			<td>318331</td>
-			<td>Торговельна марка</td>
-			<td>cmapto, смарто</td>
-			<td>29.05.2022 14:18:42</td>
-			<td>29.07.2022 14:18:42</td>
-		</tr>
-		<tr>
-			<td class="fw-bold"><a href="#">0002/2022</a></td>
-			<td>10001</td>
-			<td>Винахід</td>
-			<td>cmapto, смарто</td>
-			<td>29.05.2022 14:18:42</td>
-			<td>29.07.2022 14:18:42</td>
-		</tr>
-		<tr>
-			<td class="fw-bold"><a href="#">0003/2022</a></td>
-			<td>318332</td>
-			<td>Торговельна марка</td>
-			<td>ersag</td>
-			<td>29.05.2022 14:18:42</td>
-			<td>29.07.2022 14:18:42</td>
-		</tr>
-		<tr>
-			<td class="fw-bold"><a href="#">0004/2022</a></td>
-			<td>5566</td>
-			<td>Промиловий зразок</td>
-			<td>ЕТИКЕТКА</td>
-			<td>29.05.2022 14:18:42</td>
-			<td>29.07.2022 14:18:42</td>
-		</tr>
-		<tr>
-			<td class="fw-bold"><a href="#">0005/2022</a></td>
-			<td>m201900001</td>
-			<td>Торговельна марка</td>
-			<td>granatus</td>
-			<td>29.05.2022 14:18:42</td>
-			<td>29.07.2022 14:18:42</td>
-		</tr>
+        {% if results %}
+            {% for case in results %}
+                <tr>
+                    <td class="fw-bold text-nowrap"><a href="{% url 'cases-detail' pk=case.pk %}">{{ case.case_number }}</a></td>
+                    <td>{{ case.claim.obj_number }}</td>
+                    <td class="text-nowrap">{{ case.claim.obj_kind.title }}</td>
+                    <td>{{ case.claim.obj_title }}</td>
+                    <td data-sort="{{ case.created_at|date:"U" }}">{{ case.created_at|date:"SHORT_DATE_FORMAT" }}</td>
+                    <td data-sort="{% if case.decision_date %}{{ case.decision_date|date:"U" }}{% else %}0{% endif %}">
+                        {{ case.decision_date|date:"SHORT_DATE_FORMAT" }}
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endif %}
 	</tbody>
 	<tfoot>
 		<tr>
 			<th>№ справи</th>
-            <th>№ заявки або ох. документа</th>
+            <th>№ ОПІВ</th>
             <th>Вид ОПІВ</th>
             <th>Назва ОПІВ</th>
             <th>Дата подання звернення</th>

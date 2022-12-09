@@ -1,6 +1,9 @@
 from django import forms
+from django.core.exceptions import ValidationError
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Row, Column
+
 from apps.classifiers.models import ClaimKind, DecisionType, RefusalReason
 
 PERSON_TYPES = (
@@ -10,6 +13,12 @@ PERSON_TYPES = (
     ('collegium_head', 'Голова колегії'),
     ('collegium_member', 'Член колегії'),
     ('expert', 'Експерт'),
+)
+
+HAS_DECISION = (
+    ('', 'Оберіть значення...'),
+    ('no', 'Рішення відсутнє'),
+    ('yes', 'Є рішення АП'),
 )
 
 
@@ -65,7 +74,12 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-select-sm'})
     )
-    has_decision = forms.BooleanField(label='Є рішення Апеляційної палати', required=False)
+    has_decision = forms.ChoiceField(
+        choices=HAS_DECISION,
+        label='Рішення Апеляційної палати',
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select-sm'})
+    )
     decision_type = forms.ChoiceField(
         label='Рішення АП',
         required=False,
@@ -122,4 +136,26 @@ class SearchForm(forms.Form):
             'has_decision',
             'decision_type',
             'history_keywords',
+        )
+
+    def clean_person_name(self):
+        person_type = self.cleaned_data['person_type']
+        if person_type:
+            person_name = self.cleaned_data['person_name']
+            if not person_name:
+                person_name_label = self.fields['person_name'].label
+                person_type_label = self.fields['person_type'].label
+                raise ValidationError(
+                    f'Поле "{person_name_label}" обов\'язкове до заповнення, '
+                    f'оскільки заповнене поле "{person_type_label}".'
+                )
+
+            return person_name
+
+    def clean(self):
+        for value in self.cleaned_data.values():
+            if value:
+                return
+        raise ValidationError(
+            'Заповніть хоча б одне поле'
         )
