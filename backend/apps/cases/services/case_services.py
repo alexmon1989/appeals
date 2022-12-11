@@ -135,6 +135,9 @@ def case_create_from_claim(claim_id: int, user: UserModel) -> Union[Case, None]:
         # Заполнение данных того кто подаёт обращение
         filling_services.claim_fill_applicant(claim_id)
 
+        # Заполнение лиц, причастных к обращению
+        filling_services.claim_fill_persons(claim_id)
+
         # Присваивание документам номеров и штрихкодов
         for doc in claim.document_set.all():
             document_set_reg_number(doc.pk)

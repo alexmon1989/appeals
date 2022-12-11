@@ -155,3 +155,15 @@ class CommandType(models.Model):
     class Meta:
         managed = False
         db_table = 'cl_commands_list'
+
+
+class ClaimPersonType(TimeStampModel):
+    title = models.CharField("Назва", max_length=512)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        db_table = 'cl_claim_person_types'
+        verbose_name = "Тип особи звернення"
+        verbose_name_plural = "Тип осіб звернення"

@@ -9,7 +9,7 @@ from apps.classifiers.models import ClaimKind, DecisionType, RefusalReason
 PERSON_TYPES = (
     ('', 'Оберіть тип особи...'),
     ('appellant', 'Апелянт'),
-    ('represent', 'Представник'),
+    ('represent', 'Представник апелянта'),
     ('collegium_head', 'Голова колегії'),
     ('collegium_member', 'Член колегії'),
     ('expert', 'Експерт'),
@@ -76,12 +76,12 @@ class SearchForm(forms.Form):
     )
     has_decision = forms.ChoiceField(
         choices=HAS_DECISION,
-        label='Рішення Апеляційної палати',
+        label='Наявність рішення Апеляційної палати',
         required=False,
         widget=forms.Select(attrs={'class': 'form-select-sm'})
     )
     decision_type = forms.ChoiceField(
-        label='Рішення АП',
+        label='Тип рішення Апеляційної палати',
         required=False,
         widget=forms.Select(attrs={'class': 'form-select-sm'})
     )

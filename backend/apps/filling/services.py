@@ -12,13 +12,13 @@ from docx import Document as PyDocxDocument
 from docx.shared import Pt
 from docxcompose.composer import Composer
 
-from apps.classifiers.models import DocumentType
+from apps.classifiers.models import DocumentType, ClaimPersonType
 from apps.cases.models import Document, Sign
 from apps.cases.services import document_services
-from .models import ClaimField, Claim, Appellant
+from .models import ClaimField, Claim, Appellant, Person
 from apps.common.utils import docx_replace, base64_to_temp_file, get_random_file_name, get_temp_file_path
 
-from typing import List, Type, Union
+from typing import List, Type, Union, Iterable
 from pathlib import Path
 from distutils.dir_util import copy_tree
 import json
@@ -454,6 +454,63 @@ def claim_fill_applicant(claim_id: int) -> Appellant:
     appellant.save()
 
     return appellant
+
+
+def claim_fill_persons(claim_id: int) -> Iterable[Person]:
+    """Заполняет таблицу с лицами, которые имеют отношение к обращению в АП."""
+    claim = Claim.objects.select_related('claim_kind').get(pk=claim_id)
+    json_data = json.loads(claim.json_data)
+    persons = dict()
+    persons['appellant'] = (
+        claim.get_appellant_title(),
+        claim.get_appellant_address()
+    )
+    persons['appellant_represent'] = (
+        claim.get_represent_title(claim.claim_kind.third_person),
+        claim.get_represent_address(claim.claim_kind.third_person),
+    )
+    persons['applicant'] = (
+        claim.get_applicant_title(),
+        claim.get_applicant_address(),
+    )
+    persons['applicant_represent'] = (
+        json_data.get('represent_title'),
+        json_data.get('represent_address'),
+    )
+    persons['owner'] = (
+        claim.get_owner_title(),
+        claim.get_owner_address(),
+    )
+    persons['owner_represent'] = (
+        json_data.get('represent_title') if persons['owner'][0] else None,
+        json_data.get('represent_address') if persons['owner'][0] else None,
+    )
+
+    res = []
+    for key in persons.keys():
+        if persons[key][0]:
+            person = Person()
+            person.claim = claim
+            person.title = persons[key][0]
+            person.address = persons[key][1]
+
+            if key == 'appellant':
+                person.person_type = ClaimPersonType.objects.get(title='Апелянт')
+            elif key == 'appellant_represent':
+                person.person_type = ClaimPersonType.objects.get(title='Представник апелянта')
+            elif key == 'applicant':
+                person.person_type = ClaimPersonType.objects.get(title='Заявник')
+            elif key == 'applicant_represent':
+                person.person_type = ClaimPersonType.objects.get(title='Представник заявника')
+            elif key == 'owner':
+                person.person_type = ClaimPersonType.objects.get(title='Власник')
+            elif key == 'owner_represent':
+                person.person_type = ClaimPersonType.objects.get(title='Представник власника')
+
+            person.save()
+            res.append(person)
+
+    return res
 
 
 def claim_get_by_id(claim_id: int) -> Claim:

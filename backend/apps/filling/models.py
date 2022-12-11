@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 
 from apps.common.models import TimeStampModel
-from apps.classifiers.models import ClaimKind, ObjKind
+from apps.classifiers.models import ClaimKind, ObjKind, ClaimPersonType
 
 import json
 
@@ -112,7 +112,11 @@ class Claim(TimeStampModel):
         if self.third_person:
             appellant_name = self.data['third_person_applicant_title']
         else:
-            appellant_name = self.data['applicant_title']
+            # Заява про визнання ТМ ДВ
+            if not self.claim_kind.claim_sense:
+                appellant_name = self.data['owner_title']
+            else:
+                appellant_name = self.data['applicant_title']
         return appellant_name.replace("\r\n", ", ")
 
     def get_appellant_email(self):
@@ -136,7 +140,11 @@ class Claim(TimeStampModel):
         if self.third_person:
             appellant_address = self.data['third_person_applicant_address']
         else:
-            appellant_address = self.data['applicant_address']
+            # Заява про визнання ТМ ДВ
+            if not self.claim_kind.claim_sense:
+                appellant_address = self.data['owner_address']
+            else:
+                appellant_address = self.data['applicant_address']
         return appellant_address.replace("\r\n", ", ")
 
     def get_applicant_title(self):
@@ -203,7 +211,7 @@ class Claim(TimeStampModel):
 
 
 class Appellant(TimeStampModel):
-    """Модель данных апелянта."""
+    """Модель данных апелянта (а именно того, кто подал обращение, напр., представителя)."""
     class RepresentativeTypes(models.TextChoices):
         PATENT_ATTORNEY = 'patent_attorney', 'Патентний повірений'
         LAWYER = 'lawyer', 'Адвокат'
@@ -239,3 +247,17 @@ class Appellant(TimeStampModel):
         verbose_name = "Апелянт"
         verbose_name_plural = "Апелянти"
         db_table = 'filling_appellants'
+
+
+class Person(TimeStampModel):
+    """Модель лица, которое имеет отношение к обращению
+    (апеллянт, представитель, заявитель, представитель заявителя и т.д.)"""
+    claim = models.ForeignKey(Claim, on_delete=models.CASCADE, verbose_name='Звернення')
+    person_type = models.ForeignKey(ClaimPersonType, on_delete=models.CASCADE, verbose_name='Тип особи', max_length=255)
+    title = models.TextField('Найменування особи', max_length=1024)
+    address = models.TextField('Адреса особи', max_length=1024, null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Особа звернення"
+        verbose_name_plural = "Особи звернення"
+        db_table = 'filling_claim_persons'

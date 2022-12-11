@@ -1,12 +1,60 @@
 from django.http import QueryDict
+from django.db.models import Value as V
+from django.db.models.functions import Concat
 
 from typing import Iterable
 
 from apps.cases.models import Case
+from apps.classifiers.models import ClaimPersonType
 
 
 def search(params: QueryDict) -> Iterable[Case]:
     res = Case.objects.select_related('claim', 'claim__obj_kind')
+
+    if params.get('person_type'):
+        if params['person_type'] == 'appellant':
+            res = res.filter(
+                claim__person__title__icontains=params['person_name'],
+                claim__person__person_type=ClaimPersonType.objects.get(title='Апелянт')
+            )
+        elif params['person_type'] == 'represent':
+            res = res.filter(
+                claim__person__title__icontains=params['person_name'],
+                claim__person__person_type=ClaimPersonType.objects.get(title='Представник апелянта')
+            )
+        elif params['person_type'] == 'collegium_head':
+            res = res.annotate(
+                full_name=Concat(
+                    'collegiummembership__person__last_name',
+                    V(' '),
+                    'collegiummembership__person__first_name',
+                    V(' '),
+                    'collegiummembership__person__middle_name'
+                )
+            )
+            res = res.filter(collegiummembership__is_head=True, full_name__icontains=params['person_name'])
+        elif params['person_type'] == 'collegium_member':
+            res = res.annotate(
+                full_name=Concat(
+                    'collegiummembership__person__last_name',
+                    V(' '),
+                    'collegiummembership__person__first_name',
+                    V(' '),
+                    'collegiummembership__person__middle_name'
+                )
+            )
+            res = res.filter(full_name__icontains=params['person_name'])
+        elif params['person_type'] == 'expert':
+            res = res.annotate(
+                full_name=Concat(
+                    'expert__last_name',
+                    V(' '),
+                    'expert__first_name',
+                    V(' '),
+                    'expert__middle_name'
+                )
+            )
+            res = res.filter(full_name__icontains=params['person_name'])
 
     if params.get('case_number'):
         res = res.filter(case_number__icontains=params['case_number'])

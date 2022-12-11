@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import DocumentType, ObjKind, ClaimKind, RefusalReason, DecisionType
+from .models import DocumentType, ObjKind, ClaimKind, RefusalReason, DecisionType, ClaimPersonType
 
 
 @admin.register(DocumentType)
@@ -34,6 +34,12 @@ class ObjKindAdmin(admin.ModelAdmin):
 class RefusalReasonAdmin(admin.ModelAdmin):
     ordering = ('pk',)
     list_display = ('title', 'obj_kind', 'created_at', 'updated_at')
+
+
+@admin.register(ClaimPersonType)
+class ClaimPersonTypeAdmin(admin.ModelAdmin):
+    ordering = ('pk',)
+    list_display = ('title', 'created_at', 'updated_at')
 
 
 @admin.register(DecisionType)
