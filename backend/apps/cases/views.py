@@ -511,16 +511,12 @@ def document_send_to_sign(request, pk: int):
     # Получение документа
     document = document_services.document_get_by_id(pk)
 
-    # Проверка, не созданы ли записи для подписи
-    if document.sign_set.count():
-        raise Http404
-
-    # Проверка является ли пользователь секретарём дела
-    if document.case.secretary_id != request.user.id:
+    # Проверка, не созданы ли записи для подписи и является ли пользователь секретарём дела
+    if document.sign_set.count() or document.case.secretary_id != request.user.id:
         raise Http404
 
     # Создание записей для подписи
-    document_services.document_create_sign_records(document.pk)
+    document_services.document_send_to_sign(document.pk)
 
     # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
     stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(

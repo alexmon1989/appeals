@@ -215,7 +215,7 @@ def document_soft_delete(doc_id: int, user: UserModel) -> Union[Document, None]:
     return None
 
 
-def document_create_sign_records(doc_id: int) -> None:
+def document_send_to_sign(doc_id: int) -> None:
     """Создаёт записи для подписи пользователей."""
     document = document_get_by_id(doc_id)
     if document.document_type.signer_type == DocumentType.SignerType.COLLEGIUM:
@@ -234,6 +234,10 @@ def document_create_sign_records(doc_id: int) -> None:
         Sign.objects.create(
             document=document,
             user=document.case.collegium_head,
+        )
+    elif document.document_type.signer_type == DocumentType.SignerType.DIRECTOR:
+        Sign.objects.create(
+            document=document,
         )
 
 
