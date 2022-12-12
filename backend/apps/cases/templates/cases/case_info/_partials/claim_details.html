@@ -1,0 +1,101 @@
+{% load extras %}
+
+<dl class="row small">
+  <dt class="col-sm-3">Дата подання звернення</dt>
+  <dd class="col-sm-9">{{ claim.claim_data.submission_date }}</dd>
+
+  <dt class="col-sm-3">Канал надходження:</dt>
+  <dd class="col-sm-9">{% if claim.claim_data.internal_claim %}Внутрішній модуль{% else %}Зовнішній модуль{% endif %}</dd>
+
+  <dt class="col-sm-3">Тип звернення</dt>
+  <dd class="col-sm-9">{{ claim.claim_data.claim_kind }}</dd>
+</dl>
+
+<h3 class="mb-3">Дані об'єкта</h3>
+
+<dl class="row small">
+    <dt class="col-sm-3">Об'єкт права інтелектуальної власності</dt>
+    <dd class="col-sm-9">{{ claim.claim_data.obj_kind }}</dd>
+
+    {% for item in claim.stages.3.items %}
+        <dt class="col-sm-3">{{ item.title }}</dt>
+        <dd class="col-sm-9">{{ item.value }}</dd>
+    {% endfor %}
+
+    {% for item in claim.stages.4.items %}
+        <dt class="col-sm-3">{{ item.title }}</dt>
+        <dd class="col-sm-9">
+            {% if item.type == 'date' or 'date' in item.id %}
+                {{ item.value|to_date:"%Y-%m-%d"|date:"SHORT_DATE_FORMAT" }}
+            {% else %}
+                {{ item.value|linebreaksbr }}
+            {% endif %}
+        </dd>
+    {% endfor %}
+</dl>
+
+<h3 class="mb-3">{{ claim.stages.5.title }}</h3>
+
+<dl class="row small">
+    {% for item in claim.stages.5.items %}
+        <dt class="col-sm-3">{{ item.title }}</dt>
+        <dd class="col-sm-9">
+            {% if item.type == 'date' or 'date' in item.id %}
+                {{ item.value|to_date:"%Y-%m-%d"|date:"SHORT_DATE_FORMAT" }}
+            {% else %}
+                {{ item.value|linebreaksbr }}
+            {% endif %}
+        </dd>
+    {% endfor %}
+</dl>
+
+{% if claim.stages.6.items %}
+    <h3 class="mb-3">{{ claim.stages.6.title }}</h3>
+
+    <dl class="row small">
+        {% for item in claim.stages.6.items %}
+            <dt class="col-sm-3">{{ item.title }}</dt>
+            <dd class="col-sm-9">
+                {% if item.type == 'date' or 'date' in item.id %}
+                    {{ item.value|to_date:"%Y-%m-%d"|date:"SHORT_DATE_FORMAT" }}
+                {% else %}
+                    {{ item.value|linebreaksbr }}
+                {% endif %}
+            </dd>
+        {% endfor %}
+    </dl>
+{% endif %}
+
+{% if claim.stages.7.items %}
+    <h3 class="mb-3">{{ claim.stages.7.title }}</h3>
+
+    <dl class="row small">
+        {% for item in claim.stages.7.items %}
+            <dt class="col-sm-3">{{ item.title }}</dt>
+            <dd class="col-sm-9">
+                {% if item.type == 'date' or 'date' in item.id %}
+                    {{ item.value|to_date:"%Y-%m-%d"|date:"SHORT_DATE_FORMAT" }}
+                {% else %}
+                    {{ item.value|linebreaksbr }}
+                {% endif %}
+            </dd>
+        {% endfor %}
+    </dl>
+{% endif %}
+
+{% if claim.stages.8.items %}
+    <h3 class="mb-3">{{ claim.stages.8.title }}</h3>
+
+    <dl class="row small">
+        {% for item in claim.stages.8.items %}
+            <dt class="col-sm-3">{{ item.title }}</dt>
+            <dd class="col-sm-9">
+                {% if item.type == 'date' or 'date' in item.id %}
+                    {{ item.value|to_date:"%Y-%m-%d"|date:"SHORT_DATE_FORMAT" }}
+                {% else %}
+                    {{ item.value|linebreaksbr }}
+                {% endif %}
+            </dd>
+        {% endfor %}
+    </dl>
+{% endif %}

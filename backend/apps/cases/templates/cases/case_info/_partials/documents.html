@@ -1,0 +1,24 @@
+<h3 class="mb-3">Документи справи</h3>
+
+<table class="table table-sm table-bordered" style="font-size: 12px">
+    <thead>
+    <tr>
+        <th class="text-nowrap">Тип</th>
+        <th class="text-nowrap">Реєстраційний номер</th>
+        <th class="text-nowrap">Дата реєстрації</th>
+        <th class="text-nowrap">Дата отримання</th>
+        <th class="text-nowrap">Дата відправлення</th>
+    </tr>
+    </thead>
+    {% for document in documents %}
+        {% if not document.have_to_be_signed %}
+            <tr>
+                <td>{{ document.document_type.title }}</td>
+                <td>{{ document.registration_number|default_if_none:"" }}</td>
+                <td>{{ document.registration_date|date:"SHORT_DATE_FORMAT" }}</td>
+                <td>{{ document.input_date|date:"SHORT_DATE_FORMAT" }}</td>
+                <td>{{ document.output_date|date:"SHORT_DATE_FORMAT" }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+</table>

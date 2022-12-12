@@ -69,3 +69,8 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
     font-weight: 600;
     white-space: nowrap;
 }
+
+#table-cases tr td:nth-child(0),
+#table-cases tr td:nth-child(2) {
+    white-space: nowrap;
+}

@@ -1,0 +1,107 @@
+<h3 class="mb-3">Дані справи</h3>
+
+<dl class="row small">
+    {% if case.claim.claim_kind.claim_sense %}
+        <dt class="col-sm-3">
+            {% if case.claim.claim_kind.claim_sense == 'DE' %}
+                Підстава, з якої оскаржується рішення за запереченням
+            {% elif case.claim.claim_kind.claim_sense == 'AP' %}
+                Підстава, з якої визнається недійсним охоронний документ за апеляційною заявою
+            {% endif %}
+        </dt>
+        <dd class="col-sm-9">
+            {% if case.refusal_reasons.count > 0 %}
+                <ul>
+                    {% for reason in case.refusal_reasons.all %}
+                        <li>{{ reason.title }}{% if not forloop.last %};{% else %}.{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                Не заповнено
+            {% endif %}
+        </dd>
+    {% endif %}
+
+    <dt class="col-sm-3">
+        ПІБ призначених членів колегії
+    </dt>
+    <dd class="col-sm-9">
+        {% if case.collegium.count > 0 %}
+            <ul>
+                {% for member in case.collegiummembership_set.all %}
+                    <li>{{ member.person.get_full_name }}{% if member.is_head %}&nbsp;
+                        <strong>(голова колегії)</strong>{% endif %}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            Колегію не сформовано
+        {% endif %}
+    </dd>
+
+    <dt class="col-sm-3">
+        ПІБ секретаря
+    </dt>
+    <dd class="col-sm-9">
+        {% if case.secretary %}
+            {{ case.secretary.get_full_name }}
+        {% else %}
+            Справу не прийнято в роботу
+        {% endif %}
+    </dd>
+
+    <dt class="col-sm-3">
+        ПІБ експерта
+    </dt>
+    <dd class="col-sm-9">
+        {% if case.expert %}
+            {{ case.expert.get_full_name }}
+        {% else %}
+            Не призначено
+        {% endif %}
+    </dd>
+
+    <dt class="col-sm-3">
+        Дата призначеного засідання (засідань)
+    </dt>
+    <dd class="col-sm-9">
+        {% if case.meeting_set.count == 0 %}
+            Не визначено
+        {% else %}
+            <ul>
+                {% for meeting in case.meeting_set.all %}
+                    <li>
+                        {{ meeting.datetime }}
+                        {% if meeting.meeting_type == 'PRE' %}
+                            (підготовче засідання)
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </dd>
+
+    <dt class="col-sm-3">
+        Дата прийняття колегією рішення
+    </dt>
+    <dd class="col-sm-9">
+        {% if case.decision_date %}
+            {{ case.decision_date|date:"SHORT_DATE_FORMAT" }}
+        {% else %}
+            Не визначено
+        {% endif %}
+    </dd>
+
+    <dt class="col-sm-3">
+        Дата затвердження рішення наказом
+    </dt>
+    <dd class="col-sm-9">
+        Не визначено
+    </dd>
+
+    <dt class="col-sm-3">
+        Дата публікації рішення на сайті
+    </dt>
+    <dd class="col-sm-9">
+        Не визначено
+    </dd>
+</dl>

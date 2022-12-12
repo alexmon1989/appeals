@@ -4,6 +4,7 @@ from django.http import JsonResponse, Http404
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
+from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -12,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.contrib import messages
 
 from rest_framework import viewsets
+from django_renderpdf.views import PDFView
 
 from apps.users import services as users_services
 from apps.common.utils import files_to_base64
@@ -425,6 +427,18 @@ class CaseMeetingView(UpdateView):
             self.object.claim.claim_kind_id
         )
 
+        return context
+
+
+class CaseInfoPDFView(LoginRequiredMixin, PDFView):
+    """Создаёт PDF с основными данными дела."""
+    template_name = 'cases/case_info/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['case'] = case_services.case_get_one(kwargs['pk'])
+        context['claim'] = filling_services.claim_get_data_by_id(context['case'].claim.pk)
+        context['documents'] = case_services.case_get_documents_qs(kwargs['pk'])
         return context
 
 

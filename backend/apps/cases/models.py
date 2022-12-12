@@ -238,6 +238,12 @@ class Document(TimeStampModel):
         return self.sign_set.count() > 0
 
     @property
+    def have_to_be_signed(self) -> bool:
+        """Должен ли быть подписан."""
+        return (self.auto_generated and self.sign_set.count() == 0) or \
+               (self.sign_set.count() > 0 and self.sign_set.filter(timestamp='').exists())
+
+    @property
     def folder_path(self):
         """Возвращает путь к каталогу с файлами."""
         path = Path(self.file.path)

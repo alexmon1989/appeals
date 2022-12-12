@@ -33,6 +33,11 @@ urlpatterns = [
     ),
     path('meeting/<int:pk>/', views.CaseMeetingView.as_view(), name='case_meeting'),
     path(
+        'case-info/<int:pk>/',
+        views.CaseInfoPDFView.as_view(),
+        name='case_info',
+    ),
+    path(
         'add-document/<int:pk>/',
         views.DocumentAddView.as_view(),
         name='case_add_document'
