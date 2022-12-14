@@ -61,9 +61,10 @@ def handle_external_signs():
         for protocol in command.esignprotocolexchange_set.all():
             # Сохранение файла цифр. подписи на диск
             binary_io = io.BytesIO(protocol.esign_body)
-            p7s_path = Path(protocol.doc.folder_path) / 'sign.p7s'
+            p7s_path_absolute = str(Path(protocol.doc.folder_path) / 'sign.p7s')
+            p7s_path_relative = str(Path(protocol.doc.file.name).parent / 'sign.p7s')
 
-            with open(str(p7s_path), "wb") as f:
+            with open(p7s_path_absolute, "wb") as f:
                 f.write(binary_io.read())
 
             # Заполнение данных подписанта
@@ -74,6 +75,7 @@ def handle_external_signs():
             )
             sign.timestamp = str(protocol.date_signed)
             sign.subject = protocol.signer_name
+            sign.file = p7s_path_relative
             sign.save()
             document_services.document_add_history(
                 protocol.doc_id,
