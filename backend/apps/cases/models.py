@@ -260,8 +260,8 @@ class Document(TimeStampModel):
     def can_be_updated(self, user: UserModel):
         """Можно ли загрузить новый файл для документа."""
         # Проверка секретаря дела, сгенерирован ли документ автоматически и не подписан ли
-        return self.case and self.case.secretary == user and self.auto_generated and self.can_be_edited \
-               and not self.is_signed
+        return not self.converted_to_pdf and self.case and self.case.secretary == user and self.auto_generated \
+               and self.can_be_edited and not self.is_signed
 
     def can_be_deleted(self, user: UserModel):
         """Может ли пользователь удалить документ (удалять можно только вторичные документы)."""
@@ -345,6 +345,7 @@ class Sign(TimeStampModel):
     serial_number = models.CharField('Серійний номер', max_length=255)
     issuer = models.CharField('Надавач послуг (АЦСК)', max_length=255)
     timestamp = models.CharField('Мітка часу', max_length=255)
+    external_service_sign = models.BooleanField('Файл підписано зовнішнім сервісом', default=False)
 
     def __str__(self):
         return f"{self.document.case.case_number} - {self.document.document_type} - {self.subject}"

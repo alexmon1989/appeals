@@ -215,42 +215,82 @@ def document_soft_delete(doc_id: int, user: UserModel) -> Union[Document, None]:
     return None
 
 
+def document_convert_original_doc_to_pdf(document: Document, user_id: int) -> None:
+    """Конвертирует оригинальный файл документа в PDF (также ставит метку в БД, что документ конвертирован)."""
+    docx_file_path = Path(settings.MEDIA_ROOT) / Path(str(document.file))
+    subprocess.call(
+        ["libreoffice", "--headless", '--convert-to', 'pdf', docx_file_path],
+        cwd=str(docx_file_path.parent)
+    )
+    # Переименование pdf
+    rename_from = docx_file_path.parent / f"{docx_file_path.stem}.pdf"
+    rename_to = docx_file_path.parent / f"{docx_file_path.stem}_signs.pdf"
+    rename_from.rename(rename_to)
+
+    document.converted_to_pdf = True
+    document.save()
+    document_add_history(document.pk, 'Конвертовано у pdf (автоматично)', user_id)
+
+
+def document_send_to_sign_collegium(document: Document, user_id: int) -> None:
+    """Передаёт документ на подпись членам коллегии и секретарю."""
+    for item in document.case.collegiummembership_set.all():
+        # Члены коллегии
+        Sign.objects.create(
+            document=document,
+            user=item.person,
+        )
+    # Секретарь дела
+    Sign.objects.get_or_create(
+        document=document,
+        user=document.case.secretary,
+    )
+    document_add_history(
+        document.pk,
+        'Документ відправлено на підпис членам апеляційної колегії та секретарю',
+        user_id
+    )
+
+
+def document_send_to_sign_collegium_head(document: Document, user_id: int) -> None:
+    """Передаёт документ на подпись главе коллегии."""
+    Sign.objects.create(
+        document=document,
+        user=document.case.collegium_head,
+    )
+    document_add_history(
+        document.pk,
+        'Документ відправлено на підпис голові апеляційної колегії',
+        user_id
+    )
+
+
+def document_send_to_director(document: Document, user_id: int) -> None:
+    """Передаёт документ на подпись главе коллегии."""
+    document_send_to_external_sign(document.pk)
+    Sign.objects.get_or_create(
+        document=document,
+        file_signed=document.signed_file,
+        external_service_sign=True
+    )
+    document_add_history(document.pk, 'Документ відправлено на підпис директору організації', user_id)
+
+
 def document_send_to_sign(doc_id: int, user_id: int) -> None:
     """Создаёт записи для подписи пользователей."""
     document = document_get_by_id(doc_id)
-    if document.document_type.signer_type == DocumentType.SignerType.COLLEGIUM:
-        for item in document.case.collegiummembership_set.all():
-            # Члены коллегии
-            Sign.objects.create(
-                document=document,
-                user=item.person,
-            )
-        # Секретарь дела
-        Sign.objects.get_or_create(
-            document=document,
-            user=document.case.secretary,
-        )
-        document_add_history(
-            doc_id,
-            'Документ відправлено на підпис членам апеляційної колегії та секретарю',
-            user_id
-        )
-    elif document.document_type.signer_type == DocumentType.SignerType.COLLEGIUM_HEAD:
-        Sign.objects.create(
-            document=document,
-            user=document.case.collegium_head,
-        )
-        document_add_history(
-            doc_id,
-            'Документ відправлено на підпис голові апеляційної колегії',
-            user_id
-        )
-    elif document.document_type.signer_type == DocumentType.SignerType.DIRECTOR:
-        document_send_to_external_sign(doc_id)
-        Sign.objects.get_or_create(
-            document=document,
-        )
-        document_add_history(doc_id, 'Документ відправлено на підпис директору організації', user_id)
+
+    # Конвертация документа в pdf
+    if not document.converted_to_pdf:
+        document_convert_original_doc_to_pdf(document, user_id)
+
+    # Передача на подпись в зависимости от типа подписанта
+    sign_methods = {
+        DocumentType.SignerType.COLLEGIUM.value: document_send_to_sign_collegium,
+        DocumentType.SignerType.COLLEGIUM_HEAD.value: document_send_to_sign_collegium_head,
+        DocumentType.SignerType.DIRECTOR.value: document_send_to_director,
+    }
+    sign_methods[document.document_type.signer_type](document, user_id)
 
 
 def document_send_to_chancellary(pk: int, user_id: int) -> Command:
@@ -297,5 +337,7 @@ def document_send_to_external_sign(pk: int) -> Command:
     protocol.id_cead = 0
     protocol.saved_at = now
     protocol.save()
+
+    document_add_history(pk, 'Документ відправлено до сервісу підписання документів.')
 
     return command

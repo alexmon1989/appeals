@@ -1,14 +1,17 @@
 from django.conf import settings
+from django.utils import timezone
 
 from core.celery import app
 
 from pathlib import Path
 from urllib.parse import unquote
+import io
 
 from apps.users import services as users_services
 from .services import sign_services, document_services
 from apps.common.utils import base64_to_file
 from apps.filling import services as filling_services
+from apps.cases.models import Command, Sign
 
 
 @app.task
@@ -45,3 +48,39 @@ def upload_sign_external_task(document_id: int, sign_file_base_64: str, sign_inf
         return {'success': 1}
 
     return {'success': 0}
+
+
+@app.task
+def handle_external_signs():
+    """Получает электронные подписи из внешнего сервиса подписания и обрабатывает их."""
+    # Выборка всех необработанных команд
+    commands = Command.objects.filter(command_type__command_name='update_send_to_esign_service', is_done=False)
+
+    # Обработка цифровых подписей
+    for command in commands:
+        for protocol in command.esignprotocolexchange_set.all():
+            # Сохранение файла цифр. подписи на диск
+            binary_io = io.BytesIO(protocol.esign_body)
+            p7s_path = Path(protocol.doc.folder_path) / 'sign.p7s'
+
+            with open(str(p7s_path), "wb") as f:
+                f.write(binary_io.read())
+
+            # Заполнение данных подписанта
+            sign = Sign.objects.get(
+                document_id=protocol.doc_id,
+                user__isnull=True,
+                timestamp=''
+            )
+            sign.timestamp = str(protocol.date_signed)
+            sign.subject = protocol.signer_name
+            sign.save()
+            document_services.document_add_history(
+                protocol.doc_id,
+                'Отримано цифровий підпис від сервісу підписання документів'
+            )
+
+        command.is_done = True
+        command.is_error = False
+        command.execution_date = timezone.now()
+        command.save()

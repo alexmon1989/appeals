@@ -2,7 +2,7 @@
 
 <div class="d-flex align-items-center">
     <div class="px-1">
-        <a href="{% if document.signs_count %}{{ document.signed_file_url }}{% else %}{{ document.file.url }}{% endif %}"
+        <a href="{% if document.signs_count or document.converted_to_pdf %}{{ document.signed_file_url }}{% else %}{{ document.file.url }}{% endif %}"
            title="Завантажити"
            target="_blank">
             <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
