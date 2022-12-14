@@ -4,7 +4,6 @@ from django.http import JsonResponse, Http404
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -530,7 +529,7 @@ def document_send_to_sign(request, pk: int):
         raise Http404
 
     # Создание записей для подписи
-    document_services.document_send_to_sign(document.pk)
+    document_services.document_send_to_sign(document.pk, request.user.id)
 
     # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
     stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(

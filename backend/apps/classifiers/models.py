@@ -74,7 +74,7 @@ class DocumentType(TimeStampModel):
     class SignerType(models.TextChoices):
         COLLEGIUM = 'collegium', 'Члени колегії та секретар справи'
         COLLEGIUM_HEAD = 'collegium_head', 'Голова колегії'
-        DIRECTOR = 'director', 'Директор'
+        DIRECTOR = 'director', 'Директор організації'
 
     title = models.CharField("Назва", max_length=512)
     direction = models.CharField("Напрямок", max_length=16, choices=Direction.choices, null=True, blank=True)

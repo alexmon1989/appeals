@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.utils import timezone
 
-from apps.cases.models import Document, Sign, DocumentHistory, Command, PostalProtocolExchange
+from apps.cases.models import Document, Sign, DocumentHistory, Command, PostalProtocolExchange, EsignProtocolExchange
 from apps.cases.utils import set_cell_border
 from apps.common.utils import (docx_replace, generate_barcode_img, substitute_image_docx)
 from apps.classifiers.models import DocumentType, CommandType
@@ -215,7 +215,7 @@ def document_soft_delete(doc_id: int, user: UserModel) -> Union[Document, None]:
     return None
 
 
-def document_send_to_sign(doc_id: int) -> None:
+def document_send_to_sign(doc_id: int, user_id: int) -> None:
     """Создаёт записи для подписи пользователей."""
     document = document_get_by_id(doc_id)
     if document.document_type.signer_type == DocumentType.SignerType.COLLEGIUM:
@@ -230,15 +230,27 @@ def document_send_to_sign(doc_id: int) -> None:
             document=document,
             user=document.case.secretary,
         )
+        document_add_history(
+            doc_id,
+            'Документ відправлено на підпис членам апеляційної колегії та секретарю',
+            user_id
+        )
     elif document.document_type.signer_type == DocumentType.SignerType.COLLEGIUM_HEAD:
         Sign.objects.create(
             document=document,
             user=document.case.collegium_head,
         )
+        document_add_history(
+            doc_id,
+            'Документ відправлено на підпис голові апеляційної колегії',
+            user_id
+        )
     elif document.document_type.signer_type == DocumentType.SignerType.DIRECTOR:
-        Sign.objects.create(
+        document_send_to_external_sign(doc_id)
+        Sign.objects.get_or_create(
             document=document,
         )
+        document_add_history(doc_id, 'Документ відправлено на підпис директору організації', user_id)
 
 
 def document_send_to_chancellary(pk: int, user_id: int) -> Command:
@@ -261,5 +273,29 @@ def document_send_to_chancellary(pk: int, user_id: int) -> Command:
     protocol.save()
 
     document_add_history(pk, 'Документ відправлено в АС "Вихідні документи"', user_id)
+
+    return command
+
+
+def document_send_to_external_sign(pk: int) -> Command:
+    """Передаёт документ на подпись во внешний сервис.
+    Фактически делает записи в таблицах БД для работы стороннего приложения,
+    реально отправляющего документ на подпись."""
+    command_type = CommandType.objects.get(command_name='send_to_esign_service')
+    now = timezone.now()
+
+    command = Command()
+    command.command_type = command_type
+    command.document_id = pk
+    command.create_date = now
+    command.is_done = False
+    command.save()
+
+    protocol = EsignProtocolExchange()
+    protocol.command = command
+    protocol.doc_id = pk
+    protocol.id_cead = 0
+    protocol.saved_at = now
+    protocol.save()
 
     return command

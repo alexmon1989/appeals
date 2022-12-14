@@ -400,3 +400,21 @@ class Command(models.Model):
     class Meta:
         managed = False
         db_table = 'ls_list_commands'
+
+
+class EsignProtocolExchange(models.Model):
+    """Протокол підписання документу зовнішнім сервісом."""
+    id_rec = models.AutoField(primary_key=True)
+    doc = models.ForeignKey(Document, models.DO_NOTHING, blank=True, null=True)
+    id_cead = models.IntegerField(blank=True, null=True)
+    command = models.ForeignKey('Command', models.SET_NULL, db_column='id_command', blank=True, null=True)
+    date_saved_at = models.DateTimeField(blank=True, null=True)
+    date_export_to_esignserice = models.DateTimeField(blank=True, null=True)
+    date_import_from_esignservice = models.DateTimeField(blank=True, null=True)
+    date_signed = models.DateTimeField(blank=True, null=True)
+    esign_body = models.BinaryField(blank=True, null=True)
+    signer_name = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'esign_protocol_exchange'
