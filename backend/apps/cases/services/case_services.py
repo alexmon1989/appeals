@@ -407,3 +407,54 @@ def case_publish(case_id: int) -> bool:
     case.save()
 
     return True
+
+
+def case_get_published_list(date_from: str = None, date_to: str = None) -> list:
+    """Возвращает список дел, которые были опубликованы.
+    Параметры дат в формате дд.мм.гггг"""
+    res = []
+
+    cases = Case.objects.select_related(
+        'claim',
+        'claim__claim_kind',
+        'claim__obj_kind',
+    ).prefetch_related(
+        'document_set',
+        'document_set__document_type'
+    ).filter(published__isnull=False).order_by('published')
+
+    if date_from:
+        date_from = datetime.datetime.strptime(date_from, '%d.%m.%Y').strftime('%Y-%m-%d')
+        cases = cases.filter(published__gte=date_from)
+
+    if date_to:
+        date_to = datetime.datetime.strptime(date_to, '%d.%m.%Y').strftime('%Y-%m-%d')
+        cases = cases.filter(published__lte=date_to)
+
+    for case in cases:
+        docs_publish = {}
+        for document in case.document_set.all():
+            if document.document_type.code in ('0033', '0034'):  # Рішення АП, Наказ
+                docs_publish[document.document_type.code] = {
+                    'document_number': document.registration_number,
+                    'document_date': document.registration_date,
+                    'url': document.signed_file_url,
+                }
+
+        item = {
+            'biblio_data': {
+                'case_number': case.case_number,
+                'obj_number': case.claim.obj_number,
+                'obj_title': case.claim.obj_title,
+                'obj_kind': case.claim.obj_kind.title,
+                'claim_kind': case.claim.claim_kind.title,
+                'submission_date': case.claim.created_at,
+            },
+            'documents': {
+                'decision': docs_publish.get('0033', {}),
+                'order': docs_publish.get('0034', {}),
+            }
+        }
+        res.append(item)
+
+    return res

@@ -12,6 +12,8 @@ from django.utils.decorators import method_decorator
 from django.contrib import messages
 
 from rest_framework import viewsets
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from django_renderpdf.views import PDFView
 
 from apps.users import services as users_services
@@ -472,6 +474,17 @@ def case_publish_to_website(request, pk: int):
 
     # Переадресация на страницу дела
     return redirect('cases-detail', pk=pk)
+
+
+class CasePublishedListAPIView(APIView):
+    """Отображает список опубликованных дел."""
+
+    def get(self, request, format=None):
+        cases = case_services.case_get_published_list(
+            date_from=request.GET.get('date_from'),
+            date_to=request.GET.get('date_to'),
+        )
+        return Response(cases)
 
 
 @method_decorator(group_required('Секретар'), name='dispatch')
