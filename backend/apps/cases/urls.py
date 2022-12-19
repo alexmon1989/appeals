@@ -38,6 +38,11 @@ urlpatterns = [
         name='case_info',
     ),
     path(
+        'publish-to-website/<int:pk>/',
+        views.case_publish_to_website,
+        name='case_publish_to_website',
+    ),
+    path(
         'add-document/<int:pk>/',
         views.DocumentAddView.as_view(),
         name='case_add_document'

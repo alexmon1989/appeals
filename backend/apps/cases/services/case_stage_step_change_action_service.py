@@ -34,6 +34,7 @@ class CaseStageStepQualifier:
             5000: self._satisfies_5000,
             6000: self._satisfies_6000,
             7000: self._satisfies_7000,
+            8000: self._satisfies_8000,
         }
 
     def _satisfies_2000(self):
@@ -221,7 +222,7 @@ class CaseStageStepQualifier:
             # Множество кодов документов переданных на подпись, которые присутствуют у дела
             doc_set = self.case.document_set.prefetch_related('sign_set').all()
             doc_types_current = {
-                x.document_type.code for x in doc_set if x.is_sent_to_sign and not x.is_signed
+                x.document_type.code for x in doc_set if x.is_sent_to_sign
             }
 
             # Проверка есть ли коды документов, которые должны присутствовать на стадии,
@@ -247,6 +248,10 @@ class CaseStageStepQualifier:
             # в текущих документах дела
             return doc_types_should_exist.issubset(doc_types_current)
         return False
+
+    def _satisfies_8000(self):
+        """Удовлетворяет условиям стадии 8000 "Опубліковано на веб-сайті. Справу закрито."."""
+        return self.case.stage_step.code == 7000 and self.case.published
 
     def get_stage_step(self, case: Case) -> int:
         self.case = case
@@ -447,6 +452,20 @@ class CaseSetActualStageStepService:
         self.case.refresh_from_db()
         self.notify_all_persons()
 
+    def _call_8000_actions(self):
+        """Выполнение действий, характерных для стадии 8000 -
+        "Опубліковано на веб-сайті. Справу закрито."."""
+        # Изменение стадии дела
+        case_change_stage_step(self.case.pk, 8000, self.request.user.pk)
+
+        self.case.refresh_from_db()
+
+        # Закрытие рассмотрения дела
+        self.case.stopped = True
+        self.case.save()
+
+        self.notify_all_persons()
+
     def notify_all_persons(self):
         """Делает оповещение всех пользователей, которые причастны к делу,
         главы АП, заместителей, текущего пользователя."""
@@ -488,6 +507,7 @@ class CaseSetActualStageStepService:
                 5000: self._call_5000_actions,
                 6000: self._call_6000_actions,
                 7000: self._call_7000_actions,
+                8000: self._call_8000_actions,
             }
             try:
                 stage_actions[case_stage_step]()

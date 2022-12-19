@@ -51,7 +51,6 @@ class Case(TimeStampModel):
         related_name='papers_owner',
     )
     deadline = models.DateField('Дата, до якої необхідно розглянути звернення', null=True, blank=True)
-    hearing = models.DateField('Дата призначенного засідання', null=True, blank=True)
     stage_step = models.ForeignKey('CaseStageStep', on_delete=models.SET_NULL, verbose_name='Етап стадії розгляду',
                                    null=True, blank=True)
     stopped = models.BooleanField('Розгляд справи припинений', default=False)
@@ -72,6 +71,7 @@ class Case(TimeStampModel):
         blank=True
     )
     decision_date = models.DateField('Дата оголошення рішення АП', null=True, blank=True)
+    published = models.DateTimeField('Дата та час публікації на веб-сайті', null=True, blank=True)
 
     def __str__(self):
         return self.case_number

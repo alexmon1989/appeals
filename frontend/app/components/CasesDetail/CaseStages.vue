@@ -8,10 +8,10 @@
     <li class="process-step-item"
         v-for="stage in stages"
         :class="{
-          'complete': stage.status === 'done',
+          'complete': stage.status === 'done' || (stopped && stage.number === 7),
           'active': stage.status === 'current',
           'paused': stage.status === 'paused',
-          'stopped': stage.status === 'stopped',
+          'stopped': stage.status === 'stopped' && stage.number !== 7,
         }"
     >{{ stage.number }}. {{ stage.title }}</li>
   </ol>
@@ -22,10 +22,7 @@
     <span v-if="stopped">Розгляд справи припинений</span>
     <span v-else-if="paused">Розгляд справи зупинений</span>
     <span v-else>Розгляд справи активний</span>
-
   </div>
-
-
 </template>
 
 <script>

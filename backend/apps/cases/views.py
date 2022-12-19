@@ -441,6 +441,39 @@ class CaseInfoPDFView(LoginRequiredMixin, PDFView):
         return context
 
 
+@group_required('Секретар')
+def case_publish_to_website(request, pk: int):
+    """Публикует ап. дело на веб-сайте (фактически делает его доступным в API)."""
+    case = case_services.case_get_all_qs().filter(
+        pk=pk
+    ).first()
+
+    # Публикация
+    if case and case.secretary == request.user and case_services.case_publish(pk):
+        # Сообщение об успехе
+        messages.add_message(request, messages.SUCCESS, 'Справу (наказ та рішення) успішно опубліковано на веб-сайті.')
+
+        # Проверка какому стадии соответствует дело, смена стадии, выполнение сопутствующих стадии операций
+        case.refresh_from_db()
+        stage_set_service = case_stage_step_change_action_service.CaseSetActualStageStepService(
+            case_stage_step_change_action_service.CaseStageStepQualifier(),
+            case,
+            request,
+            NotificationService([DbChannel()])
+        )
+        stage_set_service.execute()
+    else:
+        # Сообщение о неудаче
+        messages.add_message(
+            request,
+            messages.ERROR,
+            'Справу (наказ та рішення) не опубліковано на веб-сайті. Зверніться до адміністратора.'
+        )
+
+    # Переадресация на страницу дела
+    return redirect('cases-detail', pk=pk)
+
+
 @method_decorator(group_required('Секретар'), name='dispatch')
 class DocumentAddView(LoginRequiredMixin, CreateView):
     """Страница создания вторичного документа."""

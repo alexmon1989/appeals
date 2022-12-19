@@ -395,3 +395,15 @@ def case_get_user_cases_finished(user_id: int) -> Iterable[Case]:
         'claim', 'claim__obj_kind'
     )
     return cases
+
+
+def case_publish(case_id: int) -> bool:
+    """Публикует дело на веб-сайте (ставит отметку, что дело опубликовано)."""
+    case = Case.objects.filter(pk=case_id).first()
+    if not case or case.stopped:
+        return False
+
+    case.published = datetime.datetime.now()
+    case.save()
+
+    return True
