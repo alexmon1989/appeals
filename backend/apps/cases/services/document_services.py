@@ -284,6 +284,14 @@ def document_send_to_sign(doc_id: int, user_id: int) -> None:
     if not document.converted_to_pdf:
         document_convert_original_doc_to_pdf(document, user_id)
 
+    # Присвоение атрибутов документа
+    if not document.registration_number:
+        document_set_reg_number(document.pk)
+    if not document.barcode:
+        document_set_barcode(document.pk)
+    if not document.registration_date:
+        document_set_reg_date(document.pk)
+
     # Передача на подпись в зависимости от типа подписанта
     sign_methods = {
         DocumentType.SignerType.COLLEGIUM.value: document_send_to_sign_collegium,
