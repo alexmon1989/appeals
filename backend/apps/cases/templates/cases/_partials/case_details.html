@@ -89,12 +89,30 @@
         </div>
 
         <div class="text-muted text-uppercase">Дата прийняття колегією рішення</div>
-        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+        <div class="fw-medium mb-3">
+            {% if case.decision_date %}
+                {{ case.decision_date }}
+            {% else %}
+                <i class="text-black-50">Не визначено</i>
+            {% endif %}
+        </div>
 
         <div class="text-muted text-uppercase">Дата затвердження рішення наказом</div>
-        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+        <div class="fw-medium mb-3">
+            {% if case.order_datetime %}
+                {{ case.order_datetime|date }}
+            {% else %}
+                <i class="text-black-50">Не визначено</i>
+            {% endif %}
+        </div>
 
         <div class="text-muted text-uppercase">Дата публікації рішення на сайті</div>
-        <div class="fw-medium mb-3"><i class="text-black-50">Не визначено</i></div>
+        <div class="fw-medium mb-3">
+            {% if case.published %}
+                {{ case.published }}
+            {% else %}
+                <i class="text-black-50">Не визначено</i>
+            {% endif %}
+        </div>
     </div>
 </div>

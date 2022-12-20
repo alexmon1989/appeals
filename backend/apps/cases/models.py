@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -12,6 +14,7 @@ from apps.filling.models import Claim
 from pathlib import Path
 import urllib.parse
 import os
+from typing import Optional
 
 
 UserModel = get_user_model()
@@ -94,6 +97,14 @@ class Case(TimeStampModel):
             if doc.document_type.code == '0027':
                 return True
         return False
+
+    @property
+    def order_datetime(self) -> Optional[datetime.datetime]:
+        """Возвращает время и дату приказа."""
+        doc = self.document_set.filter(document_type__code='0034').first()
+        if doc:
+            return doc.registration_date
+        return None
 
     class Meta:
         verbose_name = 'Справа'
