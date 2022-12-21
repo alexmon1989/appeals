@@ -70,7 +70,7 @@ body.layout-admin #middle .section, body.layout-admin #middle section {
     white-space: nowrap;
 }
 
-#table-cases tr td:nth-child(0),
+#table-cases tr > td:nth-child(1) > a,
 #table-cases tr td:nth-child(2) {
     white-space: nowrap;
 }
