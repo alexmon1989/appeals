@@ -260,6 +260,14 @@ class Document(TimeStampModel):
         path = Path(self.file.path)
         return str(path.parent)
 
+    @property
+    def send_to_recipient_date(self) -> Optional[datetime.datetime]:
+        """Возвращает дату и время отправки документа или None."""
+        for item in self.postalprotocolexchange_set.all():
+            if item.send_to_recipient:
+                return item.send_to_recipient
+        return None
+
     def assign_file(self, file_path: Path, file_name: str = None):
         """Присваивает файл документу."""
         with open(file_path, "rb") as fh:

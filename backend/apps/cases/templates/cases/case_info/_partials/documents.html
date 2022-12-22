@@ -17,7 +17,7 @@
                 <td>{{ document.registration_number|default_if_none:"" }}</td>
                 <td>{{ document.registration_date|date:"SHORT_DATE_FORMAT" }}</td>
                 <td>{{ document.input_date|date:"SHORT_DATE_FORMAT" }}</td>
-                <td>{{ document.output_date|date:"SHORT_DATE_FORMAT" }}</td>
+                <td>{{ document.send_to_recipient_date|date:"SHORT_DATE_FORMAT" }}</td>
             </tr>
         {% endif %}
     {% endfor %}

@@ -29,6 +29,7 @@ def case_get_all_qs(order_by: str = '-created_at') -> QuerySet[Case]:
         'document_set',
         'document_set__document_type',
         'document_set__sign_set',
+        'document_set__postalprotocolexchange_set',
         'refusal_reasons',
         'meeting_set',
         'meeting_set__invitation_set',
@@ -89,6 +90,7 @@ def case_get_documents_qs(case_id: int) -> Iterable[Document]:
         'claim',
         'claim__user',
     ).prefetch_related(
+        'postalprotocolexchange_set',
         Prefetch('sign_set', queryset=Sign.objects.all())
     ).annotate(
         signs_count=Count('sign', filter=~Q(sign__timestamp=''))

@@ -78,6 +78,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     document_type_title = serializers.ReadOnlyField(source='document_type.title')
     registration_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
     output_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
+    send_to_recipient_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
     input_date = serializers.DateTimeField(format='%d.%m.%Y %H:%M:%S')
     signs_count = serializers.ReadOnlyField()
     signs_info = serializers.SerializerMethodField()
@@ -109,6 +110,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             'registration_number',
             'registration_date',
             'output_date',
+            'send_to_recipient_date',
             'input_date',
             'signs_count',
             'signs_info',
