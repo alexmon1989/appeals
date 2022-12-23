@@ -1,0 +1,28 @@
+{% extends 'base_cabinet.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Створення заявки у технічну підтримку{% endblock %}
+
+{% block main %}
+    {% include 'support/create/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+        <form method="post" enctype="multipart/form-data">
+            {% crispy form %}
+            <div class="text-center">
+                <button class="btn btn-primary ">
+                    <svg width="18px" height="18px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Створити
+                </button>
+            </div>
+        </form>
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

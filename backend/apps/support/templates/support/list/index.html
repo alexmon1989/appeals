@@ -1,0 +1,14 @@
+{% extends 'base_cabinet.html' %}
+
+{% block title %}Список заявок у технічну підтримку{% endblock %}
+
+{% block main %}
+    {% include 'support/list/_partials/header.html' %}
+
+    <!-- Primary -->
+    <div class="section rounded mb-3">
+        {% include 'support/list/_partials/table.html' %}
+    </div>
+    <!-- /Primary -->
+
+{% endblock %}

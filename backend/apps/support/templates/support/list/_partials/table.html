@@ -1,0 +1,74 @@
+<div class="section rounded mb-3">
+    <!--
+
+        data-autofill="false|hover|click"
+        data-enable-paging="true"			 false = show all, no pagination
+        data-items-per-page="10|15|30|50|100"
+
+    -->
+    <table class="table-datatable table table-bordered table-hover table-striped g-font-size-15"
+           id="table-support"
+           data-lng-empty="Дані відсутні"
+           data-lng-page-info="Записи від _START_ до _END_ з _TOTAL_ всього"
+           data-lng-filtered="(filtered from _MAX_ total entries)"
+           data-lng-loading="Завантаження даних..."
+           data-lng-processing="Завантаження даних..."
+           data-lng-search="Пошук..."
+           data-lng-norecords="Результати відсутні"
+           data-lng-sort-ascending=": activate to sort column ascending"
+           data-lng-sort-descending=": activate to sort column descending"
+
+           data-main-search="true"
+           data-column-search="false"
+           data-row-reorder="false"
+           data-col-reorder="true"
+           data-responsive="true"
+           data-header-fixed="true"
+           data-select-onclick="false"
+           data-enable-paging="true"
+           data-enable-col-sorting="true"
+           data-autofill="false"
+           data-group="false"
+           data-items-per-page="10"
+
+           data-enable-column-visibility="true"
+           data-lng-column-visibility="Видимість стовбчиків"
+
+           data-enable-export="false"
+           data-custom-config='{
+            "stateSave": true
+           }'>
+        <thead>
+        <tr>
+            <th>№ заявки</th>
+            <th>Статус</th>
+            {% if request.user.is_staff %}<th>Створив</th>{% endif %}
+            <th>Створено</th>
+        </tr>
+        </thead>
+
+        <tbody>
+            {% for ticket in tickets %}
+                <tr>
+                    <td class="fw-bold">
+                        <a href="{% url 'support-detail-ticket' pk=ticket.pk %}">{{ ticket.pk }}</a>
+                    </td>
+                    <td class="fw-bold {% if ticket.status == 1 %}text-danger{% elif ticket.status == 2 %}text-primary{% elif ticket.status == 3 %}text-success{% endif %}">
+                        {{ ticket.get_status_display }}
+                    </td>
+                    {% if request.user.is_staff %}<td>{{ ticket.send_by.get_full_name_initials}}</td>{% endif %}
+                    <td data-sort="{{ ticket.created_at|date:"U" }}">{{ ticket.created_at }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+
+        <tfoot>
+        <tr>
+            <th>№ заявки</th>
+            <th>Статус</th>
+            {% if request.user.is_staff %}<th>Створив</th>{% endif %}
+            <th>Створено</th>
+        </tr>
+        </tfoot>
+    </table>
+</div>

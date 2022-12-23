@@ -1,0 +1,74 @@
+<dl class="row">
+    <dt class="col-sm-3">Статус</dt>
+    <dd class="col-sm-9 fw-bold {% if ticket.status == 1 %}text-danger{% elif ticket.status == 2 %}text-primary{% elif ticket.status == 3 %}text-success{% endif %}">
+        {{ ticket.get_status_display }}
+    </dd>
+
+    <dt class="col-sm-3">Створив</dt>
+    <dd class="col-sm-9">
+        {{ ticket.send_by.get_full_name }}{% if ticket.send_by.phone_number %}&nbsp;(тел.
+            {{ ticket.send_by.phone_number }}){% endif %}
+    </dd>
+
+    <dt class="col-sm-3">Дата та час створення</dt>
+    <dd class="col-sm-9">
+        {{ ticket.created_at }}
+    </dd>
+
+    <dt class="col-sm-3">Текст заявки</dt>
+    <dd class="col-sm-9">
+        {{ ticket.text|linebreaks }}
+    </dd>
+
+    {% if ticket.file_1 %}
+        <dt class="col-sm-3">Файл 1</dt>
+        <dd class="col-sm-9">
+            <a class="fancybox" href="{{ ticket.file_1.url }}">
+                {{ ticket.file_1 }}
+            </a>
+        </dd>
+    {% endif %}
+
+    {% if ticket.file_2 %}
+        <dt class="col-sm-3">Файл 2</dt>
+        <dd class="col-sm-9">
+            <a class="fancybox" href="{{ ticket.file_2.url }}">
+                {{ ticket.file_2 }}
+            </a>
+        </dd>
+    {% endif %}
+
+    {% if ticket.file_3 %}
+        <dt class="col-sm-3">Файл 3</dt>
+        <dd class="col-sm-9">
+            <a class="fancybox" href="{{ ticket.file_3.url }}">
+                {{ ticket.file_3 }}
+            </a>
+        </dd>
+    {% endif %}
+
+    {% if ticket.taken_to_work_by %}
+        <dt class="col-sm-3">Прийняв у роботу</dt>
+        <dd class="col-sm-9">{{ ticket.taken_to_work_by.get_full_name }}</dd>
+    {% endif %}
+
+    {% if ticket.taken %}
+        <dt class="col-sm-3">Дата та час прийняття у роботу</dt>
+        <dd class="col-sm-9">{{ ticket.taken }}</dd>
+    {% endif %}
+
+    {% if ticket.closed_by %}
+        <dt class="col-sm-3">Закрив</dt>
+        <dd class="col-sm-9">{{ ticket.closed_by.get_full_name }}</dd>
+    {% endif %}
+
+    {% if ticket.closed %}
+        <dt class="col-sm-3">Дата та час закриття</dt>
+        <dd class="col-sm-9">{{ ticket.closed }}</dd>
+    {% endif %}
+
+    {% if ticket.comment %}
+        <dt class="col-sm-3">Коментар</dt>
+        <dd class="col-sm-9">{{ ticket.comment|linebreaks }}</dd>
+    {% endif %}
+</dl>

@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'apps.search',
     'apps.stats',
     'apps.meetings',
+    'apps.support',
 ]
 
 MIDDLEWARE = [

@@ -223,3 +223,8 @@ def user_get_appeals_user_list_qs() -> Iterable[UserModel]:
 def user_get_by_pk(pk: int) -> UserModel:
     """Возвращает объект пользователя по его первичному ключу."""
     return UserModel.objects.filter(pk=pk).first()
+
+
+def user_get_staff() -> Iterable[UserModel]:
+    """Возвращает администраторов."""
+    return UserModel.objects.filter(is_staff=True)
