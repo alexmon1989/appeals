@@ -304,8 +304,8 @@ def claim_get_documents_qs(claim_id: int) -> QuerySet[Document]:
         Prefetch('sign_set', queryset=Sign.objects.all())
     ).annotate(Count('sign'))
 
-    claim = Claim.objects.get(pk=claim_id)
-    if claim.case:
+    claim = Claim.objects.filter(pk=claim_id, case__isnull=False).first()
+    if claim:
         case_documents = Document.objects.filter(
             case_id=claim.case.pk
         ).exclude(

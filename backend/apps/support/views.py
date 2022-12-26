@@ -11,7 +11,6 @@ from .models import Ticket
 from .forms import CreateTicketForm, CloseTicketForm
 from apps.common.mixins import LoginRequiredMixin, StaffRequiredMixin
 from apps.notifications.services import Service as NotificationService, DbChannel
-from apps.users import services as user_services
 
 
 class TicketListView(LoginRequiredMixin, ListView):

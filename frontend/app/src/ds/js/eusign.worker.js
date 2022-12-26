@@ -9,7 +9,7 @@ importScripts(
 //==============================================================================
 
 function EUSignInit() {
-  var URL_CAS_CERTIFICATES = "/static/ds/eus/CACertificates.p7b";
+  var URL_CAS_CERTIFICATES = "/static/ds/eus/CACertificates.p7b?version=1.0.20";
   var URL_CAS = "/static/ds/eus/CAs.json";
   var URL_XML_HTTP_PROXY_SERVICE = "/proxy_handler/ProxyHandlerCURL.php";
 
