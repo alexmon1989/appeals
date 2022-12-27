@@ -142,9 +142,9 @@ class Claim(TimeStampModel):
         else:
             # Заява про визнання ТМ ДВ
             if not self.claim_kind.claim_sense:
-                appellant_address = self.data['owner_address']
+                appellant_address = self.data.get('owner_address', '')
             else:
-                appellant_address = self.data['applicant_address']
+                appellant_address = self.data.get('applicant_address', '')
         return appellant_address.replace("\r\n", ", ")
 
     def get_applicant_title(self):
@@ -158,7 +158,7 @@ class Claim(TimeStampModel):
     def get_applicant_address(self):
         """Возвращает адрес заявителя заявки на объект пром. собств."""
         try:
-            applicant_address = self.data['applicant_address']
+            applicant_address = self.data.get('applicant_address', '')
             return applicant_address.replace("\r\n", ", ")
         except KeyError:
             return ''
@@ -174,7 +174,7 @@ class Claim(TimeStampModel):
     def get_owner_address(self):
         """Возвращает адрес владельца охранного документа """
         try:
-            owner_address = self.data['owner_address']
+            owner_address = self.data.get('owner_address', '')
             return owner_address.replace("\r\n", ", ")
         except KeyError:
             return ''
