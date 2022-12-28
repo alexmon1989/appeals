@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,6 +11,7 @@ from .services import (notification_get_user_notifications_qs,
                        notification_mark_notifications_as_read)
 
 
+@login_required
 def list_index(request):
     return render(request, template_name='notifications/list/index.html')
 
