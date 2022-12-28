@@ -32,6 +32,7 @@ class Meeting(TimeStampModel):
         default=MeetingStatusChoices.PENDING,
         max_length=16
     )
+    video_meeting = models.BooleanField('Засідання у режимі відео-конференції', default=False)
 
     class Meta:
         verbose_name = 'Засідання'
