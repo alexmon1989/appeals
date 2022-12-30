@@ -10,7 +10,13 @@
 
         {% include 'stats/index/_partials/filters.html' %}
 
-        {% include 'stats/index/_partials/table.html' %}
+        {% if not request.GET.stat_type %}
+            <p class="lead">Для початку роботи заповніть форму та натисніть кнопку "Сформувати"</p>
+        {% endif %}
+
+        {% if request.GET.stat_type == '6_1_1' %}
+            {% include 'stats/index/_partials/results/6_1_1.html' %}
+        {% endif %}
 
     </div>
     <!-- /Primary -->

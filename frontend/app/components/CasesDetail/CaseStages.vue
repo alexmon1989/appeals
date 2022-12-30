@@ -8,7 +8,7 @@
     <li class="process-step-item"
         v-for="stage in stages"
         :class="{
-          'complete': stage.status === 'done' || (stopped && stage.number === 7),
+          'complete': stage.status === 'done' || (stopped && stage.number === 7 && stage.status !== 'not-active'),
           'active': stage.status === 'current',
           'paused': stage.status === 'paused',
           'stopped': stage.status === 'stopped' && stage.number !== 7,

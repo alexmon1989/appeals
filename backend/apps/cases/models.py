@@ -6,7 +6,8 @@ from django.core.files.base import ContentFile
 from django.core.validators import FileExtensionValidator
 
 from apps.common.models import TimeStampModel
-from apps.classifiers.models import ObjKind, ClaimKind, DocumentType, RefusalReason, DecisionType, CommandType
+from apps.classifiers.models import (ObjKind, ClaimKind, DocumentType, RefusalReason, DecisionType, CommandType,
+                                     StopReason)
 from .utils import sign_get_file_path, document_get_original_file_path
 
 from apps.filling.models import Claim
@@ -57,6 +58,14 @@ class Case(TimeStampModel):
     stage_step = models.ForeignKey('CaseStageStep', on_delete=models.SET_NULL, verbose_name='Етап стадії розгляду',
                                    null=True, blank=True)
     stopped = models.BooleanField('Розгляд справи припинений', default=False)
+    stop_reason = models.ForeignKey(
+        StopReason,
+        on_delete=models.SET_NULL,
+        verbose_name='Причина припинення розгляду справи',
+        null=True,
+        blank=True
+    )
+    stop_date = models.DateTimeField('Дата припинення розгляду справи', null=True, blank=True)
     paused = models.BooleanField('Діловодство по справі зупинене', default=False)
     archived = models.BooleanField('Передано в архів', default=False)
     refusal_reasons = models.ManyToManyField(

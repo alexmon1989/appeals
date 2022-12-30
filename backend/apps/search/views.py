@@ -1,8 +1,10 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 from .forms import SearchForm
 from .services import search
 
 
+@login_required
 def index(request):
     """Отображает страницу поиска."""
     context = {}

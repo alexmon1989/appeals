@@ -13,7 +13,7 @@ from django_select2 import forms as s2forms
 from dateutil.relativedelta import relativedelta
 
 from .models import Case, Document
-from apps.classifiers.models import RefusalReason, DecisionType
+from apps.classifiers.models import RefusalReason, DecisionType, StopReason
 from .services import case_services, case_stage_step_change_action_service
 from apps.notifications.services import Service as NotificationService, DbChannel
 from apps.meetings import services as meetings_services
@@ -332,7 +332,8 @@ class CaseStoppingForm(forms.ModelForm):
     # Тип документа
     document_type = forms.ChoiceField(
         label='Тип документа, який буде сгенеровано',
-        help_text='Підписант документа - голова колегії'
+        help_text='Підписант документа - голова колегії',
+        required=False,
     )
     reason = forms.CharField(
         label='Підстави',
@@ -344,6 +345,10 @@ class CaseStoppingForm(forms.ModelForm):
         required=False,
         help_text='Значення поля буде додано у згенерований файл .docx'
     )
+    stop_reason = forms.ModelChoiceField(
+        label='Причина припинення розгляду справи',
+        queryset=StopReason.objects.order_by('title')
+    )
 
     class Meta:
         model = Case
@@ -353,31 +358,41 @@ class CaseStoppingForm(forms.ModelForm):
         self.request = request
         super().__init__(*args, **kwargs)
 
-        self.fields['document_type'].choices = ((x['code'], x['title']) for x in doc_types)
+        self.fields['document_type'].choices = [('', '---------')]
+        self.fields['document_type'].choices.extend([(x['code'], x['title']) for x in doc_types])
 
         self.helper = FormHelper()
         self.helper.form_id = "case-stopping-form"
         self.helper.label_class = "fw-bold"
         self.helper.field_class = "mb-4"
 
+    def clean(self):
+        if not self.cleaned_data['document_type'] and self.cleaned_data['stop_reason'].title != 'Відкликано апелянтом':
+            raise ValidationError('Поле "Тип документа, який буде сгенеровано" може бути пустим '
+                                  'тільки якщо значення поля "Причина припинення розгляду справи" '
+                                  'рівне "Відкликано апелянтом"')
+
     def save(self, commit=True):
-        # Генерация документов
-        case_services.case_create_docs(
-            case_id=self.instance.pk,
-            doc_types_codes=[self.cleaned_data['document_type']],
-            user_id=self.request.user.pk,
-            signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
-            form_data=self.cleaned_data,
-        )
+        if self.cleaned_data['document_type']:
+            # Генерация документов
+            case_services.case_create_docs(
+                case_id=self.instance.pk,
+                doc_types_codes=[self.cleaned_data['document_type']],
+                user_id=self.request.user.pk,
+                signer_id=self.instance.collegium_head.pk,  # Подписант - глава коллегии
+                form_data=self.cleaned_data,
+            )
 
         # Остановка дела
         self.instance.stopped = True
+        self.instance.stop_reason = self.cleaned_data['stop_reason']
+        self.instance.stop_date = timezone.now()
         self.instance.save()
 
         # Запись в историю дела
         case_services.case_add_history_action(
             self.instance.id,
-             'Вважати неподаним / не підлягає розгляду',
+             f'Розгляд справи припинено. Причина: {self.instance.stop_reason.title}',
             self.request.user.pk
         )
 
