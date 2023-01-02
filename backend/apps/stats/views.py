@@ -1,8 +1,11 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+
 from .forms import StatForm
 from .services import stat_get_data
 
 
+@login_required
 def index(request):
     context = {}
     if request.GET:

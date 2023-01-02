@@ -1,21 +1,22 @@
 <h5 class="mb-4 mt-5">Результати</h5>
 
-<!-- Кількість звернень (заперечення, апеляційні заяви, заяви про визнання ТМ ДВ), що надійшли на розгляд АП, в заданий проміжок часу -->
 <table class="table table-bordered">
 	<thead>
 		<tr>
-			<th width="50%">ОПІВ</th>
-			<th>Кількість</th>
+			<th>Вид особи</th>
+			<th>ОПІВ</th>
+			<th>Тип звернення</th>
+			<th>Кількість звернень</th>
 		</tr>
 	</thead>
 	<tbody>
         {% for row in data %}
             <tr>
                 <td>{{ row.0 }}</td>
+                <td>{{ row.3 }}</td>
                 <td>{{ row.1 }}</td>
+                <td>{{ row.2 }}</td>
             </tr>
         {% endfor %}
 	</tbody>
 </table>
-
-
