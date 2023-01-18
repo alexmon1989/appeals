@@ -74,6 +74,20 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-select-sm'})
     )
+    meeting_date_from = forms.DateField(
+        label='Дата засідання (від)',
+        required=False,
+        widget=forms.DateInput(
+            attrs={'placeholder': 'Дата подачі звернення (до)', 'class': 'form-control-sm', 'type': 'date'}
+        )
+    )
+    meeting_date_to = forms.DateField(
+        label='Дата засідання (до)',
+        required=False,
+        widget=forms.DateInput(
+            attrs={'placeholder': 'Дата подачі звернення (до)', 'class': 'form-control-sm', 'type': 'date'}
+        )
+    )
     has_decision = forms.ChoiceField(
         choices=HAS_DECISION,
         label='Наявність рішення Апеляційної палати',
@@ -131,6 +145,11 @@ class SearchForm(forms.Form):
             Row(
                 Column('claim_kind', css_class='form-group col-md-6 mb-0'),
                 Column('refusal_reason', css_class='form-group col-md-6 mb-0'),
+                css_class='form-row'
+            ),
+            Row(
+                Column('meeting_date_from', css_class='form-group col-md-6 mb-0'),
+                Column('meeting_date_to', css_class='form-group col-md-6 mb-0'),
                 css_class='form-row'
             ),
             'has_decision',

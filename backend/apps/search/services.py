@@ -89,4 +89,10 @@ def search(params: QueryDict) -> Iterable[Case]:
     if params.get('history_keywords'):
         res = res.filter(casehistory__action__icontains=params['history_keywords'])
 
+    if params.get('meeting_date_from'):
+        res = res.filter(meeting__datetime__gte=f"{params['meeting_date_from']} 00:00:00", meeting__status='DONE')
+
+    if params.get('meeting_date_to'):
+        res = res.filter(meeting__datetime__lte=f"{params['meeting_date_to']} 23:59:59", meeting__status='DONE')
+
     return res
